@@ -104,6 +104,9 @@ defaultSettings:
   v1DataEngine: "true"
   v2DataEngine: "false"
 
+  # === Storage Network (Multus) ===
+  storageNetwork: "longhorn-system/longhorn-san"
+
 longhornUI:
   replicas: 1
   tolerations:
