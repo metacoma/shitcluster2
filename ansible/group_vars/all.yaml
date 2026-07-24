@@ -38,10 +38,20 @@ calico_advertise_cluster_ips: true
 global_as_num: "64512"
 
 # BGP peer с core-роутером на management VLAN
+#
+# Uses node-scope (no scope key) so Kubespray renders numAllowedLocalASNumbers
+# in the Calico BGPPeer resource. This is required because the OpenWrt Quagga
+# router (AS 64513) advertises routes learned from Calico nodes (AS 64512)
+# back to other Calico nodes with AS path "64512 i" (Quagga 1.1.1 does not
+# prepend its own AS). Without numAllowedLocalASNumbers, BIRD rejects these
+# routes as AS-path loops.
+#
+# router_id: Kubespray's peer_with_router.yml template expects this key
+#            (not peer_ip) for both BGPPeer metadata name and spec.peerIP.
 peers:
   - router_id: "172.24.0.1"
     as: "64513"
-    scope: "global"
+    numallowedlocalasnumbers: 1
 
 # Calico: use each node's own status.hostIP as device route source address.
 # Previously used calico_node_extra_envs with per-host felix_device_route_source_address,
