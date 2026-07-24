@@ -30,11 +30,13 @@ kubernetes: kubernetes_reset
 	@echo "==> Running kubespray in ansible/"
 	$(MAKE) -C ansible kubernetes 2>&1 | tee kubespray.log
 
+LONGHORN_CHART_VERSION=1.11.3
+
 .PHONY: longhorn
 longhorn:
 	helm repo add longhorn https://charts.longhorn.io
 	helm repo update longhorn
-	helm upgrade --install --create-namespace longhorn longhorn/longhorn --namespace $(LONGHORN_NS) --values=longhorn_values.yml --wait
+	helm upgrade --install --version $(LONGHORN_CHART_VERSION) --create-namespace longhorn longhorn/longhorn --namespace $(LONGHORN_NS) --values=longhorn_values.yml --wait
 
 longhorn_confirm_disable:
 	kubectl -n $(LONGHORN_NS) patch settings.longhorn.io deleting-confirmation-flag   --type='json'   -p='[{"op":"replace","path":"/value","value":"true"}]'

@@ -1,3 +1,6 @@
+# Longhorn v1.11.3 — pinned chart version: 1.11.3
+# See LONGHORN_RESEARCH.md for full analysis
+
 global:
   tolerations:
     - key: "node.longhorn.io/storage"
@@ -13,21 +16,107 @@ service:
   ui:
     type: LoadBalancer
     loadBalancerIP: 172.25.1.3
+  manager:
+    type: ClusterIP
+
+# Prometheus ServiceMonitor
+metrics:
+  serviceMonitor:
+    enabled: true
+    interval: "30s"
+
+# StorageClass defaults
+persistence:
+  defaultClass: true
+  defaultFsType: ext4
+  defaultClassReplicaCount: 2
+  defaultDataLocality: "disabled"
+  reclaimPolicy: Delete
+  volumeBindingMode: "WaitForFirstConsumer"
+  migratable: false
+  disableRevisionCounter: "true"
+  dataEngine: v1
+  unmapMarkSnapChainRemoved: "enabled"
+
+# Disable pre-upgrade checker for GitOps (ArgoCD)
+preUpgradeChecker:
+  jobEnabled: false
+  upgradeVersionCheck: true
 
 defaultSettings:
+  # === Node & Disk ===
   createDefaultDiskLabeledNodes: true
   systemManagedComponentsNodeSelector: "storage:true"
   defaultDataPath: /storage
+
+  # === Replication & Scheduling ===
   defaultReplicaCount: "2"
-  replicaSoftAntiAffinity: "true"
+  replicaSoftAntiAffinity: "false"
   allowVolumeCreationWithDegradedAvailability: "false"
   replicaAutoBalance: "least-effort"
+  replicaDiskSoftAntiAffinity: "true"
+
+  # === Taints & Tolerations ===
   taintToleration: "node.longhorn.io/storage=true:NoSchedule,node-role.kubernetes.io/control-plane=:NoSchedule"
-  # Reserve 12% of allocatable CPU per instance-manager pod for stability
+
+  # === CPU Reservation ===
   guaranteedInstanceManagerCPU: "12"
+
+  # === Storage Management ===
+  storageOverProvisioningPercentage: "100"
+  storageMinimalAvailablePercentage: "10"
+
+  # === Snapshot Management ===
+  autoCleanupSystemGeneratedSnapshot: "true"
+  autoCleanupRecurringJobBackupSnapshot: "true"
+  snapshotMaxCount: "250"
+  removeSnapshotsDuringFilesystemTrim: "enabled"
+  freezeFilesystemForSnapshot: "true"
+
+  # === Data Integrity ===
+  snapshotDataIntegrity: "enable"
+  snapshotDataIntegrityImmediateCheckAfterSnapshotCreation: "false"
+  snapshotDataIntegrityCronjob: "0 2 * * *"
+  fastReplicaRebuildEnabled: "true"
+
+  # === Replica Rebuild ===
+  concurrentReplicaRebuildPerNodeLimit: "2"
+  replicaReplenishmentWaitInterval: "60"
+  offlineReplicaRebuilding: "enabled"
+
+  # === Node Management ===
+  disableSchedulingOnCordonedNode: "true"
+  nodeDrainPolicy: "mark-host-unschedulable-and-evict-workload"
+  autoSalvage: "true"
+
+  # === CSI & Scheduling ===
+  csiStorageCapacityTracking: "true"
+
+  # === Cleanup ===
+  orphanAutoDeletion: "replica-data;instance"
+  orphanResourceAutoDeletionGracePeriod: "3600"
+
+  # === Upgrade & Monitoring ===
+  upgradeChecker: "true"
+  logLevel: "Info"
+
+  # === Data Engine ===
+  v1DataEngine: "true"
+  v2DataEngine: "false"
 
 longhornUI:
   replicas: 1
+  tolerations:
+    - key: "node.longhorn.io/storage"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Equal"
+      value: ""
+      effect: "NoSchedule"
+
+longhornManager:
   tolerations:
     - key: "node.longhorn.io/storage"
       operator: "Equal"
