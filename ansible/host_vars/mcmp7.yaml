@@ -26,6 +26,11 @@ netplan_configuration:
         interfaces: [ enp6s0.402 ]
         addresses:
         - "172.26.0.16/16"
+      br-san:
+        interfaces: [ enp6s0.403 ]
+        addresses:
+        - "172.27.0.16/16"
+        dhcp4: false
       br-internet:
         interfaces: [ enp6s0.404 ]
         mtu: 1230
@@ -44,6 +49,11 @@ netplan_configuration:
         mtu: 1500
         id: 402
         link: "enp6s0"
+      enp6s0.403:
+        mtu: 1500
+        id: 403
+        link: "enp6s0"
+        dhcp4: false
       # internet
       enp6s0.404:
         mtu: 1230
