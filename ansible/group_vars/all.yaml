@@ -39,7 +39,7 @@ global_as_num: "64512"
 
 # BGP peer с core-роутером на management VLAN
 peers:
-  - peer_ip: 172.24.0.1
+  - router_id: "172.24.0.1"
     as: "64513"
     scope: "global"
 
