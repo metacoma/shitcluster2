@@ -113,6 +113,7 @@ download_keep_remote_cache: True
 # NTP: time sync is critical for etcd consensus and certificate rotation
 ntp_enabled: true
 ntp_manage_config: true
+ntp_package: chrony
 ntp_servers:
   - "0.pool.ntp.org iburst"
   - "1.pool.ntp.org iburst"

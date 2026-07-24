@@ -13,10 +13,7 @@
           - open-iscsi
           - nfs-common
           - dmsetup
-          - findmnt
-          - blkid
-          - lsblk
-          - awk
+          - gawk
         state: present
 
     - name: Ensure iSCSI services are enabled and started

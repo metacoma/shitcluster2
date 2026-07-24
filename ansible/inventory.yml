@@ -12,10 +12,12 @@ all:
       ansible_host: mcmp4.mgmt.mansion.shitcluster.io
       ip: &mcmp4_ip 172.24.0.13
       access_ip: *mcmp4_ip
-    mcmp5:
-      ansible_host: mcmp5.mgmt.mansion.shitcluster.io
-      ip: &mcmp5_ip 172.24.0.14
-      access_ip: *mcmp5_ip
+
+    # mcmp5:
+    #   ansible_host: mcmp5.mgmt.mansion.shitcluster.io
+    #   ip: &mcmp5_ip 172.24.0.14
+    #   access_ip: *mcmp5_ip
+
     mcmp6:
       ansible_host: mcmp6.mgmt.mansion.shitcluster.io
       ip: &mcmp6_ip 172.24.0.17
@@ -67,9 +69,9 @@ kube_node:
       node_labels: &worker_labels
         "node-role.kubernetes.io/worker": ""
         "node.longhorn.io/data-plane": "true"
-    mcmp5:
-      node_labels:
-        <<: *worker_labels
+    # mcmp5:
+    #   node_labels:
+    #     <<: *worker_labels
     mcmp6:
       node_labels:
         <<: *worker_labels
