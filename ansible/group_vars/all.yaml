@@ -43,9 +43,11 @@ peers:
     as: "64513"
     scope: "global"
 
-# Calico: pod device routes через private VLAN
-calico_node_extra_envs:
-  FELIX_DEVICEROUTESOURCEADDRESS: "{{ felix_device_route_source_address }}"
+# Calico: use each node's own status.hostIP as device route source address.
+# Previously used calico_node_extra_envs with per-host felix_device_route_source_address,
+# but that rendered a single static value into the DaemonSet (always mcmp2's IP),
+# causing Felix route sync failures on all other nodes.
+calico_use_default_route_src_ipaddr: true
 
 # Calico: ignore loose RPF — required for BGP routing with asymmetric paths.
 # Without this, Felix drops packets arriving on non-default interface
