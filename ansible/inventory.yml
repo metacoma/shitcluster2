@@ -4,42 +4,36 @@ all:
       ansible_host: mcmp2.mgmt.mansion.shitcluster.io
       ip: &mcmp2_ip 172.24.0.11
       access_ip: *mcmp2_ip
-      felix_device_route_source_address: 172.26.0.11
     mcmp3:
       ansible_host: mcmp3.mgmt.mansion.shitcluster.io
       ip: &mcmp3_ip 172.24.0.15
       access_ip: *mcmp3_ip
-      felix_device_route_source_address: 172.26.0.15
     mcmp4:
       ansible_host: mcmp4.mgmt.mansion.shitcluster.io
       ip: &mcmp4_ip 172.24.0.13
       access_ip: *mcmp4_ip
-      felix_device_route_source_address: 172.26.0.13
+
     # mcmp5:
     #   ansible_host: mcmp5.mgmt.mansion.shitcluster.io
     #   ip: &mcmp5_ip 172.24.0.14
     #   access_ip: *mcmp5_ip
-    #   felix_device_route_source_address: 172.26.0.14
+
     mcmp6:
       ansible_host: mcmp6.mgmt.mansion.shitcluster.io
       ip: &mcmp6_ip 172.24.0.17
       access_ip: *mcmp6_ip
-      felix_device_route_source_address: 172.26.0.17
     mcmp7:
       ansible_host: mcmp7.mgmt.mansion.shitcluster.io
       ip: &mcmp7_ip 172.24.0.16
       access_ip: *mcmp7_ip
-      felix_device_route_source_address: 172.26.0.16
     mcmp8:
       ansible_host: mcmp8.mgmt.mansion.shitcluster.io
       ip: &mcmp8_ip 172.24.0.18
       access_ip: *mcmp8_ip
-      felix_device_route_source_address: 172.26.0.18
     mcmp9:
       ansible_host: mcmp9.mgmt.mansion.shitcluster.io
       ip: &mcmp9_ip 172.24.0.10
       access_ip: *mcmp9_ip
-      felix_device_route_source_address: 172.26.0.10
   vars:
     ansible_user: ubuntu
     ansible_ssh_private_key_file: /home/ubuntu/shitcluster/maas/maas_id
