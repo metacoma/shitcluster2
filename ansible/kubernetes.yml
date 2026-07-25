@@ -1,3 +1,22 @@
 - name: Install Kubernetes
   ansible.builtin.import_playbook: kubernetes_sigs.kubespray.cluster
 
+- name: Install Whereabouts CNI IPAM plugin
+  hosts: kube_control_plane[0]
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Install Whereabouts via Helm
+      kubernetes.core.helm:
+        name: whereabouts
+        release_namespace: kube-system
+        chart_ref: whereabouts-chart
+        chart_repo_url: oci://ghcr.io/k8snetworkplumbingwg
+        chart_version: "0.9.4"
+        values:
+          nameOverride: whereabouts
+        wait: true
+        create_namespace: false
+        atomic: false
+        binary_path: "{{ bin_dir | default('/usr/local/bin') }}/helm"
+
