@@ -15,6 +15,22 @@
       loop:
         - { name: "net.ipv6.conf.all.disable_ipv6",     value: "1" }
         - { name: "net.ipv6.conf.default.disable_ipv6", value: "1" }
+    # rp_filter=0 required for Calico BGP LoadBalancer IP advertisement
+    # Asymmetric routing: LB traffic arrives on br-management but return
+    # path may differ — strict rp_filter would drop these packets.
+    # See: https://www.ahdark.blog/analyzing-load-balancer-vip-routing/
+    - name: Disable reverse path filtering for Calico BGP LB traffic
+      ansible.posix.sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        sysctl_set: true
+        state: present
+        reload: true
+        sysctl_file: /etc/sysctl.d/99-k8s-rp-filter.conf
+      loop:
+        - { name: "net.ipv4.conf.all.rp_filter",     value: "0" }
+        - { name: "net.ipv4.conf.default.rp_filter", value: "0" }
+        - { name: "net.ipv4.conf.br-management.rp_filter", value: "0" }
   roles:
     - role: mrlesmithjr.netplan
       netplan_enabled: true

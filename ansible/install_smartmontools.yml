@@ -1,0 +1,32 @@
+---
+- hosts: all
+  become: true
+  gather_facts: true
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install smartmontools
+      ansible.builtin.apt:
+        name: smartmontools
+        state: present
+
+    - name: Ensure smartd service is enabled and running
+      ansible.builtin.service:
+        name: smartd
+        state: started
+        enabled: true
+
+    - name: Verify smartctl is available
+      ansible.builtin.command: smartctl --version
+      register: smartctl_version
+      changed_when: false
+
+    - name: Display smartctl version
+      ansible.builtin.debug:
+        var: smartctl_version.stdout_lines

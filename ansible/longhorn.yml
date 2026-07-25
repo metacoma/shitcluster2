@@ -1,17 +1,20 @@
 ---
-- hosts: kube_control_plane
+- hosts: kube_node
   gather_facts: false
   become: true
   tasks:
     - name: Install longhorn dependencies
       apt:
-      with_items:
-        - grep
-        - curl
-        - bash
-        - util-linux
-        - open-iscsi
-        - nfs-common
+        name:
+          - grep
+          - curl
+          - bash
+          - util-linux
+          - open-iscsi
+          - nfs-common
+          - dmsetup
+          - gawk
+        state: present
 
     - name: Ensure iSCSI services are enabled and started
       systemd:
@@ -21,3 +24,8 @@
       loop:
         - open-iscsi
         - iscsid
+
+    - name: Ensure iscsi_tcp kernel module is loaded
+      ansible.builtin.modprobe:
+        name: iscsi_tcp
+        state: present

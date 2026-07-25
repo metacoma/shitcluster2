@@ -1,5 +1,5 @@
 ---
-- hosts: Mount /storage
+- hosts: kube_control_plane
   gather_facts: false
   become: true
   tasks:
@@ -8,7 +8,7 @@
         src: "/dev/disk/by-uuid/{{ storage_blkid }}"
         path: /storage
         fstype: ext4
-        opts: defaults
+        opts: "defaults,noatime,nodiratime,commit=60"
         dump: 0
         passno: 2
         state: present

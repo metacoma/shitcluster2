@@ -2,35 +2,37 @@ all:
   hosts:
     mcmp2:
       ansible_host: mcmp2.mgmt.mansion.shitcluster.io
-      ip: &mcmp2_ip 172.26.0.11
+      ip: &mcmp2_ip 172.24.0.11
       access_ip: *mcmp2_ip
     mcmp3:
       ansible_host: mcmp3.mgmt.mansion.shitcluster.io
-      ip: &mcmp3_ip 172.26.0.15
+      ip: &mcmp3_ip 172.24.0.15
       access_ip: *mcmp3_ip
     mcmp4:
       ansible_host: mcmp4.mgmt.mansion.shitcluster.io
-      ip: &mcmp4_ip 172.26.0.13
-      access_ip: *mcmp3_ip
-    mcmp5:
-      ansible_host: mcmp5.mgmt.mansion.shitcluster.io
-      ip: &mcmp5_ip 172.26.0.14
-      access_ip: *mcmp5_ip
+      ip: &mcmp4_ip 172.24.0.13
+      access_ip: *mcmp4_ip
+
+    # mcmp5:
+    #   ansible_host: mcmp5.mgmt.mansion.shitcluster.io
+    #   ip: &mcmp5_ip 172.24.0.14
+    #   access_ip: *mcmp5_ip
+
     mcmp6:
       ansible_host: mcmp6.mgmt.mansion.shitcluster.io
-      ip: &mcmp6_ip 172.26.0.17
+      ip: &mcmp6_ip 172.24.0.17
       access_ip: *mcmp6_ip
     mcmp7:
       ansible_host: mcmp7.mgmt.mansion.shitcluster.io
-      ip: &mcmp7_ip 172.26.0.16
+      ip: &mcmp7_ip 172.24.0.16
       access_ip: *mcmp7_ip
     mcmp8:
       ansible_host: mcmp8.mgmt.mansion.shitcluster.io
-      ip: &mcmp8_ip 172.26.0.18
+      ip: &mcmp8_ip 172.24.0.18
       access_ip: *mcmp8_ip
     mcmp9:
       ansible_host: mcmp9.mgmt.mansion.shitcluster.io
-      ip: &mcmp9_ip 172.26.0.10
+      ip: &mcmp9_ip 172.24.0.10
       access_ip: *mcmp9_ip
   vars:
     ansible_user: ubuntu
@@ -46,6 +48,8 @@ kube_control_plane:
       role: controller
       storage: true
       node.longhorn.io/create-default-disk: true
+    node_taints:
+      - "node.longhorn.io/storage=true:NoSchedule"
 
 etcd:
   hosts:
@@ -65,9 +69,9 @@ kube_node:
       node_labels: &worker_labels
         "node-role.kubernetes.io/worker": ""
         "node.longhorn.io/data-plane": "true"
-    mcmp5:
-      node_labels:
-        <<: *worker_labels
+    # mcmp5:
+    #   node_labels:
+    #     <<: *worker_labels
     mcmp6:
       node_labels:
         <<: *worker_labels

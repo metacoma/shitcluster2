@@ -13,45 +13,70 @@ crio_insecure_registries:
   - registry.k8s.mansion.shitcluster.io:5000
 
 etcd_data_dir: /opt/etcd
-# etcd_access_addresses: https://etcd.k8s.mansion.shitcluster.io:2379
-# etcd_client_url: https://etcd.k8s.mansion.shitcluster.io:2379
-
 
 cluster_name: &cluster_name k8s.mansion.shitcluster.io
 dns_domain: *cluster_name
 resolvconf_mode: none
+enable_nodelocaldns: false
 
 upstream_dns_servers: [ 172.25.0.2 ]
 nameservers: [ 172.24.0.2 ]
 searchdomains:
   - *cluster_name
   - mansion.shitcluster.io
-docker_options: --insecure-registry=registry.k8s.mansion.shitcluster.io
 
-kube_network_plugin: calico
 kube_network_plugin_multus: true
 
+# === Calico BGP mode (no overlay) ===
+kube_network_plugin: calico
+calico_network_backend: "bird"
+calico_ipip_mode: "Never"
+calico_vxlan_mode: "Never"
+peer_with_router: true
+nat_outgoing: false
+calico_advertise_cluster_ips: true
+global_as_num: "64512"
+
+# BGP peer с core-роутером на management VLAN
+#
+# Uses node-scope (no scope key) so Kubespray renders numAllowedLocalASNumbers
+# in the Calico BGPPeer resource. This is required because the OpenWrt Quagga
+# router (AS 64513) advertises routes learned from Calico nodes (AS 64512)
+# back to other Calico nodes with AS path "64512 i" (Quagga 1.1.1 does not
+# prepend its own AS). Without numAllowedLocalASNumbers, BIRD rejects these
+# routes as AS-path loops.
+#
+# router_id: Kubespray's peer_with_router.yml template expects this key
+#            (not peer_ip) for both BGPPeer metadata name and spec.peerIP.
+peers:
+  - router_id: "172.24.0.1"
+    as: "64513"
+    numallowedlocalasnumbers: 1
+
+# Calico: use each node's own status.hostIP as device route source address.
+# Previously used calico_node_extra_envs with per-host felix_device_route_source_address,
+# but that rendered a single static value into the DaemonSet (always mcmp2's IP),
+# causing Felix route sync failures on all other nodes.
+calico_use_default_route_src_ipaddr: true
+
+# Calico: ignore loose RPF — required for BGP routing with asymmetric paths.
+# Without this, Felix drops packets arriving on non-default interface
+# (e.g., LB traffic arriving on br-management but return path differs).
+calico_node_ignorelooserpf: true
+
+# === MetalLB controller-only (Calico bird handles all BGP) ===
+# MetalLB speaker disabled — Calico 3.18+ advertises LB IPs via BGP.
+# Single BGP daemon (Calico bird) per node: no session conflicts.
+# See: BGP_SINGLE_DAEMON_RESEARCH.md
 kube_proxy_strict_arp: true
 metallb_enabled: true
-metallb_namespace: "metallb-system"
-
-#metallb_speaker_enabled: false
+metallb_speaker_enabled: false
+metallb_controller_tolerations:
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Equal"
+    value: ""
+    effect: "NoSchedule"
 metallb_config:
-  controller:
-    nodeselector:
-      kubernetes.io/os: linux
-    tolerations:
-    - key: "node-role.kubernetes.io/control-plane"
-      operator: "Equal"
-      value: ""
-      effect: "NoSchedule"
-
-metallb_config:
-  layer2:
-    - primary-mgmt
-    - secondary-mgmt
-    - primary-public
-    - secondary-public
   address_pools:
     primary-mgmt:
       ip_range:
@@ -69,24 +94,59 @@ metallb_config:
       ip_range:
         - 172.25.1.128/25
       auto-assign: true
-#calico_advertise_service_loadbalancer_ips: "{{ metallb_config.address_pools.primary.ip_range }}"
+
+# Calico bird advertises these LB pools via the same BGP session as pod CIDR
+calico_advertise_service_loadbalancer_ips:
+  - 172.24.1.0/25
+  - 172.24.1.128/25
+  - 172.25.1.0/25
+  - 172.25.1.128/25
 
 apiserver_loadbalancer_domain_name: "api.k8s.mgmt.mansion.shitcluster.io"
 kube_vip_enabled: true
 kube_vip_controlplane_enabled: true
 kube_vip_address: 172.24.0.48
 kube_vip_arp_enabled: true
-kube_apiserver_port: 6443
 loadbalancer_apiserver:
   address: "{{ kube_vip_address }}"
   port: "{{ kube_apiserver_port }}"
 kube_vip_interface: br-management
 loadbalancer_apiserver_localhost: False
 
-# LoadBalancer for services
-kube_vip_services_enabled: false
+# kube-vip Prometheus metrics — monitor API LB health
+kube_vip_metrics_enabled: true
 
 download_run_once: True
-#download_localhost: True
 download_cache_dir: /var/tmp/kubespray_cache
 download_keep_remote_cache: True
+
+# NTP: time sync is critical for etcd consensus and certificate rotation
+ntp_enabled: true
+ntp_manage_config: true
+ntp_package: chrony
+ntp_servers:
+  - "0.pool.ntp.org iburst"
+  - "1.pool.ntp.org iburst"
+  - "2.pool.ntp.org iburst"
+  - "3.pool.ntp.org iburst"
+
+# === Kubespray add-ons ===
+
+# metrics-server: required for HPA, VPA, kubectl top
+metrics_server_enabled: true
+
+# cert-manager: automatic TLS certificate management (Let's Encrypt, Vault, self-signed)
+cert_manager_enabled: true
+
+# kubelet server certificate rotation with automatic CSR approval
+kubelet_rotate_server_certificates: true
+
+# Node Feature Discovery: auto-label nodes by hardware capabilities (NVMe, GPU, CPU features)
+node_feature_discovery_enabled: true
+
+# Gateway API CRDs: modern routing standard (native Istio support)
+gateway_api_enabled: true
+gateway_api_channel: "standard"
+
+# Separate etcd cluster for Kubernetes events — reduces load on main etcd
+etcd_events_cluster_enabled: true

@@ -23,3 +23,6 @@
 
 - name: Run and enable /cni/dhcp server
   ansible.builtin.import_playbook: macvlan_dhcp.yml
+
+- name: Create Longhorn storage network NAD
+  ansible.builtin.import_playbook: longhorn_storage_network.yml
