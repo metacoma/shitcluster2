@@ -1,4 +1,4 @@
-apiVersion: "k8s.cni.cncf.io/v1"
+apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
   name: longhorn-san
@@ -7,18 +7,19 @@ spec:
   config: |
     {
       "cniVersion": "0.3.1",
-      "type": "ipvlan",
+      "name": "longhorn-san",
+      "type": "macvlan",
       "master": "br-san",
-      "mode": "l2",
+      "mode": "bridge",
       "ipam": {
-        "type": "host-local",
-        "ranges": [
-          [
-            {
-              "subnet": "172.27.0.0/16",
-              "gateway": "172.27.0.1"
-            }
-          ]
+        "type": "whereabouts",
+        "range": "172.27.0.0/16",
+        "range_start": "172.27.1.1",
+        "range_end": "172.27.1.254",
+        "exclude": [
+          "172.27.0.10/32",
+          "172.27.0.11/32",
+          "172.27.0.15/32"
         ]
       }
     }

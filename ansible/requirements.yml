@@ -5,3 +5,5 @@ collections:
    type: git
    version: v2.31.0
 #   version: v2.29.0
+ - name: kubernetes.core
+   version: "6.5.0"
