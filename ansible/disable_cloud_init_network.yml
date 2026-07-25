@@ -1,6 +1,5 @@
 ---
-# Prevent MAAS/cloud-init from overwriting /etc/netplan/50-cloud-init.yaml
-# after Ansible applies the correct network configuration.
+# Prevent MAAS/cloud-init from overwriting netplan after Ansible applies configuration.
 #
 # Problem: MAAS writes its own network config via curtin into
 # /etc/cloud/cloud.cfg.d/50-curtin-networking.cfg. On commissioning,
@@ -8,7 +7,9 @@
 # from this file and overwrites Ansible's bridges/VLANs.
 #
 # Solution: Disable cloud-init network management entirely so that
-# Ansible (network.yml) becomes the single source of truth for netplan.
+# Ansible (network.yml / mrlesmithjr.netplan) becomes the single
+# source of truth for netplan via /etc/netplan/50-netplan.yaml
+# (NOT cloud-init's 50-cloud-init.yaml which cloud-init can wipe).
 - hosts: all
   become: true
   gather_facts: false
@@ -25,7 +26,7 @@
           # Managed by Ansible — do not edit.
           # Disables cloud-init network rendering so that Ansible
           # (network.yml / mrlesmithjr.netplan) remains the single
-          # source of truth for /etc/netplan/50-cloud-init.yaml.
+          # source of truth for /etc/netplan/50-netplan.yaml.
           network:
             config: disabled
 
@@ -35,9 +36,8 @@
         state: absent
 
     - name: Remove cached network config from cloud-init instance data
-      ansible.builtin.file:
-        path: "/var/lib/cloud/instances/{{ ansible_default_ipv4.address | default('gtqndg') }}/network-config.json"
-        state: absent
+      ansible.builtin.shell:
+        cmd: rm -f /var/lib/cloud/instances/*/network-config.json
       failed_when: false
 
     - name: Clear cloud-init network cache to prevent re-rendering
