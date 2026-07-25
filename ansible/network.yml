@@ -34,5 +34,5 @@
   roles:
     - role: mrlesmithjr.netplan
       netplan_enabled: true
-      netplan_config_file: /etc/netplan/50-cloud-init.yaml
+      netplan_config_file: /etc/netplan/50-netplan.yaml
 
