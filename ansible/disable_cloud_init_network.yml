@@ -47,8 +47,6 @@
       changed_when: true
 
     - name: Create sentinel file so cloud-init clean is idempotent
-      ansible.builtin.copy:
-        dest: /var/lib/cloud/instances/.network-cleaned
-        content: ""
-        force: false
-        mode: '0644'
+      ansible.builtin.shell:
+        cmd: mkdir -p /var/lib/cloud/instances && touch /var/lib/cloud/instances/.network-cleaned
+      failed_when: false
