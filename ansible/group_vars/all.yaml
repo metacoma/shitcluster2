@@ -138,9 +138,6 @@ metrics_server_enabled: true
 # cert-manager: automatic TLS certificate management (Let's Encrypt, Vault, self-signed)
 cert_manager_enabled: true
 
-# kubelet server certificate rotation with automatic CSR approval
-kubelet_rotate_server_certificates: true
-
 # Node Feature Discovery: auto-label nodes by hardware capabilities (NVMe, GPU, CPU features)
 node_feature_discovery_enabled: true
 
