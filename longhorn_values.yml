@@ -8,6 +8,7 @@ defaultSettings:
   #systemManagedComponentsNodeSelector: "node.longhorn.io/data-plane:true"
   #systemManagedComponentsNodeSelector: "storage:True"
   defaultDataPath: /storage
+  storageNetwork: "longhorn-system/longhorn-san"
 
 longhornUI:
   replicas: 1
