@@ -37,9 +37,21 @@ longhorn: longhorn_nad
 	helm repo add longhorn https://charts.longhorn.io
 	helm repo update longhorn
 	helm upgrade --install --version $(LONGHORN_CHART_VERSION) --create-namespace longhorn longhorn/longhorn --namespace $(LONGHORN_NS) --values=longhorn_values.yml --wait
+	kubectl apply -f - <<'EOF'
+apiVersion: longhorn.io/v1beta2
+kind: BackupTarget
+metadata:
+  name: default
+  namespace: $(LONGHORN_NS)
+spec:
+  backupTargetURL: ""
+  credentialSecret: ""
+  pollInterval: "0m"
+EOF
 
 .PHONY: longhorn_nad
 longhorn_nad:
+	kubectl create namespace $(LONGHORN_NS) --dry-run=client -o yaml | kubectl apply -f -
 	kubectl apply -f longhorn-san-nad.yaml
 
 longhorn_confirm_disable:

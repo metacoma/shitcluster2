@@ -41,15 +41,26 @@ all:
 kube_control_plane:
   hosts:
     mcmp2:
+      node_labels:
+        role: controller
+        storage: "true"
+        node.longhorn.io/create-default-disk: "true"
+      node_taints:
+        - "node.longhorn.io/storage=true:NoSchedule"
     mcmp3:
+      node_labels:
+        role: controller
+        storage: "true"
+        node.longhorn.io/create-default-disk: "true"
+      node_taints:
+        - "node.longhorn.io/storage=true:NoSchedule"
     mcmp9:
-  vars:
-    node_labels:
-      role: controller
-      storage: "true"
-      node.longhorn.io/create-default-disk: "true"
-    node_taints:
-      - "node.longhorn.io/storage=true:NoSchedule"
+      node_labels:
+        role: controller
+        storage: "true"
+        node.longhorn.io/create-default-disk: "true"
+      node_taints:
+        - "node.longhorn.io/storage=true:NoSchedule"
 
 etcd:
   hosts:
