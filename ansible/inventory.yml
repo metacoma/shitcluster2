@@ -46,8 +46,8 @@ kube_control_plane:
   vars:
     node_labels:
       role: controller
-      storage: true
-      node.longhorn.io/create-default-disk: true
+      storage: "true"
+      node.longhorn.io/create-default-disk: "true"
     node_taints:
       - "node.longhorn.io/storage=true:NoSchedule"
 

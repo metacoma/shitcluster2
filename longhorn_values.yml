@@ -19,10 +19,10 @@ service:
   manager:
     type: ClusterIP
 
-# Prometheus ServiceMonitor
+# Prometheus ServiceMonitor (disabled — no Prometheus Operator)
 metrics:
   serviceMonitor:
-    enabled: true
+    enabled: false
     interval: "30s"
 
 # StorageClass defaults
@@ -46,7 +46,6 @@ preUpgradeChecker:
 defaultSettings:
   # === Node & Disk ===
   createDefaultDiskLabeledNodes: true
-  systemManagedComponentsNodeSelector: "storage:true"
   defaultDataPath: /storage
   storageNetwork: "longhorn-system/longhorn-san"
 
@@ -58,7 +57,7 @@ defaultSettings:
   replicaDiskSoftAntiAffinity: "true"
 
   # === Taints & Tolerations ===
-  taintToleration: "node.longhorn.io/storage=true:NoSchedule,node-role.kubernetes.io/control-plane=:NoSchedule"
+  taintToleration: "node.longhorn.io/storage=true:NoSchedule"
 
   # === CPU Reservation ===
   guaranteedInstanceManagerCPU: "12"
@@ -91,7 +90,7 @@ defaultSettings:
   autoSalvage: "true"
 
   # === CSI & Scheduling ===
-  csiStorageCapacityTracking: "true"
+  csiStorageCapacityTracking: "false"
 
   # === Cleanup ===
   orphanAutoDeletion: "replica-data;instance"

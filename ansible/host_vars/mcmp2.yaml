@@ -33,7 +33,6 @@ netplan_configuration:
         addresses:
         - "172.26.0.11/16"
         dhcp4: false
-
       br-san:
         interfaces: [ enp8s0.403 ]
         addresses:
