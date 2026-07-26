@@ -33,7 +33,7 @@ calico_network_backend: "bird"
 calico_ipip_mode: "Never"
 calico_vxlan_mode: "Never"
 peer_with_router: true
-nat_outgoing: false
+nat_outgoing: true
 calico_advertise_cluster_ips: true
 global_as_num: "64512"
 
