@@ -40,10 +40,10 @@ netplan_configuration:
           interfaces: [ enp3s0.402 ]
           addresses:
           - "172.26.0.10/16"
-        br-san:
-          interfaces: [ enp3s0.403 ]
-          addresses:
-          - "172.27.0.10/16"
+      br-san:
+        interfaces: [ enp3s0.403 ]
+        addresses:
+        - "172.27.0.10/16"
         br-internet:
           interfaces: [ enp3s0.404 ]
           mtu: 1230

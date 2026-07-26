@@ -36,7 +36,7 @@ all:
       access_ip: *mcmp9_ip
   vars:
     ansible_user: ubuntu
-    ansible_ssh_private_key_file: /home/ubuntu/shitcluster/maas/maas_id
+    ansible_ssh_private_key_file: /workspace/maas_key
 
 kube_control_plane:
   hosts:
@@ -46,8 +46,8 @@ kube_control_plane:
   vars:
     node_labels:
       role: controller
-      storage: true
-      node.longhorn.io/create-default-disk: true
+      storage: "true"
+      node.longhorn.io/create-default-disk: "true"
     node_taints:
       - "node.longhorn.io/storage=true:NoSchedule"
 

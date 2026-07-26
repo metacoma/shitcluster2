@@ -29,9 +29,9 @@ netplan_configuration:
         - "172.26.0.15/16"
         interfaces: [ enp2s0.402 ]
       br-san:
+        interfaces: [ enp2s0.403 ]
         addresses:
         - "172.27.0.15/16"
-        interfaces: [ enp2s0.403 ]
 
       br-internet:
         interfaces: [ enp2s0.404 ]
