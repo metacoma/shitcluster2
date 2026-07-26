@@ -70,11 +70,11 @@ defaultSettings:
   autoCleanupSystemGeneratedSnapshot: "true"
   autoCleanupRecurringJobBackupSnapshot: "true"
   snapshotMaxCount: "250"
-  removeSnapshotsDuringFilesystemTrim: "enabled"
+  removeSnapshotsDuringFilesystemTrim: "true"
   freezeFilesystemForSnapshot: "true"
 
   # === Data Integrity ===
-  snapshotDataIntegrity: "enable"
+  snapshotDataIntegrity: "enabled"
   snapshotDataIntegrityImmediateCheckAfterSnapshotCreation: "false"
   snapshotDataIntegrityCronjob: "0 2 * * *"
   fastReplicaRebuildEnabled: "true"
@@ -82,11 +82,11 @@ defaultSettings:
   # === Replica Rebuild ===
   concurrentReplicaRebuildPerNodeLimit: "2"
   replicaReplenishmentWaitInterval: "60"
-  offlineReplicaRebuilding: "enabled"
+  offlineReplicaRebuilding: "true"
 
   # === Node Management ===
   disableSchedulingOnCordonedNode: "true"
-  nodeDrainPolicy: "mark-host-unschedulable-and-evict-workload"
+  nodeDrainPolicy: "block-for-eviction"
   autoSalvage: "true"
 
   # === CSI & Scheduling ===
