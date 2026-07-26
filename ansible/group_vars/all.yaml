@@ -64,13 +64,12 @@ calico_use_default_route_src_ipaddr: true
 # (e.g., LB traffic arriving on br-management but return path differs).
 calico_node_ignorelooserpf: true
 
-# === MetalLB controller-only (Calico bird handles all BGP) ===
-# MetalLB speaker disabled — Calico 3.18+ advertises LB IPs via BGP.
-# Single BGP daemon (Calico bird) per node: no session conflicts.
-# See: BGP_SINGLE_DAEMON_RESEARCH.md
+# === MetalLB L2 mode ===
+# MetalLB speaker handles LB IP announcement via ARP/NDP (Layer 2).
+# Replaces previous BGP-based scheme (Calico bird) which was unreliable.
 kube_proxy_strict_arp: true
 metallb_enabled: true
-metallb_speaker_enabled: false
+metallb_speaker_enabled: true
 metallb_controller_tolerations:
   - key: "node-role.kubernetes.io/control-plane"
     operator: "Equal"
@@ -94,13 +93,11 @@ metallb_config:
       ip_range:
         - 172.25.1.128/25
       auto-assign: true
-
-# Calico bird advertises these LB pools via the same BGP session as pod CIDR
-calico_advertise_service_loadbalancer_ips:
-  - 172.24.1.0/25
-  - 172.24.1.128/25
-  - 172.25.1.0/25
-  - 172.25.1.128/25
+  layer2:
+    - primary-mgmt
+    - secondary-mgmt
+    - primary-public
+    - secondary-public
 
 apiserver_loadbalancer_domain_name: "api.k8s.mgmt.mansion.shitcluster.io"
 kube_vip_enabled: true
