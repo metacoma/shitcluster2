@@ -1,0 +1,127 @@
+---
+# Playbook: Import sops-encrypted secrets into HashiCorp Vault KV v2
+#
+# Parameters (pass via -e or group_vars):
+#   age_key_file   - Path to age private key file (default: ~/.config/sops/age/keys.txt)
+#   sops_file      - Path to the sops-encrypted YAML file
+#   vault_addr     - Vault address (e.g. http://172.25.1.4:8200)
+#   vault_token    - Vault auth token
+#   vault_mount    - KV v2 mount point (default: kv)
+#
+# Usage:
+#   ansible-playbook sops_to_vault.yml \
+#     -e age_key_file=/path/to/keys.txt \
+#     -e sops_file=/path/to/vault_data.sops.yaml \
+#     -e vault_addr=http://172.25.1.4:8200 \
+#     -e vault_token=hvs.xxx
+#
+# Dependencies:
+#   - sops (CLI)
+#   - age (CLI)
+#   - ansible-core >= 2.14
+#   - community.hashi_vault collection
+#   - python3-yaml (PyYAML)
+
+- name: Import sops secrets into HashiCorp Vault
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    age_key_file: "{{ lookup('env', 'SOPS_AGE_KEY_FILE') | default('~/.config/sops/age/keys.txt') }}"
+    sops_file: "secrets/vault_data.sops.yaml"
+    vault_addr: "http://127.0.0.1:8200"
+    vault_token: ""
+    vault_mount: "kv"
+    validate_certs: false
+    strip_prefix: ""
+
+  tasks:
+    # ------------------------------------------------------------------
+    # Step 1: Decrypt sops file
+    # ------------------------------------------------------------------
+    - name: Decrypt sops file
+      ansible.builtin.shell: |
+        export SOPS_AGE_KEY_FILE="{{ age_key_file | expanduser }}"
+        sops --decrypt "{{ sops_file }}"
+      register: sops_decrypted
+      no_log: true
+      changed_when: false
+
+    - name: Parse decrypted YAML
+      ansible.builtin.set_fact:
+        sops_data: "{{ sops_decrypted.stdout | from_yaml }}"
+      no_log: true
+
+    # ------------------------------------------------------------------
+    # Step 2: Flatten sops tree into list of (vault_path, leaf_data) pairs
+    # Writes decrypted JSON to a temp file, then runs flatten_secrets.py
+    # ------------------------------------------------------------------
+    - name: Write decrypted sops data to temp file
+      ansible.builtin.copy:
+        content: "{{ sops_data | to_json }}"
+        dest: "/tmp/_sops_decrypted.json"
+        mode: "0600"
+      register: _tmp_json
+      no_log: true
+
+    - name: Flatten sops secret tree into vault paths
+      ansible.builtin.shell: |
+        python3 {{ playbook_dir }}/flatten_secrets.py --strip-prefix {{ strip_prefix }} < {{ _tmp_json.dest }}
+      register: _flatten_result
+      changed_when: false
+      no_log: true
+
+    - name: Parse flattened vault paths
+      ansible.builtin.set_fact:
+        vault_paths: "{{ _flatten_result.stdout | from_json }}"
+      no_log: true
+
+    - name: Clean up temp file
+      ansible.builtin.file:
+        path: "{{ _tmp_json.dest }}"
+        state: absent
+      no_log: true
+
+    # ------------------------------------------------------------------
+    # Step 3: Enable KV v2 secrets engine (idempotent)
+    # Uses vault_write to POST to sys/mounts/{path}
+    # ------------------------------------------------------------------
+    - name: Enable KV v2 secrets engine
+      community.hashi_vault.vault_write:
+        url: "{{ vault_addr }}"
+        token: "{{ vault_token }}"
+        path: "sys/mounts/{{ vault_mount }}"
+        data:
+          type: "kv"
+          options:
+            version: "2"
+        validate_certs: "{{ validate_certs }}"
+      ignore_errors: true
+      no_log: true
+
+    # ------------------------------------------------------------------
+    # Step 4: Write each vault path to Vault KV v2
+    # ------------------------------------------------------------------
+    - name: Write secrets to Vault KV v2
+      community.hashi_vault.vault_kv2_write:
+        url: "{{ vault_addr }}"
+        token: "{{ vault_token }}"
+        engine_mount_point: "{{ vault_mount }}"
+        path: "{{ item.path }}"
+        data: "{{ item.data }}"
+        validate_certs: "{{ validate_certs }}"
+      loop: "{{ vault_paths }}"
+      loop_control:
+        label: "{{ item.path }}"
+      no_log: true
+
+    # ------------------------------------------------------------------
+    # Step 5: Summary
+    # ------------------------------------------------------------------
+    - name: Display import summary
+      ansible.builtin.debug:
+        msg: >
+          Successfully imported {{ vault_paths | length }} secret path(s)
+          into {{ vault_addr }}/{{ vault_mount }}/
+      changed_when: false
