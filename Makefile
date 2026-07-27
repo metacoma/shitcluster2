@@ -62,6 +62,9 @@ longhorn_uninstall: longhorn_confirm_disable
 
 .PHONY: argocd argocd_uninstall
 
+VAULT_CHART_VERSION=0.34.0
+VAULT_CHART_COMMIT=8e4887ccec5dec2bf7168a229aaf5dc06e708ab6
+
 .PHONY: root_token
 root_token:
 	@$(VAULT_TOKEN_CMD); echo
@@ -116,8 +119,8 @@ update_kubeconfig:
 
 .PHONY: vault vault_install
 vault_install:
-	helm repo add hashicorp https://helm.releases.hashicorp.com
-	helm upgrade --install --namespace $(VAULT_NS) --create-namespace --install vault hashicorp/vault -f vault_values.yml
+	git clone --depth 1 --branch v$(VAULT_CHART_VERSION) https://github.com/hashicorp/vault-helm.git /tmp/vault-helm
+	helm upgrade --install --namespace $(VAULT_NS) --create-namespace vault /tmp/vault-helm -f vault_values.yml
 
 .ONESHELL: vault
 vault: vault_install
