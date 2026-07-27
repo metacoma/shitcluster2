@@ -33,26 +33,26 @@ kubernetes: kubernetes_reset
 LONGHORN_CHART_VERSION=1.11.3
 
 .PHONY: longhorn
-longhorn: longhorn_nad
-	helm repo add longhorn https://charts.longhorn.io
-	helm repo update longhorn
-	helm upgrade --install --version $(LONGHORN_CHART_VERSION) --create-namespace longhorn longhorn/longhorn --namespace $(LONGHORN_NS) --values=longhorn_values.yml --wait
-	kubectl apply -f - <<'EOF'
-apiVersion: longhorn.io/v1beta2
-kind: BackupTarget
-metadata:
-  name: default
-  namespace: $(LONGHORN_NS)
-spec:
-  backupTargetURL: ""
-  credentialSecret: ""
-  pollInterval: "0m"
-EOF
+longhorn: update_kubeconfig longhorn_ansible longhorn_nad longhorn_helm
+
+.PHONY: longhorn_ansible
+longhorn_ansible:
+	@echo "==> Running longhorn node preparation (apt, iSCSI) via ansible"
+	$(MAKE) -C ansible longhorn 2>&1 | tee longhorn_ansible.log
 
 .PHONY: longhorn_nad
 longhorn_nad:
+	@echo "==> Creating longhorn-system namespace and SAN NAD"
 	kubectl create namespace $(LONGHORN_NS) --dry-run=client -o yaml | kubectl apply -f -
 	kubectl apply -f longhorn-san-nad.yaml
+
+.PHONY: longhorn_helm
+longhorn_helm:
+	@echo "==> Installing Longhorn $(LONGHORN_CHART_VERSION) via Helm"
+	helm repo add longhorn https://charts.longhorn.io
+	helm repo update longhorn
+	helm upgrade --install --version $(LONGHORN_CHART_VERSION) --create-namespace longhorn longhorn/longhorn --namespace $(LONGHORN_NS) --values=longhorn_values.yml --wait
+	kubectl apply -f longhorn-backuptarget.yaml
 
 longhorn_confirm_disable:
 	kubectl -n $(LONGHORN_NS) patch settings.longhorn.io deleting-confirmation-flag   --type='json'   -p='[{"op":"replace","path":"/value","value":"true"}]'
@@ -112,7 +112,7 @@ argocd_password:
 
 .PHONY: update_kubeconfig
 update_kubeconfig:
-	ssh mcmp2.mgmt.mansion.shitcluster.io 'sudo cat /root/.kube/config' > ~/.kube/config
+	ssh mcmp2.mgmt.mansion.shitcluster.io 'sudo cat /etc/kubernetes/admin.conf' > ~/.kube/config
 
 .PHONY: vault vault_install
 vault_install:
