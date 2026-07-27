@@ -112,9 +112,7 @@ argocd_password:
 
 .PHONY: update_kubeconfig
 update_kubeconfig:
-	ssh mcmp2.mgmt.mansion.shitcluster.io 'sudo cat /root/.kube/config' > ~/.kube/config
-	ssh mcmp2.mgmt.mansion.shitcluster.io 'sudo cat /etc/kubernetes/pki/ca.crt' > /tmp/k8s-ca.crt
-	python3 $(CURDIR)/patch_kubeconfig.py
+	ssh mcmp2.mgmt.mansion.shitcluster.io 'sudo cat /etc/kubernetes/admin.conf' > ~/.kube/config
 
 .PHONY: vault vault_install
 vault_install:
