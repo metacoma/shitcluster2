@@ -4,6 +4,7 @@ global:
       operator: "Equal"
       value: ""
       effect: "NoSchedule"
+
 ui:
   enabled: true
   serviceType: "LoadBalancer"
@@ -14,12 +15,19 @@ injector:
     node-role.kubernetes.io/worker: ""
 
 server:
+  # Use latest stable version for homelab (v2.0.3 based on research)
+  image:
+    repository: hashicorp/vault
+    tag: "2.0.3"
+  
   nodeSelector:
     node-role.kubernetes.io/worker: ""
+  
   dataStorage:
     size: 4Gi
+    
   ingress:
-    enabled: true 
+    enabled: true
     annotations:
       nginx.ingress.kubernetes.io/ssl-redirect: "true"
       cert-manager.io/cluster-issuer: letsencrypt
@@ -32,7 +40,7 @@ server:
       - hosts:
           - vault-api.mansion.metacoma.org
         secretName: mansion-wildcard
-    
+
   postStart:
     - sh
     - -c
@@ -42,12 +50,12 @@ server:
       vault status > /tmp/status.txt
       if ! vault status >/dev/null 2>&1; then
         echo "Initializing Vault..."
+        # Homelab: minimal shares and threshold for ease of use
         vault operator init -key-shares=1 -key-threshold=1 > /tmp/init.txt
         UNSEAL_KEY=$(grep 'Unseal Key 1:' /tmp/init.txt | awk '{print $4}')
         vault operator unseal $UNSEAL_KEY
         echo "Root token:"
         grep 'Initial Root Token:' /tmp/init.txt | awk '{print $4}'
-        # rm /tmp/init.txt
       fi
       vault status >> /tmp/status.txt
       echo "Done..."
