@@ -80,7 +80,7 @@ argocd_prepare:
 	export VAULT_TOKEN="$$( $(VAULT_TOKEN_CMD) )" && \
 	export SOPS_PUBLIC_KEY="$(SOPS_PUBLIC_KEY)" && \
 	export SOPS_AGE_SECRET_KEY="$(SOPS_AGE_SECRET_KEY)" && \
-	source ansible/.venv/bin/activate && \
+	. ansible/.venv/bin/activate && \
 	ansible-playbook -i ansible/inventory.yml ansible/argocd-vault-setup.yml \
 		-e sops_public_key="$$SOPS_PUBLIC_KEY" \
 		-e sops_age_secret_key="$$SOPS_AGE_SECRET_KEY"
@@ -92,7 +92,7 @@ sops_to_vault:
 	export VAULT_TOKEN="$$( $(VAULT_TOKEN_CMD) )" && \
 	export SOPS_AGE_KEY_FILE=$(SOPS_AGE_KEY_FILE) && \
 	cd ansible/sops-to-vault && \
-	source ../.venv/bin/activate && \
+	. ../.venv/bin/activate && \
 	ansible-playbook sops_to_vault.yml \
 		-e vault_addr="$$VAULT_ADDR" \
 		-e vault_token="$$VAULT_TOKEN" \
@@ -189,6 +189,7 @@ vault_secrets:
 
 
 .ONESHELL: vault
+.SHELLFLAGS := -ec
 vault: vault_install
 	echo "Waiting for /tmp/init.txt to appear in vault-0..."
 	while ! kubectl exec -n $(VAULT_NS) vault-0 -- test -f /tmp/init.txt 2>/dev/null; do
