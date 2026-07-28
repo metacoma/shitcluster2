@@ -9,7 +9,10 @@
     "syncPolicy": {
       "automated": {
       	"selfHeal": true
-      }
+      },
+      "syncOptions": [
+        "SkipDryRunOnMissingResource=true"
+      ]
     },
     "destination": {
       "namespace": "default",
