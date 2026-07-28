@@ -7,13 +7,15 @@
 #   vault_addr     - Vault address (e.g. http://172.25.1.4:8200)
 #   vault_token    - Vault auth token
 #   vault_mount    - KV v2 mount point (default: kv)
+#   strip_prefix   - Top-level key to strip from vault paths (default: "")
 #
 # Usage:
 #   ansible-playbook sops_to_vault.yml \
 #     -e age_key_file=/path/to/keys.txt \
 #     -e sops_file=/path/to/vault_data.sops.yaml \
 #     -e vault_addr=http://172.25.1.4:8200 \
-#     -e vault_token=hvs.xxx
+#     -e vault_token=hvs.xxx \
+#     -e strip_prefix=vault_data
 #
 # Dependencies:
 #   - sops (CLI)
@@ -35,6 +37,7 @@
     vault_mount: "kv"
     validate_certs: false
     strip_prefix: ""
+    vault_write_count: 0
 
   tasks:
     # ------------------------------------------------------------------
@@ -54,37 +57,7 @@
       no_log: true
 
     # ------------------------------------------------------------------
-    # Step 2: Flatten sops tree into list of (vault_path, leaf_data) pairs
-    # Writes decrypted JSON to a temp file, then runs flatten_secrets.py
-    # ------------------------------------------------------------------
-    - name: Write decrypted sops data to temp file
-      ansible.builtin.copy:
-        content: "{{ sops_data | to_json }}"
-        dest: "/tmp/_sops_decrypted.json"
-        mode: "0600"
-      register: _tmp_json
-      no_log: true
-
-    - name: Flatten sops secret tree into vault paths
-      ansible.builtin.shell: |
-        python3 {{ playbook_dir }}/flatten_secrets.py --strip-prefix {{ strip_prefix }} < {{ _tmp_json.dest }}
-      register: _flatten_result
-      changed_when: false
-      no_log: true
-
-    - name: Parse flattened vault paths
-      ansible.builtin.set_fact:
-        vault_paths: "{{ _flatten_result.stdout | from_json }}"
-      no_log: true
-
-    - name: Clean up temp file
-      ansible.builtin.file:
-        path: "{{ _tmp_json.dest }}"
-        state: absent
-      no_log: true
-
-    # ------------------------------------------------------------------
-    # Step 3: Enable KV v2 secrets engine (idempotent)
+    # Step 2: Enable KV v2 secrets engine (idempotent)
     # Uses vault_write to POST to sys/mounts/{path}
     # ------------------------------------------------------------------
     - name: Enable KV v2 secrets engine
@@ -101,27 +74,28 @@
       no_log: true
 
     # ------------------------------------------------------------------
-    # Step 4: Write each vault path to Vault KV v2
+    # Step 3: Recursively walk sops tree and write to Vault
+    # Uses include_tasks with write_secret.yml for recursion.
+    # Each level collects leaf values (non-mapping) and writes them
+    # as one Vault KV path. Nested dicts recurse deeper.
     # ------------------------------------------------------------------
     - name: Write secrets to Vault KV v2
-      community.hashi_vault.vault_kv2_write:
-        url: "{{ vault_addr }}"
-        token: "{{ vault_token }}"
-        engine_mount_point: "{{ vault_mount }}"
-        path: "{{ item.path }}"
-        data: "{{ item.data }}"
-        validate_certs: "{{ validate_certs }}"
-      loop: "{{ vault_paths }}"
+      ansible.builtin.include_tasks: write_secret.yml
+      loop: "{{ sops_data | dict2items }}"
       loop_control:
-        label: "{{ item.path }}"
+        loop_var: _entry
+      vars:
+        _entry_key: "{{ _entry.key }}"
+        _entry_value: "{{ _entry.value }}"
+        _current_path: ""
       no_log: true
 
     # ------------------------------------------------------------------
-    # Step 5: Summary
+    # Step 4: Summary
     # ------------------------------------------------------------------
     - name: Display import summary
       ansible.builtin.debug:
         msg: >
-          Successfully imported {{ vault_paths | length }} secret path(s)
+          Successfully imported {{ vault_write_count }} secret path(s)
           into {{ vault_addr }}/{{ vault_mount }}/
       changed_when: false

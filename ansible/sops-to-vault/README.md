@@ -5,16 +5,17 @@ Automatically decrypts a [SOPS](https://github.com/getsops/sops)-encrypted YAML 
 ## How It Works
 
 ```
-sops-encrypted YAML → sops --decrypt → flatten_secrets.py → Vault KV v2
+sops-encrypted YAML → sops --decrypt → recursive include_tasks → Vault KV v2
 ```
 
 1. **Decrypt** — `sops --decrypt` with age key
-2. **Flatten** — recursively walks the YAML tree, collecting leaf values at each level into separate Vault paths
-3. **Import** — writes each path to Vault via `community.hashi_vault.vault_kv2_write`
+2. **Walk** — recursively walks the YAML tree using `include_tasks` with `write_secret.yml`
+3. **Classify** — at each level, separates leaf values (`is not mapping`) from nested dicts (`is mapping`)
+4. **Import** — writes leaf values to Vault via `community.hashi_vault.vault_kv2_write`
 
 ### Path Mapping
 
-The SOPS top-level key `vault_data` is stripped (via `--strip-prefix`), so:
+The SOPS top-level key `vault_data` is stripped (via `strip_prefix`), so:
 
 | SOPS Key | Vault Path | KCL Reference |
 |---|---|---|
@@ -60,5 +61,5 @@ ansible-playbook sops_to_vault.yml \
 | File | Purpose |
 |---|---|
 | `sops_to_vault.yml` | Main playbook |
-| `flatten_secrets.py` | Recursive YAML → Vault path flattener |
+| `write_secret.yml` | Recursive task: classify + write + recurse |
 | `requirements.yml` | Ansible Galaxy collection deps |
