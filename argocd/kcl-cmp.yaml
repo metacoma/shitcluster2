@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kcl-plugin-config
+  namespace: argocd
+data:
+  # Sometimes, the ArgoCD runs the kcl run command twice simultaneously,
+  # leading to a race condition in the usage of files inside the
+  # KCL_CACHE_PATH and KCL_PKG_PATH directories.
+  plugin.yaml: |
+    apiVersion: argoproj.io/v1alpha1
+    kind: ConfigManagementPlugin
+    metadata:
+      name: kcl
+    spec:
+      version: v1.0
+      generate:
+        command: ["sh", "-c"]
+        args:
+          - |
+            export KCL_CACHE_PATH=/tmp
+            export KCL_PKG_PATH=/tmp
+            tempfile=$(mktemp)
+            kcl run -q -o $tempfile  > /dev/null 2>&1
+            error=$?
+            if [ $error -eq 0 ]; then
+              cat $tempfile | vals eval -f -
+              rm $tempfile
+            fi
+            exit $error

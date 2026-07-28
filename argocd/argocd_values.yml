@@ -1,0 +1,28 @@
+global:
+  nodeSelector:
+    node-role.kubernetes.io/worker: ""
+
+repoServer:
+  env:
+    - name: ARGOCD_EXEC_TIMEOUT
+      value: 10m
+
+  envFrom:
+    - secretRef:
+        name: argocd-vault-plugin-credentials
+
+configs:
+  params:
+    server.insecure: true
+    controller.self.heal.timeout.seconds: 180
+
+
+server:
+  service:
+    type: 'LoadBalancer'
+    loadBalancerIP: 172.25.1.2  # Specific IP address from the primary pool
+
+redis:
+  image:
+    repository: docker.io/library/redis
+    tag: 8.2.2-alpine
