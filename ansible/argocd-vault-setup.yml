@@ -29,16 +29,16 @@
   gather_facts: false
 
   vars:
-    vault_addr: "{{ lookup('env', 'VAULT_ADDR') | default('http://127.0.0.1:8200') }}"
-    vault_token: "{{ lookup('env', 'VAULT_TOKEN') | default('') }}"
+    vault_addr: "{{ lookup('env', 'VAULT_ADDR') or 'http://127.0.0.1:8200' }}"
+    vault_token: "{{ lookup('env', 'VAULT_TOKEN') or '' }}"
     vault_mount: "kv"
     vault_mount_description: "KV storage for ArgoCD"
     validate_certs: false
     sops_public_key: ""
     sops_age_secret_key: ""
     argocd_token_renewable: false
-    vault_k8s_service_addr: "{{ lookup('env', 'VAULT_K8S_SERVICE_ADDR') | default('http://vault.vault:8200') }}"
-    argocd_namespace: "{{ lookup('env', 'ARGOCD_NAMESPACE') | default('argocd') }}"
+    vault_k8s_service_addr: "{{ lookup('env', 'VAULT_K8S_SERVICE_ADDR') or 'http://vault.vault:8200' }}"
+    argocd_namespace: "{{ lookup('env', 'ARGOCD_NAMESPACE') or 'argocd' }}"
 
   tasks:
     # ------------------------------------------------------------------
@@ -137,6 +137,11 @@
           renewable: "{{ argocd_token_renewable }}"
         validate_certs: "{{ validate_certs }}"
       register: vault_token_result
+
+    # Extract token to a separate var so no_log doesn't hide it
+    - name: Store ArgoCD Vault token
+      ansible.builtin.set_fact:
+        argocd_vault_token: "{{ vault_token_result.data.auth.client_token }}"
       no_log: true
 
     # ------------------------------------------------------------------
@@ -147,7 +152,7 @@
       ansible.builtin.shell: |
         kubectl create secret generic argocd-vault-credentials \
           --from-literal=VAULT_ADDR="{{ vault_k8s_service_addr }}" \
-          --from-literal=VAULT_TOKEN="{{ vault_token_result.data.token_id }}" \
+          --from-literal=VAULT_TOKEN="{{ argocd_vault_token }}" \
           -n {{ argocd_namespace }} \
           --dry-run=client -o yaml | kubectl apply -f -
       no_log: true
@@ -163,7 +168,7 @@
           --from-literal=AVP_TYPE=vault \
           --from-literal=AVP_AUTH_TYPE=token \
           --from-literal=VAULT_ADDR="{{ vault_k8s_service_addr }}" \
-          --from-literal=VAULT_TOKEN="{{ vault_token_result.data.token_id }}" \
+          --from-literal=VAULT_TOKEN="{{ argocd_vault_token }}" \
           -n {{ argocd_namespace }} \
           --dry-run=client -o yaml | kubectl apply -f -
       no_log: true
