@@ -50,6 +50,10 @@ fix_dns:
 reset:
 	make ansible_run ANSIBLE_ARGS="-vv --become --become-user=root kubernetes_reset.yml"
 
+argocd_setup: ansible_requirements
+	$(ACTIVATE)
+	$(ANSIBLE_PLAY_CMD) argocd-vault-setup.yml
+
 
 terminate_ns:
 	kubectl get ns $(NS) -o json | jq 'del(.spec.finalizers)' | kubectl replace --raw "/api/v1/namespaces/longhorn-system/finalize" -f -

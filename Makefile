@@ -71,8 +71,7 @@ root_token:
 
 .PHONY: argocd_prepare
 argocd_prepare:
-	$(TOFU_DOCKER) init
-	$(TOFU_DOCKER) apply -auto-approve
+	$(MAKE) -C ansible argocd_setup
 
 
 argocd_uninstall:
@@ -121,6 +120,17 @@ update_kubeconfig:
 vault_install:
 	git clone --depth 1 --branch v$(VAULT_CHART_VERSION) https://github.com/hashicorp/vault-helm.git /tmp/vault-helm
 	helm upgrade --install --namespace $(VAULT_NS) --create-namespace vault /tmp/vault-helm -f vault_values.yml
+
+
+vault_secrets:
+	ROOT_TOKEN=$$(kubectl exec -n $(VAULT_NS) vault-0 -- sh -c "grep 'Initial Root Token:' /tmp/init.txt | awk '{print \$$4}'")
+	UNSEAL_KEY=$$(kubectl exec -n $(VAULT_NS) vault-0 -- sh -c "grep 'Unseal Key 1:' /tmp/init.txt | awk '{print \$$4}'")
+	echo "ROOT_TOKEN=$$ROOT_TOKEN"
+	echo "UNSEAL_KEY=$$UNSEAL_KEY"
+	kubectl -n $(VAULT_NS) create secret generic $(VAULT_BOOTSTRAP_CONFIGMAP) \
+	  --from-literal=root_token="$$ROOT_TOKEN" \
+	  --from-literal=unseal_key="$$UNSEAL_KEY"
+
 
 .ONESHELL: vault
 vault: vault_install
