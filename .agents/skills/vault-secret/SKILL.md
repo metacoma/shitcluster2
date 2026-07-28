@@ -2,9 +2,9 @@
 name: vault-secret
 description: >
   Add a new secret to the cluster: encrypts it with SOPS, commits to a feature
-  branch, creates a PR, and imports it into HashiCorp Vault KV v2.
+  branch, creates a GitHub PR, and imports it into HashiCorp Vault KV v2.
   Use when the user asks to add, create, or update a secret (password, token,
-  API key, SSH key, certificate, etc.).
+  API key, SSH key, certificate, etc.) for the shitcluster.
   NOT for reading existing secrets or modifying non-secret configuration.
 ---
 
@@ -12,31 +12,39 @@ description: >
 
 Add a secret to the cluster's secret pipeline: SOPS-encrypted YAML → Git PR → Vault KV v2.
 
-## Secret pipeline
+## Secret pipeline overview
 
 ```
-secrets/vault_data.sops.yaml  --(sops --set)-->  encrypted YAML
-       |                                              |
-       +--(git commit + PR)--------------------------+
-                                                      |
-                                          make sops_to_vault
-                                                      |
-                                              Vault KV v2
-                                                      |
-                                    KCL: ref+vault://kv/<section>#<key>
+User provides: vault_path, key_name, value
+       |
+       v
+sops --set '["vault_data"]["<vault_path>"]["<key_name>"] "<value>"' secrets/vault_data.sops.yaml
+       |
+       v
+git commit → feature branch → GitHub PR
+       |
+       v
+make sops_to_vault  (imports ALL secrets from SOPS file into Vault KV v2)
+       |
+       v
+Vault KV v2: kv/<vault_path>#<key_name>
+       |
+       v
+KCL reference: ref+vault://kv/<vault_path>#<key_name>
 ```
 
 ## Input parameters
 
 Ask the user for these three values:
 
-1. **Vault path** — the section under `kv/` (e.g. `grafana`, `nats`, `vpn_nl`, `monitoring`)
-2. **Key name** — the secret key within that section (e.g. `adminPassword`, `root_user`, `ssh_host`)
-3. **Value** — the plaintext secret value
+1. **vault_path** — the section name under `kv/` (e.g. `grafana`, `nats`, `vpn_nl`, `monitoring`, `my_service`)
+2. **key_name** — the secret key within that section (e.g. `adminPassword`, `root_user`, `ssh_host`)
+3. **value** — the plaintext secret value
 
-The full Vault path will be `kv/<vault_path>#<key_name>`.
-The SOPS YAML path will be `vault_data.<vault_path>.<key_name>`.
-The KCL reference will be `ref+vault://kv/<vault_path>#<key_name>`.
+The resulting paths will be:
+- **SOPS YAML path:** `vault_data.<vault_path>.<key_name>`
+- **Vault KV path:** `kv/<vault_path>#<key_name>`
+- **KCL reference:** `ref+vault://kv/<vault_path>#<key_name>`
 
 ## Steps
 
