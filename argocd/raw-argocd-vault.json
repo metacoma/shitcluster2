@@ -21,7 +21,7 @@
       "plugin": {
         "name": "argocd-vault-plugin"
       },
-      "repoURL": "https://github.com/metacoma/shitcluster",
+      "repoURL": "https://github.com/metacoma/shitcluster2",
       "targetRevision": "master"
     }
   }
