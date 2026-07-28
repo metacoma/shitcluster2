@@ -26,7 +26,7 @@ kubernetes_reset:
 	$(MAKE) -C ansible reset 2>&1 | tee kubespray_reset.log
 
 .PHONY: kubespray
-kubernetes: kubernetes_reset
+kubernetes:
 	@echo "==> Running kubespray in ansible/"
 	$(MAKE) -C ansible kubernetes 2>&1 | tee kubespray.log
 
