@@ -67,6 +67,7 @@ manifests = [
     istio.helm.gateway, values = {
       nodeSelector = _config.nodeSelector.worker
       global.proxy.clusterDomain = _config.k8s_domain
+      image.tag = istio.helm.gateway.app_version
       service = {
         type = "LoadBalancer"
         loadBalancerIP = istio.gateway_lb
