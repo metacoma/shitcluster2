@@ -35,6 +35,94 @@ cp .env.sample .env
 
 > **Note:** `SOPS_PUBLIC_KEY` and `SOPS_AGE_SECRET_KEY` are only needed for `make argocd_prepare`. They are passed as ansible variables, not stored in Vault.
 
+## Dependencies
+
+### Host tools (management machine)
+
+| Tool | Used by | Install |
+|------|---------|---------|
+| `make` | All targets | `apt install make` |
+| `docker` | `KUBECTL_RUN`, `HELM_RUN` | Docker Engine |
+| `kubectl` | Direct calls (update_kubeconfig, longhorn_helm, argocd_*) | `apt install kubectl` or any method |
+| `helm` | `longhorn_helm`, `vault_install` | `apt install helm` or any method |
+| `ssh` | `update_kubeconfig` | `apt install openssh-client` |
+| `git` | `vault_install` (clone vault-helm) | `apt install git` |
+| `python3` | Ansible venv | `apt install python3 python3-venv` |
+| `sops` | `sops_to_vault` (decrypt secrets) | `curl -sL https://github.com/getsops/sops/releases/download/v3.8.1/sops-v3.8.1.linux.amd64 -o /usr/local/bin/sops && chmod +x /usr/local/bin/sops` |
+| `age` | SOPS key management (via sops) | `apt install age` |
+
+### Docker images (pulled on-demand)
+
+| Image | Used by | Version |
+|-------|---------|---------|
+| `alpine/kubectl` | `KUBECTL_RUN` | `$(KUBECTL_VERSION)` from `.env` |
+| `alpine/helm` | `HELM_RUN` | `$(HELM_VERSION)` from `.env` |
+
+### Python packages (ansible/.venv)
+
+Installed automatically via `make -C ansible ansible_requirements`:
+
+| Package | Version | Used by |
+|---------|---------|---------|
+| `ansible` | 11.13.0 | All playbooks |
+| `cryptography` | 46.0.7 | community.crypto module |
+| `jmespath` | 1.1.0 | Jinja2 json_query templating |
+| `netaddr` | 1.3.0 | ansible.utils.ipaddr |
+| `distlib` | — | Virtual environment management |
+
+### Ansible collections
+
+Installed automatically via `ansible-galaxy install -r requirements.yml`:
+
+| Collection | Version | Used by |
+|------------|---------|---------|
+| `kubernetes_sigs.kubespray` | v2.31.0 | Kubernetes installation |
+| `kubernetes.core` | 6.5.0 | K8s modules |
+| `community.hashi_vault` | latest | Vault API calls (argocd-vault-setup, sops_to_vault) |
+| `ansible.utils` | latest | IP/network utilities |
+| `community.crypto` | latest | Cryptographic operations |
+| `community.general` | latest | General-purpose modules |
+| `ansible.netcommon` | latest | Network modules |
+| `ansible.posix` | latest | System modules (sysctl, etc.) |
+| `community.docker` | latest | Docker modules |
+| `community.library_inventory_filtering_v1` | latest | Inventory filtering |
+
+### Ansible roles
+
+| Role | Used by |
+|------|---------|
+| `mrlesmithjr.netplan` | Network configuration (network.yml) |
+
+### On-cluster tools (installed during deployment)
+
+| Tool | Installed by | Purpose |
+|------|-------------|---------|
+| Calico CNI | Kubespray | Pod networking |
+| Whereabouts CNI | longhorn_storage_network | IPAM for macvlan (Longhorn SAN) |
+| Longhorn | longhorn_helm | Block storage |
+| HashiCorp Vault | vault_install | Secret management |
+| ArgoCD | argocd | GitOps continuous delivery |
+| KCL (in ArgoCD repo-server) | argocd (kcl-cmp.yaml) | Manifest generation |
+| AVP (argocd-vault-plugin) | argocd (cmp-plugin) | Vault secret injection |
+| vals | argocd (kcl-cmp plugin) | Secret reference evaluation |
+
+### Pre-flight check
+
+```bash
+# Check all required host tools
+for cmd in make docker kubectl helm ssh git python3 sops age; do
+    if ! command -v $cmd &>/dev/null; then
+        echo "MISSING: $cmd"
+    else
+        echo "OK: $cmd"
+    fi
+done
+
+# Check Docker images are available (will pull on first use)
+docker pull alpine/kubectl:$(grep KUBECTL_VERSION .env | cut -d= -f2)
+docker pull alpine/helm:$(grep HELM_VERSION .env | cut -d= -f2)
+```
+
 ## Deployment Flow
 
 ### Step 1: Reset cluster nodes
