@@ -1,0 +1,7 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ConfigManagementPlugin
+metadata:
+  name: avp
+spec:
+  generate:
+    command: ["argocd-vault-plugin"]

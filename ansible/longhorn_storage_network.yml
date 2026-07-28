@@ -68,17 +68,4 @@
         EOF
       changed_when: false
 
-    - name: Create default BackupTarget (required by Longhorn v1.11+ for volume creation)
-      ansible.builtin.shell: |
-        kubectl apply -f - <<'EOF'
-        apiVersion: longhorn.io/v1beta2
-        kind: BackupTarget
-        metadata:
-          name: default
-          namespace: longhorn-system
-        spec:
-          backupTargetURL: ""
-          credentialSecret: ""
-          pollInterval: "0m"
-        EOF
-      changed_when: false
+    # BackupTarget moved to Makefile longhorn_helm (applied after Longhorn CRDs are ready)

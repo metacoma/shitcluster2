@@ -33,18 +33,17 @@ kubernetes: kubernetes_reset
 LONGHORN_CHART_VERSION=1.11.3
 
 .PHONY: longhorn
-longhorn: update_kubeconfig longhorn_ansible longhorn_nad longhorn_helm
+longhorn: update_kubeconfig longhorn_ansible longhorn_storage_network longhorn_helm
 
 .PHONY: longhorn_ansible
 longhorn_ansible:
 	@echo "==> Running longhorn node preparation (apt, iSCSI) via ansible"
 	$(MAKE) -C ansible longhorn 2>&1 | tee longhorn_ansible.log
 
-.PHONY: longhorn_nad
-longhorn_nad:
-	@echo "==> Creating longhorn-system namespace and SAN NAD"
-	kubectl create namespace $(LONGHORN_NS) --dry-run=client -o yaml | kubectl apply -f -
-	kubectl apply -f longhorn-san-nad.yaml
+.PHONY: longhorn_storage_network
+longhorn_storage_network:
+	@echo "==> Installing Whereabouts CNI and creating Longhorn SAN NAD"
+	$(MAKE) -C ansible ansible_run ANSIBLE_ARGS="-vv --become --become-user=root longhorn_storage_network.yml" 2>&1 | tee longhorn_storage_network.log
 
 .PHONY: longhorn_helm
 longhorn_helm:
@@ -69,10 +68,36 @@ VAULT_CHART_COMMIT=8e4887ccec5dec2bf7168a229aaf5dc06e708ab6
 root_token:
 	@$(VAULT_TOKEN_CMD); echo
 
+VAULT_ADDR = http://172.25.1.4:8200
+SOPS_AGE_KEY_FILE = ~/.config/sops/age/keys.txt
+
 .PHONY: argocd_prepare
 argocd_prepare:
-	$(MAKE) -C ansible argocd_setup
+	@echo "==> Creating argocd namespace"
+	@kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+	@echo "==> Setting up Vault for ArgoCD"
+	@export VAULT_ADDR=$(VAULT_ADDR) && \
+	export VAULT_TOKEN="$$( $(VAULT_TOKEN_CMD) )" && \
+	export SOPS_PUBLIC_KEY="$(SOPS_PUBLIC_KEY)" && \
+	export SOPS_AGE_SECRET_KEY="$(SOPS_AGE_SECRET_KEY)" && \
+	source ansible/.venv/bin/activate && \
+	ansible-playbook -i ansible/inventory.yml ansible/argocd-vault-setup.yml \
+		-e sops_public_key="$$SOPS_PUBLIC_KEY" \
+		-e sops_age_secret_key="$$SOPS_AGE_SECRET_KEY"
 
+.PHONY: sops_to_vault
+sops_to_vault:
+	@echo "==> Importing SOPS secrets into Vault"
+	@export VAULT_ADDR=$(VAULT_ADDR) && \
+	export VAULT_TOKEN="$$( $(VAULT_TOKEN_CMD) )" && \
+	export SOPS_AGE_KEY_FILE=$(SOPS_AGE_KEY_FILE) && \
+	cd ansible/sops-to-vault && \
+	source ../.venv/bin/activate && \
+	ansible-playbook sops_to_vault.yml \
+		-e vault_addr="$$VAULT_ADDR" \
+		-e vault_token="$$VAULT_TOKEN" \
+		-e sops_file="$(CURDIR)/secrets/vault_data.sops.yaml" \
+		-e strip_prefix=vault_data
 
 argocd_uninstall:
 	$(HELM_RUN) "\
@@ -80,6 +105,8 @@ argocd_uninstall:
 	"
 
 argocd:
+	@echo "==> Creating cmp-plugin configmap"
+	@kubectl -n argocd create configmap cmp-plugin --from-file=avp.yaml=./argocd/cmp-plugin-avp.yaml --dry-run=client -o yaml | kubectl apply -f -
 	$(HELM_RUN) "\
 		helm repo add argocd https://argoproj.github.io/argo-helm && \
 		helm repo update argocd && \
@@ -88,24 +115,53 @@ argocd:
 	$(KUBECTL_RUN) '\
 		kubectl apply -f ./argocd/kcl-cmp.yaml && \
 		kubectl -n argocd patch deploy/argocd-repo-server -p "`cat ./argocd/patch-argocd-repo-server.yaml`" && \
-		while :; do \
-			kubectl -n argocd get pods -l app.kubernetes.io/name=argocd-repo-server --field-selector=status.phase=Running | grep argocd-repo-server || { \
-				echo -n .; \
-				sleep 1; \
-				continue; \
-			}; \
-			break; \
-		done ; \
+		kubectl -n argocd rollout restart deploy/argocd-repo-server && \
 		kubectl wait --for=condition=ready pod -n argocd -l app.kubernetes.io/name=argocd-repo-server --timeout=600s \
 	'
 
 .PHONY: argocd_infra_app
 argocd_infra_app:
 	$(KUBECTL_RUN) 'cat argocd/infra.json | kubectl apply -f -'
+	@echo "==> Enabling auto-sync for infra"
+	@kubectl -n argocd patch application infra --type merge -p '{"spec":{"syncPolicy":{"automated":{"prune":true,"selfHeal":true,"allowEmpty":true}}}}'
+	@echo "==> Refreshing infra application"
+	@kubectl -n argocd annotate application infra argocd.argoproj.io/refresh=hard --overwrite
 
 .PHONY: argocd_workloads_app
 argocd_workloads_app:
 	$(KUBECTL_RUN) 'cat argocd/workloads.json | kubectl apply -f -'
+	@echo "==> Enabling auto-sync for workloads"
+	@kubectl -n argocd patch application workloads --type merge -p '{"spec":{"syncPolicy":{"automated":{"prune":true,"selfHeal":true,"allowEmpty":true}}}}'
+	@echo "==> Refreshing workloads application"
+	@kubectl -n argocd annotate application workloads argocd.argoproj.io/refresh=hard --overwrite
+
+.PHONY: argocd_wait_infra
+argocd_wait_infra:
+	@echo "==> Waiting for infra to sync..."
+	@while true; do \
+		STATUS=$$(kubectl -n argocd get application infra -o jsonpath='{.status.sync.status}' 2>/dev/null); \
+		HEALTH=$$(kubectl -n argocd get application infra -o jsonpath='{.status.health.status}' 2>/dev/null); \
+		echo "  infra: $$STATUS / $$HEALTH"; \
+		if [ "$$STATUS" = "Synced" ] && [ "$$HEALTH" = "Healthy" ]; then \
+			echo "  infra synced and healthy"; \
+			break; \
+		fi; \
+		sleep 10; \
+	done
+
+.PHONY: argocd_wait_workloads
+argocd_wait_workloads:
+	@echo "==> Waiting for workloads to sync..."
+	@while true; do \
+		STATUS=$$(kubectl -n argocd get application workloads -o jsonpath='{.status.sync.status}' 2>/dev/null); \
+		HEALTH=$$(kubectl -n argocd get application workloads -o jsonpath='{.status.health.status}' 2>/dev/null); \
+		echo "  workloads: $$STATUS / $$HEALTH"; \
+		if [ "$$STATUS" = "Synced" ] && [ "$$HEALTH" = "Healthy" ]; then \
+			echo "  workloads synced and healthy"; \
+			break; \
+		fi; \
+		sleep 10; \
+	done
 
 .PHONY: argocd_password
 argocd_password:
@@ -166,5 +222,5 @@ vault_uninstall:
 	helm uninstall --namespace $(VAULT_NS) vault --wait
 	kubectl -n $(VAULT_NS) delete pvc --all
 
-flow: kubernetes update_kubeconfig argocd argocd_workloads_app
-	echo DONE
+flow: kubernetes update_kubeconfig longhorn vault sops_to_vault argocd_prepare argocd argocd_infra_app argocd_workloads_app
+	@echo DONE
