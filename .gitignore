@@ -3,3 +3,4 @@ secrets/**/
 !secrets/*.sops.*
 !secrets/**/*.sops.*
 vault_secret.yml
+.env
