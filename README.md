@@ -386,7 +386,7 @@ make flow
 ```
 
 Runs all steps in order:
-1. `kubernetes` (reset + install)
+1. `kubernetes` (install only; use `make kubernetes_reset` separately if needed)
 2. `update_kubeconfig`
 3. `longhorn`
 4. `vault`
