@@ -1,0 +1,43 @@
+# shitcluster — Homelab Kubernetes GitOps Repository
+
+shitcluster is a GitOps project for managing a homelab Kubernetes cluster. It uses Ansible (Kubespray) for base infrastructure, KCL for manifest generation, ArgoCD for continuous delivery, and SOPS+age with HashiCorp Vault for secret management.
+
+## Quick Links
+
+- [AGENTS.md](AGENTS.md) — Instructions for AI coding agents (stack, commands, conventions, boundaries)
+- [README.md](README.md) — Full deployment guide with prerequisites, step-by-step flow, and troubleshooting
+- [LLM_REPO_MAP.md](LLM_REPO_MAP.md) — Detailed repository map for LLM context
+
+## Stack
+
+- **Kubernetes**: Kubespray v2.31.0 with CRI-O, Calico BGP (no overlay), MetalLB L2, kube-vip
+- **GitOps**: ArgoCD with KCL CMP plugin + argocd-vault-plugin (AVP)
+- **Secrets**: SOPS/age encryption → HashiCorp Vault KV v2 → AVP injection at render time
+- **Storage**: Longhorn 1.11.3 with Whereabouts CNI for macvlan SAN networking
+- **Networking**: Istio 1.28.1, Knative 1.20.0, SSH tunnels via nicolaka/netshoot
+- **Observability**: VictoriaMetrics + Grafana + Loki + Tempo + Vector
+- **Messaging**: NATS 2.12.4
+
+## Deployment
+
+Full deployment: `make flow` (runs kubernetes → longhorn → vault → sops_to_vault → argocd_prepare → argocd → apps)
+
+See [README.md](README.md) for the complete 9-step deployment guide with verification commands.
+
+## Repository Structure
+
+- `ansible/` — Kubespray playbooks, network config, Longhorn node preparation
+- `gitops/infra/` — KCL infrastructure module (Tekton, SOPS namespace)
+- `gitops/workloads/` — KCL workload module (apps, monitoring, networking)
+- `gitops/workloads/apps/` — Per-application KCL files
+- `tmux/` — KCL tmux session configurations
+- `secrets/` — SOPS-encrypted secrets (age key management)
+- `argocd/` — ArgoCD Helm values, CMP plugins, Application definitions
+- `vault-data/` — Terraform/OpenTofu Vault configuration
+
+## Key Files
+
+- `Makefile` — Orchestration entry point (all deployment targets)
+- `ansible/group_vars/all.yaml` — Cluster-wide Ansible variables (Calico, MetalLB, kube-vip)
+- `gitops/workloads/config.k` — Shared KCL config (namespaces, Helm versions, Vault refs)
+- `tmux/schema.k` — KCL schema for tmux session definitions

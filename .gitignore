@@ -4,3 +4,4 @@ secrets/**/
 !secrets/**/*.sops.*
 vault_secret.yml
 .env
+AGENTS.override.md
