@@ -1,5 +1,5 @@
 ---
-# Playbook: Configure Vault for ArgoCD and create K8s secret
+# Playbook: Configure Vault for ArgoCD and create K8s secrets
 # (replaces Terraform argocd/terraform/main.tf)
 #
 # Creates:
@@ -8,7 +8,8 @@
 #   3. SOPS/Age keys at kv/sops/gitops
 #   4. Vault policy 'argocd-vals' (read everywhere)
 #   5. Vault token with that policy
-#   6. K8s Secret 'argocd-vault-credentials' in namespace 'argocd'
+#   6. K8s Secret 'argocd-vault-credentials' (for vals/KCL plugin)
+#   7. K8s Secret 'argocd-vault-plugin-credentials' (for AVP plugin)
 #
 # Usage:
 #   ansible-playbook argocd-vault-setup.yml \
@@ -20,9 +21,9 @@
 #
 # Dependencies:
 #   - community.hashi_vault collection
-#   - kubectl (for K8s secret)
+#   - kubectl (for K8s secrets)
 
-- name: Setup Vault for ArgoCD and create K8s secret
+- name: Setup Vault for ArgoCD and create K8s secrets
   hosts: localhost
   connection: local
   gather_facts: false
@@ -140,11 +141,27 @@
 
     # ------------------------------------------------------------------
     # Step 6: Create K8s Secret 'argocd-vault-credentials'
-    # Uses kubectl directly (no kubernetes.core dependency needed)
+    # Used by vals/KCL plugin sidecar in argocd-repo-server
     # ------------------------------------------------------------------
     - name: Create argocd-vault-credentials K8s secret
       ansible.builtin.shell: |
         kubectl create secret generic argocd-vault-credentials \
+          --from-literal=VAULT_ADDR="{{ vault_k8s_service_addr }}" \
+          --from-literal=VAULT_TOKEN="{{ vault_token_result.data.token_id }}" \
+          -n {{ argocd_namespace }} \
+          --dry-run=client -o yaml | kubectl apply -f -
+      no_log: true
+
+    # ------------------------------------------------------------------
+    # Step 7: Create K8s Secret 'argocd-vault-plugin-credentials'
+    # Used by AVP (argocd-vault-plugin) and KCL/vals plugin sidecars.
+    # Replaces the hardcoded vault_secret.yml.
+    # ------------------------------------------------------------------
+    - name: Create argocd-vault-plugin-credentials K8s secret
+      ansible.builtin.shell: |
+        kubectl create secret generic argocd-vault-plugin-credentials \
+          --from-literal=AVP_TYPE=vault \
+          --from-literal=AVP_AUTH_TYPE=token \
           --from-literal=VAULT_ADDR="{{ vault_k8s_service_addr }}" \
           --from-literal=VAULT_TOKEN="{{ vault_token_result.data.token_id }}" \
           -n {{ argocd_namespace }} \
@@ -163,3 +180,4 @@
           - "Policy 'argocd-vals' created"
           - "Vault token created"
           - "K8s Secret 'argocd-vault-credentials' created in namespace '{{ argocd_namespace }}'"
+          - "K8s Secret 'argocd-vault-plugin-credentials' created in namespace '{{ argocd_namespace }}'"
