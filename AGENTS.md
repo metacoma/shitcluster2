@@ -1,92 +1,82 @@
-# AGENTS.md
+# shitcluster
 
-## Purpose
+GitOps repository for homelab Kubernetes cluster. Ansible (Kubespray) for base infra, KCL for GitOps manifests, ArgoCD for delivery, SOPS+age for secrets, Vault for runtime secret injection.
 
-This file contains instructions for local coding agents working in the `shitcluster` repository. It is designed to provide essential context regarding the repository structure, development workflow, and validation procedures to ensure consistent and safe contributions.
+## Stack
 
-## Repository overview
+- Ansible 11 + Kubespray v2.31.0 (CRI-O, Calico BGP, MetalLB L2, kube-vip)
+- KCL (Kubernetes Configuration Language) for manifest generation
+- ArgoCD with KCL CMP plugin + AVP (argocd-vault-plugin)
+- HashiCorp Vault (Helm 0.34.0) + SOPS/age encryption
+- Longhorn 1.11.3 (block storage with Whereabouts CNI)
+- Istio 1.28.1, Knative 1.20.0, NATS 2.12.4
+- VictoriaMetrics + Grafana + Loki + Tempo + Vector (observability)
 
-`shitcluster` is a GitOps project for managing a Kubernetes cluster. It employs a layered approach to infrastructure and application management:
-- **Base Infrastructure**: Automated via Ansible (using Kubespray for Kubernetes, alongside network and storage setup).
-- **Cluster Services**: Orchestrated via a root `Makefile` using Helm and Terraform/OpenTofu (e.g., Vault, ArgoCD, Longhorn).
-- **Continuous Delivery**: Managed by ArgoCD.
-- **Configuration Management**: Uses KCL (Kubernetes Configuration Language) to define both infrastructure (`gitops/infra`) and workloads (`gitops/workloads`), as well as tmux session configurations (`tmux/`).
-- **Secret Management**: Secrets are encrypted using SOPS.
+## Repository structure
 
-## Repository map
-
-```text
-ansible/                - Base infrastructure automation (Kubespray, network, storage).
-ansible/group_vars/     - Ansible group variables.
-ansible/host_vars/      - Ansible host-specific variables.
-gitops/                - KCL-based GitOps configurations.
-gitops/infra/          - Infrastructure definitions (KCL modules).
-gitops/workloads/      - Application definitions (KCL modules).
-gitops/workloads/apps/ - Source KCL files for individual applications.
-tmux/                  - KCL definitions for generating tmux session configurations.
-tmux/sessions/         - Individual tmux session definitions in KCL.
-secrets/               - Encrypted secrets managed with SOPS.
-vault-data/            - HashiCorp Vault configuration (Terraform/OpenTofu).
-misc/                  - General utility scripts (e.g., Calico fixes).
-Makefile               - Top-level orchestration for bootstrapping the cluster and services.
-main.k                 - Root KCL entrypoint, primarily for rendering tmux sessions.
-LLM_REPO_MAP.md        - Detailed map and guide for LLM agents.
+```
+ansible/                — Kubespray, network, Longhorn node prep
+ansible/group_vars/     — Cluster-wide Ansible vars (Calico, MetalLB, kube-vip)
+ansible/host_vars/      — Per-node Ansible vars
+gitops/infra/           — KCL infra module (Tekton, SOPS secrets namespace)
+gitops/workloads/       — KCL workloads module (apps, monitoring, networking)
+gitops/workloads/apps/  — Per-app KCL files (*.k). Add new apps here.
+tmux/                   — KCL tmux session configs (schema.k defines types)
+tmux/sessions/          — Individual tmux session definitions
+secrets/                — SOPS-encrypted YAML (age key in .sops.yaml)
+vault-data/             — Terraform/OpenTofu for Vault (rarely used)
+argocd/                 — ArgoCD Helm values, CMP plugins, Application JSON
+Makefile                — Orchestration: kubernetes, longhorn, vault, argocd
 ```
 
-## Development workflow
+## Commands
 
-### KCL Changes
-1. **Analyze Patterns**: Inspect existing patterns in `gitops/workloads/apps/` or `tmux/`.
-2. **Schema Adherence**: Follow established schemas, particularly those in `tmux/schema.k`.
-3. **Minimal Edits**: Modify the smallest possible source files (e.g., `gitops/workloads/config.k` or specific app `.k` files).
-4. **Avoid Manual Manifest Edits**: Do not edit generated YAML manifests directly; always modify the KCL source.
+- `make kubernetes` — Install K8s via Kubespray (does NOT reset; run `make kubernetes_reset` first if needed)
+- `make longhorn` — Node prep + Whereabouts CNI + Longhorn Helm + BackupTarget
+- `make vault` — Install Vault Helm, wait for init, extract root token
+- `make sops_to_vault` — Decrypt SOPS secrets, import to Vault KV v2
+- `make argocd_prepare` — Create Vault namespace, policies, tokens, K8s secrets
+- `make argocd` — Install ArgoCD Helm + KCL CMP + AVP plugin
+- `make argocd_infra_app` / `make argocd_workloads_app` — Create ArgoCD Applications
+- `make flow` — Full deployment pipeline (all steps in order)
+- `make update_kubeconfig` — Fetch kubeconfig from mcmp2 via SSH
+- `make -C ansible ansible_lint` — Lint Ansible playbooks
+- `make -C ansible ansible_ping` — Ping cluster nodes
+- `cd gitops/workloads && kcl run .` — Validate/render workload manifests
+- `cd gitops/infra && kcl run .` — Validate/render infra manifests
+- `kcl fmt .` — Format KCL files
 
-### Ansible Changes
-1. **Linting**: Run `make -C ansible ansible_lint` to verify playbook syntax and style.
-2. **Testing**: Use `make -C ansible ansible_ping` to verify connectivity to nodes.
+## KCL conventions
 
-### General Workflow
-1. **Context First**: Read `AGENTS.md` and `LLM_REPO_MAP.md`.
-2. **Verification**: Run `git diff --check` before committing.
-3. **Minimalism**: Prioritize minimal, focused changes over broad refactorings.
+- Never edit generated YAML — always modify the `.k` source file
+- New apps go in `gitops/workloads/apps/` as a single `.k` file exporting `manifests`
+- Import the app in `gitops/workloads/main.k` and add to `resources` list
+- Shared config lives in `gitops/workloads/config.k` (namespaces, Helm versions, Vault refs)
+- Vault secret references use format: `ref+vault://kv/<path>#<key>`
+- Follow existing patterns in `gitops/workloads/apps/` — do not invent new schemas
+- Tmux sessions use schema from `tmux/schema.k` (Tmux, Window, Env types)
 
-## Validation and build commands
+## Ansible conventions
 
-### Cluster Orchestration (via root Makefile)
-- `make kubernetes`: Full cluster setup including reset and installation via Ansible.
-- `make vault`: Installs and initializes HashiCorp Vault.
-- `make argocd`: Installs and configures ArgoCD.
-- `make longhorn`: Installs Longhorn storage.
+- Playbooks run against `ansible/inventory.yml` (nodes: mcmp2–mcmp9, mcmp5 excluded)
+- Cluster vars in `ansible/group_vars/all.yaml` (Calico BGP, MetalLB pools, kube-vip)
+- Use `make -C ansible ansible_run ANSIBLE_ARGS="..."` for ad-hoc playbook runs
+- Python deps in `ansible/.venv/` (created via `make -C ansible ansible_requirements`)
 
-### Ansible Validation
-- `make -C ansible ansible_lint`: Lints Ansible playbooks.
-- `make -C ansible ansible_ping`: Pings Kubernetes nodes.
+## Boundaries
 
-### KCL Tooling (if installed)
-- **Validate Infrastructure**: Navigate to `gitops/infra` and run `kcl run .`
-- **Validate Workloads**: Navigate to `gitops/workloads` and run `kcl run .`
-- `kcl fmt .`: Formats KCL files in the current directory.
-- `kcl run .`: Executes KCL to validate and generate output.
+- NEVER commit plaintext secrets — use SOPS (`secrets/*.sops.yaml` only)
+- NEVER edit `kcl.mod.lock` (auto-generated)
+- NEVER edit `gitops/infra/tekton-pipelines.yml` (template/partially generated)
+- NEVER edit files marked `generated` or `managed by`
+- NEVER run `make kubernetes_reset` without explicit user confirmation (destroys cluster state)
+- KCL changes affect live cluster via ArgoCD — verify against cluster state before committing
+- `.env` contains secrets — never commit or print its contents
 
-## Safety rules
+## Git workflow
 
-### Files to avoid editing manually
-- `kcl.mod.lock`: Automatically generated lock files.
-- `gitops/infra/tekton-pipelines.yml`: Treated as a template/partially generated.
-- Any file explicitly marked as `generated` or `managed by` an external process.
-
-### Infrastructure Safety
-- **Cluster Access**: Changing KCL infrastructure files may impact the live cluster via ArgoCD. Verify changes against the current cluster state before applying.
-- **Secrets**: Do not commit plaintext secrets. Use SOPS for encrypting files in the `secrets/` directory.
-- **Privileged Operations**: Be cautious with `make kubernetes` or `make kubernetes_reset` as these can destroy existing cluster states.
-
-## Contribution conventions
-
-### Git Conventions
-- **Branching**: Create descriptive feature branches (e.g., `feat/add-rabbitmq-config`).
-- **Commits**: Focus on atomic commits.
-- **Verification**: Always run `git diff --check` and review the diff carefully before finalizing changes.
-
-### KCL Conventions
-- **Modularity**: Place new application definitions in `gitops/workloads/apps/` as separate `.k` files.
-- **Configuration**: Centralize shared configurations in `gitops/workloads/config.k` where appropriate.
+- Branch format: `type/short-description` (feat, fix, chore, docs)
+- Conventional commits: `feat:`, `fix:`, `chore:`, `docs:`
+- Atomic commits — one logical change per commit
+- Run `git diff --check` before committing
+- Squash merge on PR
