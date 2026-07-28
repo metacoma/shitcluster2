@@ -9,7 +9,7 @@ k = shell.kubernetes_ns(argocd_ns)
 sessions = [
   schema.Tmux {
   name = "argocd"
-  workdir = "/home/ubuntu/shitcluster/shitcluster"
+  workdir = "/home/ubuntu/shitcluster2/shitcluster2"
   env = {
     EDITOR = "nvim"
   }

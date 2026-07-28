@@ -1,4 +1,4 @@
-import .tmux.sessions.shitcluster as shitcluster
+import .tmux.sessions.shitcluster2 as shitcluster2
 import .tmux.sessions.ssh_tunnels as ssh_tunnels
 import .tmux.sessions.bird as bird
 import .tmux.sessions.argocd as argocd
@@ -9,7 +9,7 @@ import manifests
 
 
 manifests.yaml_stream([
-  tmuxp.render(shitcluster.session)
+  tmuxp.render(shitcluster2.session)
   tmuxp.renders(ssh_tunnels.sessions)
   tmuxp.renders(bird.sessions)
   tmuxp.renders(argocd.sessions)

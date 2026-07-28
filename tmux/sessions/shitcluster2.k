@@ -2,7 +2,7 @@ import tmux.schema as schema
 import yaml
 import file
 
-name = "shitcluster"
+name = "shitcluster2"
 
 domain = "mansion.shitcluster.io"
 
@@ -26,7 +26,7 @@ make_etcd_endpoinds = lambda hosts: [str] -> str {
 
 session = schema.Tmux {
   name = name
-  workdir = "~/shitcluster/repo"
+  workdir = "~/shitcluster2/repo"
   windows = [
      schema.Window {
         name: "*gitops"

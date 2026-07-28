@@ -2,11 +2,11 @@
 
 ## Purpose
 
-This file contains instructions for local coding agents working in the `shitcluster` repository. It is designed to provide essential context regarding the repository structure, development workflow, and validation procedures to ensure consistent and safe contributions.
+This file contains instructions for local coding agents working in the `shitcluster2` repository. It is designed to provide essential context regarding the repository structure, development workflow, and validation procedures to ensure consistent and safe contributions.
 
 ## Repository overview
 
-`shitcluster` is a GitOps project for managing a Kubernetes cluster. It employs a layered approach to infrastructure and application management:
+`shitcluster2` is a GitOps project for managing a Kubernetes cluster. It employs a layered approach to infrastructure and application management:
 - **Base Infrastructure**: Automated via Ansible (using Kubespray for Kubernetes, alongside network and storage setup).
 - **Cluster Services**: Orchestrated via a root `Makefile` using Helm and Terraform/OpenTofu (e.g., Vault, ArgoCD, Longhorn).
 - **Continuous Delivery**: Managed by ArgoCD.

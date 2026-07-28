@@ -11,7 +11,7 @@ k = shell.kubernetes_ns(monitoring.namespace)
 sessions = [
   schema.Tmux {
   name = "alertmanager"
-  workdir = "/home/ubuntu/shitcluster/shitcluster"
+  workdir = "/home/ubuntu/shitcluster2/shitcluster2"
 
   windows = [
      schema.Window {

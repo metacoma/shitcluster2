@@ -6,7 +6,7 @@ It describes the current repository structure and should be used as context befo
 
 ## Repository purpose
 
-The repository is a GitOps project (named "shitcluster") for managing a Kubernetes cluster. It uses KCL for defining infrastructure and workload configurations, Ansible for base node/cluster setup, and ArgoCD for continuous delivery. It also includes configurations for tmux sessions via KCL.
+The repository is a GitOps project (named "shitcluster2") for managing a Kubernetes cluster. It uses KCL for defining infrastructure and workload configurations, Ansible for base node/cluster setup, and ArgoCD for continuous delivery. It also includes configurations for tmux sessions via KCL.
 
 ## High-level layout
 
