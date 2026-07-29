@@ -59,10 +59,3 @@ netplan_configuration:
         mtu: 1230
         id: 404
         link: "enp6s0"
-
-
-node_labels:
-  node.longhorn.io/create-default-disk: "config"
-
-node_annotations:
-  longhorn.io/default-disk-config: '{"allowScheduling": false}'
