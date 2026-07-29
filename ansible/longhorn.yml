@@ -30,3 +30,8 @@
       community.general.modprobe:
         name: iscsi_tcp
         state: present
+
+    - name: Ensure dm_crypt kernel module is loaded
+      community.general.modprobe:
+        name: dm_crypt
+        state: present

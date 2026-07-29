@@ -47,7 +47,6 @@ defaultSettings:
   # === Node & Disk ===
   createDefaultDiskLabeledNodes: true
   defaultDataPath: /storage
-  storageNetwork: "longhorn-system/longhorn-san"
 
   # === Replication & Scheduling ===
   defaultReplicaCount: "2"
@@ -105,6 +104,8 @@ defaultSettings:
   v2DataEngine: "false"
 
   # === Storage Network (Multus) ===
+  # Requires: NAD longhorn-system/longhorn-san (macvlan on br-san, 172.27.0.0/16)
+  # Applied BEFORE Longhorn install via ansible/longhorn_storage_network.yml
   storageNetwork: "longhorn-system/longhorn-san"
 
 longhornUI:
