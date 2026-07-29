@@ -81,7 +81,6 @@ defaultSettings:
   # === Replica Rebuild ===
   concurrentReplicaRebuildPerNodeLimit: "2"
   replicaReplenishmentWaitInterval: "60"
-  offlineReplicaRebuilding: "true"
 
   # === Node Management ===
   disableSchedulingOnCordonedNode: "true"
@@ -105,8 +104,55 @@ defaultSettings:
 
   # === Storage Network (Multus) ===
   # Requires: NAD longhorn-system/longhorn-san (macvlan on br-san, 172.27.0.0/16)
-  # Applied BEFORE Longhorn install via ansible/longhorn_storage_network.yml
   storageNetwork: "longhorn-system/longhorn-san"
+
+  # === Offline Replica Rebuilding ===
+  # Disabled to prevent Longhorn from re-attaching faulted volumes to
+  # non-storage nodes during rebuild (worker nodes have no disks).
+  offlineReplicaRebuilding: "false"
+
+# extraObjects removed to avoid CRD validation error during install
+#  - apiVersion: longhorn.io/v1beta2
+#    kind: Setting
+#    metadata:
+#      name: storage-network
+#      namespace: longhorn-system
+#    value: "longhorn-system/longhorn-san"
+#  - apiVersion: longhorn.io/v1beta2
+#    kind: Setting
+#    metadata:
+#      name: offline-replica-rebuilding
+#      namespace: longhorn-system
+#    value: "false"
+#  - apiVersion: longhorn.io/v1beta2
+#    kind: Node
+#    metadata:
+#      name: mcmp4
+#      namespace: longhorn-system
+#    spec:
+#      allowScheduling: false
+#  - apiVersion: longhorn.io/v1beta2
+#    kind: Node
+#    metadata:
+#      name: mcmp6
+#      namespace: longhorn-system
+#    spec:
+#      allowScheduling: false
+#  - apiVersion: longhorn.io/v1beta2
+#    kind: Node
+#    metadata:
+#      name: mcmp7
+#      namespace: longhorn-system
+#    spec:
+#      allowScheduling: false
+#  - apiVersion: longhorn.io/v1beta2
+#    kind: Node
+#    metadata:
+#      name: mcmp8
+#      namespace: longhorn-system
+#    spec:
+#      allowScheduling: false
+
 
 longhornUI:
   replicas: 1
