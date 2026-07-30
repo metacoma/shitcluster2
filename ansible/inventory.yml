@@ -80,16 +80,25 @@ kube_node:
       node_labels: &worker_labels
         "node-role.kubernetes.io/worker": ""
         "node.longhorn.io/data-plane": "true"
+        "node.longhorn.io/create-default-disk": "config"
+      node_annotations: &worker_annotations
+        "node.longhorn.io/default-disks-config": "[]"
     # mcmp5:
     #   node_labels:
     #     <<: *worker_labels
     mcmp6:
       node_labels:
         <<: *worker_labels
+      node_annotations:
+        <<: *worker_annotations
     mcmp7:
       node_labels:
         <<: *worker_labels
+      node_annotations:
+        <<: *worker_annotations
     mcmp8:
       node_labels:
         <<: *worker_labels
+      node_annotations:
+        <<: *worker_annotations
     mcmp9:
