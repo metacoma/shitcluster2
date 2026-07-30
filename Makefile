@@ -30,7 +30,7 @@ kubernetes:
 	@echo "==> Running kubespray in ansible/"
 	$(MAKE) -C ansible kubernetes 2>&1 | tee kubespray.log
 
-LONGHORN_CHART_VERSION=1.11.3
+LONGHORN_CHART_VERSION=1.12.0
 
 .PHONY: longhorn
 longhorn: update_kubeconfig longhorn_ansible longhorn_storage_network longhorn_helm

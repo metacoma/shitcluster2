@@ -69,6 +69,7 @@ defaultSettings:
   autoCleanupSystemGeneratedSnapshot: "true"
   autoCleanupRecurringJobBackupSnapshot: "true"
   snapshotMaxCount: "250"
+  snapshotCountWarningThreshold: "100"
   removeSnapshotsDuringFilesystemTrim: "true"
   freezeFilesystemForSnapshot: "true"
 
@@ -91,7 +92,7 @@ defaultSettings:
   csiStorageCapacityTracking: "false"
 
   # === Cleanup ===
-  orphanAutoDeletion: "replica-data;instance"
+  orphanResourceAutoDeletion: "replica-data;instance"
   orphanResourceAutoDeletionGracePeriod: "3600"
 
   # === Upgrade & Monitoring ===
@@ -102,57 +103,98 @@ defaultSettings:
   v1DataEngine: "true"
   v2DataEngine: "false"
 
-  # === Storage Network (Multus) ===
-  # Requires: NAD longhorn-system/longhorn-san (macvlan on br-san, 172.27.0.0/16)
-  storageNetwork: "longhorn-system/longhorn-san"
-
   # === Offline Replica Rebuilding ===
   # Disabled to prevent Longhorn from re-attaching faulted volumes to
   # non-storage nodes during rebuild (worker nodes have no disks).
   offlineReplicaRebuilding: "false"
 
-# extraObjects removed to avoid CRD validation error during install
-#  - apiVersion: longhorn.io/v1beta2
-#    kind: Setting
-#    metadata:
-#      name: storage-network
-#      namespace: longhorn-system
-#    value: "longhorn-system/longhorn-san"
-#  - apiVersion: longhorn.io/v1beta2
-#    kind: Setting
-#    metadata:
-#      name: offline-replica-rebuilding
-#      namespace: longhorn-system
-#    value: "false"
-#  - apiVersion: longhorn.io/v1beta2
-#    kind: Node
-#    metadata:
-#      name: mcmp4
-#      namespace: longhorn-system
-#    spec:
-#      allowScheduling: false
-#  - apiVersion: longhorn.io/v1beta2
-#    kind: Node
-#    metadata:
-#      name: mcmp6
-#      namespace: longhorn-system
-#    spec:
-#      allowScheduling: false
-#  - apiVersion: longhorn.io/v1beta2
-#    kind: Node
-#    metadata:
-#      name: mcmp7
-#      namespace: longhorn-system
-#    spec:
-#      allowScheduling: false
-#  - apiVersion: longhorn.io/v1beta2
-#    kind: Node
-#    metadata:
-#      name: mcmp8
-#      namespace: longhorn-system
-#    spec:
-#      allowScheduling: false
+# extraObjects: helm hook Job to configure Longhorn Node CRs for worker nodes.
+#
+# Problem: Longhorn Node CRs are created by the manager daemonset AFTER helm install.
+# Direct Node CRs via extraObjects fail on first install (CRD not yet registered).
+# Solution: a post-install/post-upgrade Job that waits for Node CRs then patches them.
+#
+# Worker nodes are selected by label node.longhorn.io/create-default-disk=config
+# (set via kubespray inventory). This is idempotent and catches new nodes on upgrade.
+extraObjects:
+  - apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: longhorn-worker-node-config
+      namespace: longhorn-system
+      annotations:
+        "helm.sh/hook": post-install,post-upgrade
+        "helm.sh/hook-weight": "10"
+        "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+    spec:
+      template:
+        spec:
+          serviceAccountName: longhorn-service-account
+          restartPolicy: Never
+          containers:
+            - name: config
+              # Uses longhorn-manager image (has curl + python3, no kubectl needed)
+              # {{ .Chart.AppVersion }} is resolved by tpl in extra-objects.yaml
+              image: "docker.io/longhornio/longhorn-manager:{{ .Chart.AppVersion }}"
+              command:
+                - /bin/sh
+                - -ec
+                - |
+                  API="https://kubernetes.default.svc"
+                  TOKEN="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
+                  HDR="Authorization: Bearer $TOKEN"
+                  NS="longhorn-system"
+                  LABEL="node.longhorn.io%2Fcreate-default-disk%3Dconfig"
 
+                  echo "=== Longhorn worker node config ==="
+                  echo "Finding worker nodes (label: node.longhorn.io/create-default-disk=config)..."
+
+                  # Get worker node names from K8s API
+                  NODES=$(curl -sk "$API/api/v1/nodes?labelSelector=$LABEL" \
+                    -H "$HDR" | python3 -c "
+                  import sys, json
+                  data = json.load(sys.stdin)
+                  names = [item['metadata']['name'] for item in data.get('items', [])]
+                  print(' '.join(names))
+                  ")
+
+                  if [ -z "$NODES" ]; then
+                    echo "No worker nodes found. Exiting."
+                    exit 0
+                  fi
+
+                  echo "Worker nodes: $NODES"
+                  echo "Patching Longhorn Node CRs: allowScheduling=false"
+
+                  for node in $NODES; do
+                    echo "  Processing: $node"
+
+                    # Wait for Longhorn Node CR to exist (up to 120s, 24 attempts x 5s)
+                    FOUND=0
+                    for i in $(seq 1 24); do
+                      if curl -sk "$API/apis/longhorn.io/v1beta2/namespaces/$NS/nodes/$node" \
+                        -H "$HDR" 2>/dev/null | grep -q '"kind"'; then
+                        FOUND=1
+                        break
+                      fi
+                      sleep 5
+                    done
+
+                    if [ "$FOUND" -eq 0 ]; then
+                      echo "    WARNING: Node CR not found, skipping $node"
+                      continue
+                    fi
+
+                    # Patch allowScheduling=false
+                    RESULT=$(curl -sk "$API/apis/longhorn.io/v1beta2/namespaces/$NS/nodes/$node" \
+                      -H "$HDR" \
+                      -H "Content-Type: application/merge-patch+json" \
+                      -X PATCH \
+                      -d '{"spec":{"allowScheduling":false}}' 2>&1)
+                    echo "    Patched: $(echo "$RESULT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['spec'].get('allowScheduling','?'))" 2>/dev/null || echo 'ok')"
+                  done
+
+                  echo "=== Done ==="
 
 longhornUI:
   replicas: 1
