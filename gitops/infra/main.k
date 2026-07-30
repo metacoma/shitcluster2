@@ -5,6 +5,7 @@ import file
 import manifests
 import json_merge_patch as json_patch
 import tekton
+import vault_unseal
 import k8s.api.core.v1 as k8s
 import config
 
@@ -26,4 +27,6 @@ manifests.yaml_stream([
   }
 
   tekton.manifests
+
+  vault_unseal.manifests
 ])
