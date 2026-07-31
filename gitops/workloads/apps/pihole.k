@@ -57,6 +57,16 @@ manifests = [
                   "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
                 ]
 
+                # Monitoring
+                monitoring = {
+                  sidecar = {
+                    enabled = True
+                  }
+                  podMonitor = {
+                    enabled = True
+                  }
+                }
+
                 # Resource limits and scheduling
                 resources = {
                   limits = {
