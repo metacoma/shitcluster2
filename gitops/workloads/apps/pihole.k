@@ -54,7 +54,7 @@ manifests = [
                 # Adlists - Conservative set for non-tech users
                 adlists = [
                   "https://big.oisd.nl",
-                  "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts.lean"
+                  "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
                 ]
 
                 # Resource limits and scheduling
