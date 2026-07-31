@@ -1,3 +1,8 @@
+---
+name: kcl-validate
+description: Validate, compile, and format KCL (Kubernetes Configuration Language) manifests using a Docker container matching the ArgoCD environment. Use when you need to ensure KCL files are syntactically correct before committing them to Git.
+---
+
 # KCL Validation Skill
 
 This skill provides instructions for validating, compiling, and formatting KCL (Kubernetes Configuration Language) manifests using a Docker container that matches the environment used by ArgoCD in the shitcluster.
