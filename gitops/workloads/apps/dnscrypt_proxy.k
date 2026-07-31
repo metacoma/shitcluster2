@@ -42,12 +42,24 @@ manifests = [
             targetRevision = dp.helm.chart_version
             helm = {
               values = yaml.encode({
-                config = dns_config
+                configmap = {
+                  config = {
+                    enabled = True
+                    data = {
+                      "dnscrypt-proxy.toml": dns_config
+                    }
+                  }
+                }
                 # Ensure it runs on worker nodes
                 nodeSelector = _config.nodeSelector.worker
                 service = {
-                  type = "LoadBalancer"
-                  loadBalancerIP = "172.25.1.8"
+                  main = {
+                    enabled = True
+                    type = "LoadBalancer"
+                    loadBalancerIP = "172.25.1.8"
+                    port = 53
+                    protocol = "UDP"
+                  }
                 }
               })
             }
