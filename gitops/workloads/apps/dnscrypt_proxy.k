@@ -9,7 +9,7 @@ dp = _config.dnscrypt_proxy
 # Custom dnscrypt-proxy configuration
 # This is a high-quality default focusing on DoH and privacy
 dns_config = """
-listen_addresses = ['0.0.0.0:53']
+listen_addresses = ['0.0.0.0:5353']
 server_names = ['cloudflare', 'google']
 # Use only DoH if possible
 doh_servers = true
