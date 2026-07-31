@@ -13,8 +13,8 @@ listen_addresses = ['0.0.0.0:53']
 server_names = ['cloudflare', 'google']
 # Use only DoH if possible
 doh_servers = true
-# Enable DNSSEC validation
-dnssec = true
+# Server must support DNS security extensions (DNSSEC)
+require_dnssec = true
 # Cache settings for performance
 cache = true
 cache_size = 2048
