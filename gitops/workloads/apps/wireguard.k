@@ -27,7 +27,7 @@ clients = [
 # Generate peer configs using a list comprehension and join
 peer_configs = "".join([ "\n[Peer]\nPublicKey = " + c.PublicKey + "\nAllowedIPs = " + c.AllowedIPs + "\n" for c in clients])
 
-wg0_conf = "[Interface]\nAddress = " + wg.server_address + "\nListenPort = 51820\nTable = off\nPostUp = wg set wg0 private-key /etc/wireguard/privatekey && iptables -t nat -A POSTROUTING -s " + wg.server_cidr + " -o eth0 -j MASQUERADE\nPostDown = iptables -t nat -D POSTROUTING -s " + wg.server_cidr + " -o eth0 -j MASQUERADE\n" + peer_configs
+wg0_conf = "[Interface]\nAddress = " + wg.server_address + "\nListenPort = 51820\nMTU = 1380\nDNS = 172.25.0.2\nTable = off\nPostUp = wg set wg0 private-key /etc/wireguard/privatekey && iptables -t nat -A POSTROUTING -s " + wg.server_cidr + " -o eth0 -j MASQUERADE && iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\nPostDown = iptables -t nat -D POSTROUTING -s " + wg.server_cidr + " -o eth0 -j MASQUERADE && iptables -t mangle -D FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n" + peer_configs
 
 manifests = [
   k8s.Namespace {
