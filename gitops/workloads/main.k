@@ -16,6 +16,7 @@ import .apps.spaceship_dns as spaceship_dns
 import .apps.ingress_nginx as ingress_nginx
 import .apps.wireguard as wireguard
 import .apps.dnscrypt_proxy as dnscrypt_proxy
+import .apps.pihole as pihole
 
 resources = [
     #    argoproj.Application {
@@ -124,6 +125,7 @@ resources = [
     ingress_nginx.manifests
     wireguard.manifests
     dnscrypt_proxy.manifests
+    pihole.manifests
 ]
 
 manifests.yaml_stream([

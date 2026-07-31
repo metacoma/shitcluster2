@@ -282,4 +282,16 @@ config = {
             chart_version = "1.4.5"
         }
     }
+    pihole = {
+        namespace = "network"
+        helm = {
+            chart_name = "pihole"
+            repo = "https://mojo2600.github.io/pihole-kubernetes/"
+            release_name = "pihole"
+            chart_version = "2.38.0"
+        }
+        loadBalancerIP = "172.25.1.9"
+        upstreamDns = "10.233.35.221"
+        adminPassword = "ref+vault://kv/pihole#adminPassword"
+    }
 }
