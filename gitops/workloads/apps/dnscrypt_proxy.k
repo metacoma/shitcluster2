@@ -77,6 +77,12 @@ manifests = [
                         targetPort = 5353
                         protocol = "UDP"
                       }
+                      "http" = {
+                        enabled = True
+                        port = 8080
+                        targetPort = 8080
+                        protocol = "TCP"
+                      }
                     }
                   }
                   "dns-udp" = {
