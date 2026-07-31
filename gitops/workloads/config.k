@@ -266,4 +266,11 @@ config = {
             app_version = "1.12.0"
         }
     }
+    wireguard = {
+        namespace = "network"
+        lb_ip = "172.25.1.7"
+        port = 51820
+        server_address = "10.30.0.1/24"
+        server_cidr = "10.30.0.0/24"
+    }
 }

@@ -14,6 +14,7 @@ import .apps.nats as nats
 import .apps.eventing_jsm as eventing_jsm
 import .apps.spaceship_dns as spaceship_dns
 import .apps.ingress_nginx as ingress_nginx
+import .apps.wireguard as wireguard
 
 resources = [
     #    argoproj.Application {
@@ -120,6 +121,7 @@ resources = [
     eventing_jsm.manifests
     spaceship_dns.manifests
     ingress_nginx.manifests
+    wireguard.manifests
 ]
 
 manifests.yaml_stream([
