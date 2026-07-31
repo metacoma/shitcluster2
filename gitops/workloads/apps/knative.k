@@ -186,7 +186,7 @@ manifests = [
       namespace = _config.knative.eventing.namespace
     }
     data = {
-      "channelTemplateSpec" = yaml.encode({
+      "channel-template-spec" = yaml.encode({
         apiVersion = "messaging.knative.dev/v1alpha1"
         kind = "NatsJetStreamChannel"
         spec = {
