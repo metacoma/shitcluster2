@@ -6,6 +6,18 @@
     "namespace": "argocd"
   },
   "spec": {
+    "ignoreDifferences": [
+      {
+        "group": "",
+        "kind": "ConfigMap",
+        "name": "config-br-default-channel",
+        "jsonPointers": [
+          "/metadata/labels",
+          "/metadata/annotations",
+          "/metadata/ownerReferences"
+        ]
+      }
+    ],
     "syncPolicy": {
       "automated": {
       	"selfHeal": true
