@@ -24,6 +24,11 @@ clients = [
     } for p in peers_data
 ]
 
+# Generate peer configs using a list comprehension and join
+peer_configs = "".join([ "\n[Peer]\nPublicKey = " + c.PublicKey + "\nAllowedIPs = " + c.AllowedIPs + "\n" for c in clients])
+
+wg0_conf = "[Interface]\nAddress = " + wg.server_address + "\nListenPort = 51820\nTable = off\nPostUp = wg set wg0 private-key /etc/wireguard/privatekey && iptables -t nat -A POSTROUTING -s " + wg.server_cidr + " -o eth0 -j MASQUERADE\nPostDown = iptables -t nat -D POSTROUTING -s " + wg.server_cidr + " -o eth0 -j MASQUERADE\n" + peer_configs
+
 manifests = [
   k8s.Namespace {
     metadata.name = "network" # Using the same namespace as ssh_tunnel
@@ -37,6 +42,17 @@ manifests = [
     type = "Opaque"
     stringData = {
         "privatekey": "ref+vault://kv/wireguard#server_private_key"
+    }
+  }
+  # Custom config secret to fix routing loop (Table = off)
+  k8s.Secret {
+    metadata = {
+        name = "wireguard-vpn-wg-config"
+        namespace = "network"
+    }
+    type = "Opaque"
+    stringData = {
+        "wg0.conf": wg0_conf
     }
   }
   argoproj.Application {
@@ -56,21 +72,24 @@ manifests = [
             targetRevision = "0.23.0"
             helm = {
                 values = yaml.encode({
-                  service = {
-                    type = "LoadBalancer"
-                    loadBalancerIP = wg.lb_ip
-                    port = wg.port
-                  }
-                  securityContext = {
-                      privileged = True
-                  }
-                  wireguard = {
-                      serverAddress = wg.server_address
-                      serverCidr = wg.server_cidr
-                      clients = clients
-                  }
-                  secretName = "wireguard-server-key"
-                })
+                      replicaCount = 1
+                      autoscaling = { enabled = False }
+                      service = {
+                        type = "LoadBalancer"
+                        loadBalancerIP = wg.lb_ip
+                        port = wg.port
+                      }
+                      securityContext = {
+                          privileged = True
+                      }
+                      wireguard = {
+                          serverAddress = wg.server_address
+                          serverCidr = wg.server_cidr
+                          clients = clients
+                      }
+                      secretName = "wireguard-server-key"
+                      disableConfigManagement = True
+                    })
                 releaseName = "wireguard-vpn"
             }
         }
