@@ -187,22 +187,8 @@ manifests = [
     }
     data = {
       "channel-template-spec" = yaml.encode({
-        apiVersion = "messaging.knative.dev/v1alpha1"
-        kind = "NatsJetStreamChannel"
-        spec = {
-          stream = {
-              config = {
-                  retention = "Limits"
-                  maxBytes = 1000000000
-                  replicas = 1
-              }
-          }
-          consumerConfigTemplate = {
-              deliverPolicy = "New"
-              maxDeliver = 1
-              ackWait = "10m"
-          }
-        }
+        apiVersion = "messaging.knative.dev/v1"
+        kind = "InMemoryChannel"
       })
     }
   }
