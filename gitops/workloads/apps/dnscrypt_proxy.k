@@ -61,17 +61,29 @@ manifests = [
                 nodeSelector = _config.nodeSelector.worker
                 service = {
                   main = {
-                    enabled = False
+                    enabled = True
+                    type = "LoadBalancer"
+                    loadBalancerIP = "172.25.1.8"
+                    ports = {
+                      "dns-tcp" = {
+                        enabled = True
+                        port = 53
+                        targetPort = 5353
+                        protocol = "TCP"
+                      }
+                      "dns-udp" = {
+                        enabled = True
+                        port = 53
+                        targetPort = 5353
+                        protocol = "UDP"
+                      }
+                    }
                   }
                   "dns-udp" = {
-                    enabled = True
-                    type = "LoadBalancer"
-                    loadBalancerIP = "172.25.1.8"
+                    enabled = False
                   }
                   "dns-tcp" = {
-                    enabled = True
-                    type = "LoadBalancer"
-                    loadBalancerIP = "172.25.1.8"
+                    enabled = False
                   }
                 }
               })
