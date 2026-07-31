@@ -89,6 +89,21 @@ manifests = [
                       }
                       secretName = "wireguard-server-key"
                       disableConfigManagement = True
+                      volumeMounts = [
+                        {
+                            name = "config"
+                            mountPath = "/etc/wireguard/wg0.conf"
+                            subPath = "wg0.conf"
+                        }
+                      ]
+                      volumes = [
+                        {
+                            name = "config"
+                            secret = {
+                                secretName = "wireguard-vpn-wg-config"
+                            }
+                        }
+                      ]
                     })
                 releaseName = "wireguard-vpn"
             }
@@ -96,6 +111,7 @@ manifests = [
         syncPolicy = {
             automated = {
                 selfHeal = True
+                prune = True
             }
         }
     }
