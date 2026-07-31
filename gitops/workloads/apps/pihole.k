@@ -69,6 +69,9 @@ manifests = [
                   }
                 }
                 nodeSelector = _config.nodeSelector.worker
+                extraEnvVars = {
+                  DNSMASQ_USER = "root"
+                }
               })
             }
         }
