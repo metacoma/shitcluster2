@@ -8,14 +8,14 @@ GitOps repository for homelab Kubernetes cluster. Ansible (Kubespray) for base i
 - KCL (Kubernetes Configuration Language) for manifest generation
 - ArgoCD with KCL CMP plugin + AVP (argocd-vault-plugin)
 - HashiCorp Vault (Helm 0.34.0) + SOPS/age encryption
-- Longhorn 1.11.3 (block storage with Whereabouts CNI)
+- Longhorn 1.12.0 (block storage with Whereabouts CNI)
 - Istio 1.28.1, Knative 1.20.0, NATS 2.12.4
 - VictoriaMetrics + Grafana + Loki + Tempo + Vector (observability)
 
 ## Repository structure
 
 ```
-ansible/                — Kubespray, network, Longhorn node prep
+ansible/                — Kubespray, network, Longhorn node prep, SOPS-to-Vault import
 ansible/group_vars/     — Cluster-wide Ansible vars (Calico, MetalLB, kube-vip)
 ansible/host_vars/      — Per-node Ansible vars
 gitops/infra/           — KCL infra module (Tekton, SOPS secrets namespace)
@@ -26,6 +26,8 @@ tmux/sessions/          — Individual tmux session definitions
 secrets/                — SOPS-encrypted YAML (age key in .sops.yaml)
 vault-data/             — Terraform/OpenTofu for Vault (rarely used)
 argocd/                 — ArgoCD Helm values, CMP plugins, Application JSON
+scripts/                — Maintenance and helper scripts
+misc/                   — Miscellaneous configuration and fixes
 Makefile                — Orchestration: kubernetes, longhorn, vault, argocd
 ```
 
@@ -34,9 +36,11 @@ Makefile                — Orchestration: kubernetes, longhorn, vault, argocd
 - `make kubernetes` — Install K8s via Kubespray (does NOT reset; run `make kubernetes_reset` first if needed)
 - `make longhorn` — Node prep + Whereabouts CNI + Longhorn Helm + BackupTarget
 - `make vault` — Install Vault Helm, wait for init, extract root token
+- `make vault-unseal` — Unseal Vault using the bootstrap secret
 - `make sops_to_vault` — Decrypt SOPS secrets, import to Vault KV v2
 - `make argocd_prepare` — Create Vault namespace, policies, tokens, K8s secrets
 - `make argocd` — Install ArgoCD Helm + KCL CMP + AVP plugin
+- `make argocd_password` — Print the initial ArgoCD admin password
 - `make argocd_infra_app` / `make argocd_workloads_app` — Create ArgoCD Applications
 - `make flow` — Full deployment pipeline (all steps in order)
 - `make update_kubeconfig` — Fetch kubeconfig from mcmp2 via SSH
@@ -64,8 +68,8 @@ ArgoCD repo-server runs two sidecar containers:
 |---|---|---|---|
 | `infra` | `gitops/infra` | `kcl-v1.0` | Infra resources (namespace, SOPS secret, Tekton) |
 | `workloads` | `gitops/workloads` | `kcl-v1.0` | All workloads (apps, monitoring, networking) |
-| `argocd-vault` | `gitops/argocd-vault` | `kcl-v1.0` | KCL manifests with Vault refs (dir does not exist yet) |
-| `argocd-vault-raw` | `gitops/argocd-vault-raw` | `argocd-vault-plugin` | Raw YAML with AVP annotations (dir does not exist yet) |
+| `argocd-vault` | `gitops/argocd-vault` | `kcl-v1.0` | KCL manifests with Vault refs |
+| `argocd-vault-raw` | `gitops/argocd-vault-raw` | `argocd-vault-plugin` | Raw YAML with AVP annotations |
 
 All applications use `in-cluster` connection (`https://kubernetes.default.svc`), auto-sync with self-heal, and target `master` branch.
 
@@ -104,7 +108,7 @@ config = {
 **app.k pattern** — each file in `apps/` exports a `manifests` variable (list of K8s resources). Two deployment patterns:
 
 1. **Native K8s resources** — directly define `k8s.Namespace`, `k8s.Secret`, `v1.Deployment`, etc. (e.g., `ssh_tunnel.k`, `spaceship_dns.k`)
-2. **Nested ArgoCD Application** — define `argoproj.Application` that points to a Helm chart. The nested app is managed by ArgoCD as a child of the parent application. Use a lambda helper like `monitoring_app(helm_config, values, sync)` for DRY Helm app generation (e.g., `monitoring.k`, `istio.k`, `observability.k`, `vector.k`, `nats.k`)
+2. **Nested ArgoCD Application** — define `argoproj.Application` that points to a Helm chart. The nested app is managed by ArgoCD as a child of the parent application. Use a local lambda helper (e.g., `monitoring_app(...)` in `monitoring.k`, `istio_app(...)` in `istio.k`) for DRY Helm app generation.. For apps with complex data configs (like Vector), additional config files can be stored in subdirectories (e.g., `apps/vector_data/parsers/*.lua`).
 
 ### KCL dependencies (workloads)
 
@@ -112,6 +116,7 @@ config = {
 |---|---|---|---|
 | `k8s` | ghcr.io/kcl-lang/k8s | 1.31.2 | Core K8s types (v1.Namespace, v1.Deployment, etc.) |
 | `argoproj` | ghcr.io/kcl-lang/argoproj | 3.0.12 | ArgoCD Application CRD |
+| `knative` | ghcr.io/kcl-lang/knative | 0.2.0 | Knative core types |
 | `knative-operator` | ghcr.io/kcl-lang/knative-operator | 0.3.0 | KnativeServing, KnativeEventing CRDs |
 | `kubevirt` | ghcr.io/kcl-lang/kubevirt | 0.3.0 | NetworkAttachmentDefinition |
 | `victoria-metrics-operator` | ghcr.io/kcl-lang/victoria-metrics-operator | 0.45.3 | VMServiceScrape CRD |
