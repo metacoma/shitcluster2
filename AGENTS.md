@@ -46,9 +46,8 @@ Makefile                — Orchestration: kubernetes, longhorn, vault, argocd
 - `make update_kubeconfig` — Fetch kubeconfig from mcmp2 via SSH
 - `make -C ansible ansible_lint` — Lint Ansible playbooks
 - `make -C ansible ansible_ping` — Ping cluster nodes
-- `cd gitops/workloads && kcl run .` — Validate/render workload manifests
-- `cd gitops/infra && kcl run .` — Validate/render infra manifests
-- `kcl fmt .` — Format KCL files
+- Use `kcl-validate` skill to validate/render KCL manifests (gitops/workloads, gitops/infra)
+- Use `kcl-validate` skill to format KCL files
 
 ## GitOps architecture
 
