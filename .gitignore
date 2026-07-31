@@ -5,3 +5,4 @@ secrets/**/
 vault_secret.yml
 .env
 AGENTS.override.md
+ansible/.venv/
