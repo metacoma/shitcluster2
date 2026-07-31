@@ -4,6 +4,9 @@
 - name: Prevent cloud-init from overwriting netplan
   ansible.builtin.import_playbook: disable_cloud_init_network.yml
 
+- name: Disable WireGuard AppArmor profile
+  ansible.builtin.import_playbook: disable_wg_apparmor.yml
+
 - name: Install longhorn requirements
   ansible.builtin.import_playbook: longhorn.yml
 

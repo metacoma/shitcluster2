@@ -1,0 +1,20 @@
+---
+- name: Disable WireGuard AppArmor profile
+  hosts: all
+  become: true
+  tasks:
+    - name: Ensure disable directory exists
+      file:
+        path: /etc/apparmor.d/disable
+        state: directory
+        mode: '0755'
+
+    - name: Create symlink to disable wg-quick profile (persistent)
+      file:
+        src: /etc/apparmor.d/wg-quick
+        dest: /etc/apparmor.d/disable/wg-quick
+        state: link
+
+    - name: Remove wg-quick profile from kernel immediately
+      command: apparmor_parser -R /etc/apparmor.d/wg-quick
+      ignore_errors: true # Ignore if the profile is already removed or not found
