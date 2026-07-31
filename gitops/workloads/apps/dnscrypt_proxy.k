@@ -54,11 +54,8 @@ manifests = [
                 nodeSelector = _config.nodeSelector.worker
                 service = {
                   main = {
-                    enabled = True
                     type = "LoadBalancer"
                     loadBalancerIP = "172.25.1.8"
-                    port = 53
-                    protocol = "UDP"
                   }
                 }
               })
