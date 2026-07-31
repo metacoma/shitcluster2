@@ -1,34 +1,29 @@
 _ssh_tunnel_namespace = "network"
 
-
 config = {
-  k8s_domain = "k8s.mansion.shitcluster.io"
-
-  storageClass = "longhorn"
-  argocd = {
-    namespace = "argocd"
-  }
-
-  nodeSelector = {
-    worker = {
-      "node-role.kubernetes.io/worker": ""
+    k8s_domain = "k8s.mansion.shitcluster.io"
+    storageClass = "longhorn"
+    argocd = {
+        namespace = "argocd"
     }
-    controller = {
-      "node-role.kubernetes.io/control-plane": ""
+    nodeSelector = {
+        worker = {
+            "node-role.kubernetes.io/worker": ""
+        }
+        controller = {
+            "node-role.kubernetes.io/control-plane": ""
+        }
     }
-  }
-  nodeAffinity = {
-    requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms = [{
-      matchExpressions = [{
-        key = "node-role.kubernetes.io/worker"
-        operator = "Exists"
-      }]
-    }]
-  }
-
-  ssh_tunnel = {
-
-    ssh_args = """-o Compression=no \
+    nodeAffinity = {
+        requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms = [{
+            matchExpressions = [{
+                key = "node-role.kubernetes.io/worker"
+                operator = "Exists"
+            }]
+        }]
+    }
+    ssh_tunnel = {
+        ssh_args = """-o Compression=no \
       -o UserKnownHostsFile=/dev/null \
       -o StrictHostKeyChecking=no \
       -o Ciphers=chacha20-poly1305@openssh.com  \
@@ -39,235 +34,236 @@ config = {
       -o ServerAliveCountMax=3 \
       -o ExitOnForwardFailure=yes \
     """
-    namespace = _ssh_tunnel_namespace
-    container_image = "nicolaka/netshoot:latest"
-    endpoints = [
-      {
-        host_network = {
-          #type = "bridge"
-          bridge = "br-public"
-          ip = "172.25.220.2/16"
-          gw = "172.25.0.1"
+        namespace = _ssh_tunnel_namespace
+        container_image = "nicolaka/netshoot:latest"
+        endpoints = [
+            {
+                host_network = {
+                    #type = "bridge"
+                    bridge = "br-public"
+                    ip = "172.25.220.2/16"
+                    gw = "172.25.0.1"
+                }
+                name = "nl0"
+                country = "NL"
+                ssh = {
+                    user = "ref+vault://kv/vpn_nl#ssh_user"
+                    host = "ref+vault://kv/vpn_nl#ssh_host"
+                    private_key = "ref+vault://kv/vpn_nl#ssh_private_key_base64"
+                }
+                local_addr = "10.50.0.2/24"
+                remote_addr = "10.50.0.1/24"
+                remote_tun = "tun5"
+            }
+        ]
+    }
+    monitoring = {
+        notifications = {
+            telegram = {
+                bot_token = "ref+vault://kv/monitoring#telegram_bot_token"
+                chat_id = "ref+vault://kv/monitoring#telegram_chat_id"
+            }
         }
-        name = "nl0"
-        country = "NL"
-        ssh = {
-          user = "ref+vault://kv/vpn_nl#ssh_user"
-          host = "ref+vault://kv/vpn_nl#ssh_host"
-          private_key = "ref+vault://kv/vpn_nl#ssh_private_key_base64"
+        namespace = "monitoring"
+        alertmanager = {
+            secret_name = "alert-manager"
+            helm = {
+                release_name = "alertmanager"
+                chart_version = "1.30.0"
+                app_version = "v0.30.0"
+                repo = "https://prometheus-community.github.io/helm-charts"
+                chart_name = "alertmanager"
+            }
         }
-        local_addr = "10.50.0.2/24"
-        remote_addr = "10.50.0.1/24"
-        remote_tun = "tun5"
-      }
-    ]
-  }
-
-  monitoring = {
-    notifications = {
-      telegram = {
-        bot_token = "ref+vault://kv/monitoring#telegram_bot_token"
-        chat_id = "ref+vault://kv/monitoring#telegram_chat_id"
-      }
+        kube_state_metrics = {
+            helm = {
+                release_name = "kube-state-metrics"
+                chart_version = "7.0.0"
+                app_version = "2.17.0"
+                repo = "https://prometheus-community.github.io/helm-charts"
+                chart_name = "kube-state-metrics"
+            }
+        }
+        node_exporter = {
+            helm = {
+                release_name = "node-exporter"
+                chart_version = "4.49.2"
+                app_version = "1.10.2"
+                repo = "https://prometheus-community.github.io/helm-charts"
+                chart_name = "prometheus-node-exporter"
+            }
+        }
+        blackbox_exporter = {
+            helm = {
+                release_name = "blackbox-exporter"
+                chart_version = "11.6.1"
+                app_version = "v0.28.0"
+                repo = "https://prometheus-community.github.io/helm-charts"
+                chart_name = "prometheus-blackbox-exporter"
+            }
+        }
+        vm_operator = {
+            helm = {
+                release_name = "vm-operator"
+                chart_version = "0.57.1"
+                app_version = "v0.66.1"
+                repo = "https://victoriametrics.github.io/helm-charts/"
+                chart_name = "victoria-metrics-operator"
+            }
+        }
+        vm_single = {
+            helm = {
+                release_name = "vm-single"
+                chart_version = "0.27.0"
+                app_version = "v1.132.0"
+                repo = "https://victoriametrics.github.io/helm-charts/"
+                chart_name = "victoria-metrics-single"
+            }
+        }
+        vm_agent = {
+            helm = {
+                release_name = "vm-agent"
+                chart_version = "0.28.0"
+                app_version = "v1.132.0"
+                repo = "https://victoriametrics.github.io/helm-charts/"
+                chart_name = "victoria-metrics-agent"
+            }
+        }
+        grafana = {
+            helm = {
+                repo = "https://grafana.github.io/helm-charts"
+                release_name = "grafana"
+                chart_version = "10.4.0"
+                app_version = "12.0.4"
+                chart_name = "grafana"
+            }
+        }
     }
-
-    namespace = "monitoring"
-    alertmanager = {
-      secret_name = "alert-manager"
-      helm = {
-        release_name = "alertmanager"
-        chart_version = "1.30.0"
-        app_version = "v0.30.0"
-        repo = "https://prometheus-community.github.io/helm-charts"
-        chart_name = "alertmanager"
-
-      }
+    observability = {
+        namespace = "observability"
+        loki = {
+            helm = {
+                repo = "https://grafana.github.io/helm-charts"
+                release_name = "loki"
+                chart_version = "6.49.0"
+                app_version = "3.6.3"
+                chart_name = "loki"
+            }
+        }
+        tempo = {
+            helm = {
+                repo = "https://grafana.github.io/helm-charts"
+                release_name = "tempo"
+                chart_version = "1.24.1"
+                app_version = "2.9.0"
+                chart_name = "tempo"
+            }
+        }
+        otlp = {
+            helm = {
+                repo = "https://open-telemetry.github.io/opentelemetry-helm-charts"
+                release_name = "otlp"
+                chart_version = "0.142.0"
+                app_version = "0.142.0"
+                chart_name = "opentelemetry-collector"
+            }
+        }
     }
-    kube_state_metrics = {
-      helm = {
-        release_name = "kube-state-metrics"
-        chart_version = "7.0.0"
-        app_version = "2.17.0"
-        repo = "https://prometheus-community.github.io/helm-charts"
-        chart_name = "kube-state-metrics"
-
-      }
+    istio = {
+        namespace = "istio-system"
+        gateway_lb = "172.25.1.6"
+        helm = {
+            istio_base = {
+                chart_name = "base"
+                repo = "https://istio-release.storage.googleapis.com/charts"
+                chart_version = "1.28.1"
+                app_version = "1.28.1"
+                release_name = "istio-base"
+            }
+            istiod = {
+                chart_name = "istiod"
+                repo = "https://istio-release.storage.googleapis.com/charts"
+                app_version = "1.28.1"
+                chart_version = "1.28.1"
+                release_name = "istiod"
+            }
+            gateway = {
+                chart_name = "gateway"
+                repo = "https://istio-release.storage.googleapis.com/charts"
+                app_version = "1.28.1"
+                chart_version = "1.28.1"
+                release_name = "istio-ingressgateway"
+            }
+        }
     }
-    node_exporter = {
-      helm = {
-        release_name = "node-exporter"
-        chart_version = "4.49.2"
-        app_version = "1.10.2"
-        repo = "https://prometheus-community.github.io/helm-charts"
-        chart_name = "prometheus-node-exporter"
-
-      }
+    knative = {
+        domain = "kn.public.mansion.shitcluster.io"
+        operator = {
+            namespace = "knative-operator"
+            helm = {
+                chart = "knative-operator"
+                repo = "https://knative.github.io/operator"
+                release_name = "knative-operator"
+                version = "1.20.0"
+                app_version = "v1.20.0"
+            }
+        }
+        eventing = {
+            namespace = "knative-eventing"
+            version = "1.20.0"
+        }
+        serving = {
+            namespace = "knative-serving"
+            version = "1.20.0"
+        }
     }
-    blackbox_exporter = {
-      helm = {
-        release_name = "blackbox-exporter"
-        chart_version = "11.6.1"
-        app_version = "v0.28.0"
-        repo = "https://prometheus-community.github.io/helm-charts"
-        chart_name = "prometheus-blackbox-exporter"
-
-      }
-    }
-    vm_operator = {
-      helm = {
-        release_name = "vm-operator"
-        chart_version = "0.57.1"
-        app_version = "v0.66.1"
-        repo = "https://victoriametrics.github.io/helm-charts/"
-        chart_name = "victoria-metrics-operator"
-
-      }
-    }
-    vm_single = {
-      helm = {
-        release_name = "vm-single"
-        chart_version = "0.27.0"
-        app_version = "v1.132.0"
-        repo = "https://victoriametrics.github.io/helm-charts/"
-        chart_name = "victoria-metrics-single"
-
-      }
-    }
-    vm_agent = {
-      helm = {
-        release_name = "vm-agent"
-        chart_version = "0.28.0"
-        app_version = "v1.132.0"
-        repo = "https://victoriametrics.github.io/helm-charts/"
-        chart_name = "victoria-metrics-agent"
-
-      }
-    }
-    grafana = {
-      helm = {
-        repo = "https://grafana.github.io/helm-charts"
-        release_name = "grafana"
-        chart_version = "10.4.0"
-        app_version = "12.0.4"
-        chart_name = "grafana"
-      }
-    }
-  }
-  observability = {
-    namespace = "observability"
-    loki = {
-      helm = {
-        repo = "https://grafana.github.io/helm-charts"
-        release_name = "loki"
-        chart_version = "6.49.0"
-        app_version = "3.6.3"
-        chart_name = "loki"
-      }
-    }
-    tempo = {
-      helm = {
-        repo = "https://grafana.github.io/helm-charts"
-        release_name = "tempo"
-        chart_version = "1.24.1"
-        app_version = "2.9.0"
-        chart_name = "tempo"
-      }
-    }
-    otlp = {
-      helm = {
-        repo = "https://open-telemetry.github.io/opentelemetry-helm-charts"
-        release_name = "otlp"
-        chart_version = "0.142.0"
-        app_version = "0.142.0"
-        chart_name = "opentelemetry-collector"
-      }
-    }
-  }
-  istio = {
-    namespace = "istio-system"
-    gateway_lb = "172.25.1.6"
-    helm = {
-      istio_base = {
-        chart_name = "base"
-        repo = "https://istio-release.storage.googleapis.com/charts"
-        chart_version = "1.28.1"
-        app_version = "1.28.1"
-        release_name = "istio-base"
-      }
-      istiod = {
-        chart_name = "istiod"
-        repo = "https://istio-release.storage.googleapis.com/charts"
-        app_version = "1.28.1"
-        chart_version = "1.28.1"
-        release_name = "istiod"
-      }
-      gateway = {
-        chart_name = "gateway"
-        repo = "https://istio-release.storage.googleapis.com/charts"
-        app_version = "1.28.1"
-        chart_version = "1.28.1"
-        release_name = "istio-ingressgateway"
-      }
-    }
-  }
-  knative = {
-    domain = "kn.public.mansion.shitcluster.io"
-    operator = {
-      namespace = "knative-operator"
-      helm = {
-        chart = "knative-operator"
-        repo = "https://knative.github.io/operator"
-        release_name = "knative-operator"
-        version = "1.20.0"
-        app_version = "v1.20.0"
-      }
-
-    }
-    eventing = {
-      namespace = "knative-eventing"
-      version = "1.20.0"
-    }
-    serving = {
-      namespace = "knative-serving"
-      version = "1.20.0"
-    }
-  }
-  nats = {
-    namespace = "nats"
-    users = {
-      root = {
-        username = "ref+vault://kv/nats#root_user+"
-        password = "ref+vault://kv/nats#root_password+"
-      }
-      sys = {
-        username = "ref+vault://kv/nats#sys_user+"
-        password = "ref+vault://kv/nats#sys_password+"
-      }
-    }
-    helm = {
-      chart = "nats"
-      repo = "https://nats-io.github.io/k8s/helm/charts/"
-      release_name = "nats"
-      version = "2.12.4"
-      app_version = "2.12.4"
-    }
-  }
-  vector = {
-    namespace = "vector"
-    configMapFiles = {
-      "vector-exceptions" = {
-        "parser.lua" = "apps/vector_data/parsers/parser.lua"
-        "python.lua" = "apps/vector_data/parsers/python.lua"
-      }
+    nats = {
+        namespace = "nats"
+        users = {
+            root = {
+                username = "ref+vault://kv/nats#root_user+"
+                password = "ref+vault://kv/nats#root_password+"
+            }
+            sys = {
+                username = "ref+vault://kv/nats#sys_user+"
+                password = "ref+vault://kv/nats#sys_password+"
+            }
+        }
+        helm = {
+            chart = "nats"
+            repo = "https://nats-io.github.io/k8s/helm/charts/"
+            release_name = "nats"
+            version = "2.12.4"
+            app_version = "2.12.4"
+        }
     }
     vector = {
-      helm = {
-        chart_name = "vector"
-        repo = "https://helm.vector.dev"
-        release_name = "vector"
-        chart_version = "0.49.0"
-        app_version = "0.52.0-distroless-libc"
-      }
+        namespace = "vector"
+        configMapFiles = {
+            "vector-exceptions" = {
+                "parser.lua" = "apps/vector_data/parsers/parser.lua"
+                "python.lua" = "apps/vector_data/parsers/python.lua"
+            }
+        }
+        vector = {
+            helm = {
+                chart_name = "vector"
+                repo = "https://helm.vector.dev"
+                release_name = "vector"
+                chart_version = "0.49.0"
+                app_version = "0.52.0-distroless-libc"
+            }
+        }
     }
-  }
+    ingress_nginx = {
+        namespace = "ingress-nginx"
+        ingress_lb = "172.25.1.1"
+        helm = {
+            chart_name = "ingress-nginx"
+            repo = "https://kubernetes.github.io/ingress-nginx"
+            release_name = "ingress-nginx"
+            chart_version = "4.15.1"
+            app_version = "1.12.0"
+        }
+    }
 }
