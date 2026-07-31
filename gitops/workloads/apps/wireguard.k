@@ -61,8 +61,14 @@ manifests = [
                     loadBalancerIP = wg.lb_ip
                     port = wg.port
                   }
+                  podSecurityContext = {
+                      runAsNonRoot = False
+                      runAsUser = 0
+                  }
                   securityContext = {
                       privileged = True
+                      runAsNonRoot = False
+                      runAsUser = 0
                   }
                   wireguard = {
                       serverAddress = wg.server_address
