@@ -68,7 +68,7 @@ manifests = [
                   securityContext = {
                       privileged = True
                       runAsNonRoot = False
-                      runAsUser = 1234
+                      runAsUser = 0
                   }
                   wireguard = {
                       serverAddress = wg.server_address
