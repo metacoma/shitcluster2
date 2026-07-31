@@ -15,6 +15,7 @@ import .apps.eventing_jsm as eventing_jsm
 import .apps.spaceship_dns as spaceship_dns
 import .apps.ingress_nginx as ingress_nginx
 import .apps.wireguard as wireguard
+import .apps.dnscrypt_proxy as dnscrypt_proxy
 
 resources = [
     #    argoproj.Application {
@@ -122,6 +123,7 @@ resources = [
     spaceship_dns.manifests
     ingress_nginx.manifests
     wireguard.manifests
+    dnscrypt_proxy.manifests
 ]
 
 manifests.yaml_stream([

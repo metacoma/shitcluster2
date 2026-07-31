@@ -273,4 +273,13 @@ config = {
         server_address = "10.30.0.1/24"
         server_cidr = "10.30.0.0/24"
     }
+    dnscrypt_proxy = {
+        namespace = "network"
+        helm = {
+            chart_name = "dnscrypt-proxy"
+            repo = "https://charts.obeone.cloud"
+            release_name = "dnscrypt-proxy"
+            chart_version = "1.4.5"
+        }
+    }
 }
