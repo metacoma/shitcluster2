@@ -63,8 +63,13 @@ manifests = [
                     enabled = True
                   }
                   podMonitor = {
-                    enabled = True
+                    enabled = False
                   }
+                }
+
+                podAnnotations = {
+                  "prometheus.io/scrape": "true"
+                  "prometheus.io/port": "9617"
                 }
 
                 # Resource limits and scheduling
