@@ -291,7 +291,7 @@ config = {
             chart_version = "2.38.0"
         }
         loadBalancerIP = "172.25.1.9"
-        upstreamDns = "10.233.35.221"
+        upstreamDns = "172.25.1.8"
         adminPassword = "ref+vault://kv/pihole#adminPassword"
     }
 }
