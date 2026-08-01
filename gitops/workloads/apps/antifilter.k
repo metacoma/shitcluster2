@@ -55,8 +55,7 @@ manifests = [
         bgp = {
             routers = [
                 {
-                    asn = peer.localAs
-                    vrf = "vrf-" + str(peer.localAs)
+                    asn = 64512
                     neighbors = [
                         {
                             address = peer.neighborIp
@@ -71,3 +70,4 @@ manifests = [
         }
     }
   }
+]
