@@ -57,6 +57,7 @@ manifests = [
               routers = [
                   {
                       asn = peer.localAs
+                      vrf = "vrf-" + str(peer.localAs)
                       neighbors = [
                           {
                               address = peer.neighborIp
