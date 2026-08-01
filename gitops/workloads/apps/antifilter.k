@@ -60,7 +60,7 @@ manifests = [
                         {
                             address = peer.neighborIp
                             remoteAs = peer.remoteAs
-                            holdTime = str(peer.holdTime)
+                            holdTime = str(peer.holdTime) + "s"
                             ebgpMultiHop = peer.multihop
                         }
                     ]
