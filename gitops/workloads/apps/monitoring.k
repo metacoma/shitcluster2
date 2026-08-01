@@ -297,6 +297,64 @@ manifests = [
     sync = {}
   )
 
+  {
+    apiVersion = "cert-manager.io/v1"
+    kind = "Certificate"
+    metadata = {
+      name = "grafana-tls"
+      namespace = monitoring.namespace
+    }
+    spec = {
+      secretName = "grafana-tls"
+      issuerRef = {
+        name = "letsencrypt-prod-bind"
+        kind = "ClusterIssuer"
+      }
+      dnsNames = ["grafana.mansion.metacoma.org"]
+    }
+  }
+
+  {
+    apiVersion = "networking.k8s.io/v1"
+    kind = "Ingress"
+    metadata = {
+      name = "grafana-ingress"
+      namespace = monitoring.namespace
+      annotations = {
+        "kubernetes.io/ingress.class" = "nginx"
+      }
+    }
+    spec = {
+      tls = [
+        {
+          hosts = ["grafana.mansion.metacoma.org"]
+          secretName = "grafana-tls"
+        }
+      ]
+      rules = [
+        {
+          host = "grafana.mansion.metacoma.org"
+          http = {
+            paths = [
+              {
+                path = "/"
+                pathType = "Prefix"
+                backend = {
+                  service = {
+                    name = monitoring.grafana.helm.release_name
+                    port = {
+                      number = 80
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+
   k8s.Secret {
     metadata = {
       name = monitoring.alertmanager.secret_name
