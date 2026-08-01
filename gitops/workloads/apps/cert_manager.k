@@ -2,6 +2,7 @@ import k8s.api.core.v1 as k8s
 import config as cfg
 import ..argoproj.v1alpha1 as argoproj
 import yaml
+import json
 
 _config = cfg.config
 cert_manager = _config.cert_manager
@@ -49,10 +50,15 @@ manifests = [
     cert_manager.helm, 
     values = {
       installCRDs = True
-      webhook = {
-        service = {
-          loadBalancerIP = cert_manager.lb_ip
-        }
+      # Use Multus annotation for access to Management VLAN
+      podAnnotations = {
+        "k8s.v1.cni.cncf.io/networks": json.encode([
+          {
+            "name": "macvlan-management-cert-manager",
+            "interface": "net1",
+            "ips": ["172.24.1.2/24"]
+          }
+        ])
       }
       # Ensure controllers run on workers
       nodeSelector = {
