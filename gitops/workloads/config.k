@@ -296,6 +296,7 @@ config = {
     }
     cert_manager = {
         namespace = "cert-manager"
+        issuer_name = "letsencrypt-prod-bind"
         managed_domain = "ref+vault://kv/spaceship_dns#managed_domain"
         helm = {
             chart_name = "cert-manager"

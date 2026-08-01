@@ -307,10 +307,10 @@ manifests = [
     spec = {
       secretName = "grafana-tls"
       issuerRef = {
-        name = "letsencrypt-prod-bind"
+        name = _config.cert_manager.issuer_name
         kind = "ClusterIssuer"
       }
-      dnsNames = ["grafana.mansion.metacoma.org"]
+      dnsNames = ["grafana." + _config.cert_manager.managed_domain]
     }
   }
 
@@ -327,13 +327,13 @@ manifests = [
     spec = {
       tls = [
         {
-          hosts = ["grafana.mansion.metacoma.org"]
+          hosts = ["grafana." + _config.cert_manager.managed_domain]
           secretName = "grafana-tls"
         }
       ]
       rules = [
         {
-          host = "grafana.mansion.metacoma.org"
+          host = "grafana." + _config.cert_manager.managed_domain
           http = {
             paths = [
               {
