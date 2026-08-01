@@ -296,12 +296,6 @@ config = {
     }
     antifilter = {
         namespace = "network"
-        helm = {
-            chart_name = "frr-k8s"
-            repo = "https://metallb.github.io/frr-k8s"
-            release_name = "frr-k8s"
-            chart_version = "0.0.25" # Using a placeholder, usually managed by ArgoCD or specific version
-        }
         bgpPeers = [
             {
                 localAs = 64512
