@@ -79,8 +79,7 @@ manifests = [
         "k8s.v1.cni.cncf.io/networks": json.encode([
           {
             "name": "macvlan-management-cert-manager",
-            "interface": "net1",
-            "ips": ["172.24.1.2/24"]
+            "interface": "eth1"
           }
         ])
       }
