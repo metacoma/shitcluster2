@@ -88,19 +88,25 @@ manifests = [
       nodeSelector = {
         "node-role.kubernetes.io/worker": ""
       }
-      webhook.nodeSelector = {
-        "node-role.kubernetes.io/worker": ""
+      webhook = {
+        nodeSelector = {
+          "node-role.kubernetes.io/worker": ""
+        }
       }
-      cainjector.nodeSelector = {
-        "node-role.kubernetes.io/worker": ""
+      cainjector = {
+        nodeSelector = {
+          "node-role.kubernetes.io/worker": ""
+        }
       }
-      startupapicheck.nodeSelector = {
-        "node-role.kubernetes.io/worker": ""
+      startupapicheck = {
+        nodeSelector = {
+          "node-role.kubernetes.io/worker": ""
+        }
       }
     }
   )
 
-  # 3. Secret for BIND TSIG key (RFC 2136)
+  # 4. Secret for BIND TSIG key (RFC 2136)
   k8s.Secret {
     metadata = {
       name = "bind-tsig-secret"
@@ -111,7 +117,7 @@ manifests = [
     }
   }
 
-  # 4. ClusterIssuer for Let's Encrypt with BIND DNS-01
+  # 5. ClusterIssuer for Let's Encrypt with BIND DNS-01
   {
     apiVersion = "cert-manager.io/v1"
     kind = "ClusterIssuer"
@@ -144,7 +150,7 @@ manifests = [
     }
   }
 
-  # 5. Wildcard Certificate for managed domain
+  # 6. Wildcard Certificate for managed domain
   {
     apiVersion = "cert-manager.io/v1"
     kind = "Certificate"
