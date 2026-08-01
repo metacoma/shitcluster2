@@ -3,6 +3,7 @@ import config as cfg
 import ..argoproj.v1alpha1 as argoproj
 import yaml
 import json
+import kubevirt.v1.k8s_cni_cncf_io_v1_network_attachment_definition as network_attach
 
 _config = cfg.config
 cert_manager = _config.cert_manager
@@ -45,7 +46,30 @@ manifests = [
     }
   }
 
-  # 2. Helm Installation via ArgoCD
+  # 2. Network Attachment Definition for Management VLAN
+  network_attach.NetworkAttachmentDefinition {
+    metadata = {
+      name = "macvlan-management-cert-manager"
+      namespace = cert_manager.namespace
+    }
+    spec = {
+      config = json.encode({
+        cniVersion = "0.3.1"
+        type = "macvlan"
+        master = "net1"
+        mode = "bridge"
+        ipam = {
+          type = "static"
+          addresses = [{
+            address = "172.24.1.2/24"
+            gateway = "172.24.0.1"
+          }]
+        }
+      })
+    }
+  }
+
+  # 3. Helm Installation via ArgoCD
   app_manifest(
     cert_manager.helm, 
     values = {
