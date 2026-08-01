@@ -121,7 +121,7 @@ manifests = [
     apiVersion = "cert-manager.io/v1"
     kind = "ClusterIssuer"
     metadata = {
-      name = "letsencrypt-prod-bind"
+      name = cert_manager.issuer_name
     }
     spec = {
       acme = {
@@ -160,7 +160,7 @@ manifests = [
     spec = {
       secretName = "mansion-net-tls"
       issuerRef = {
-        name = "letsencrypt-prod-bind"
+        name = cert_manager.issuer_name
         kind = "ClusterIssuer"
       }
       commonName = "*." + cert_manager.managed_domain
