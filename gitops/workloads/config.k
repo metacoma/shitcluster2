@@ -297,6 +297,7 @@ config = {
     cert_manager = {
         namespace = "cert-manager"
         lb_ip = "172.24.1.10"
+        managed_domain = "ref+vault://kv/spaceship_dns#managed_domain"
         helm = {
             chart_name = "cert-manager"
             repo = "oci://quay.io/jetstack/charts"

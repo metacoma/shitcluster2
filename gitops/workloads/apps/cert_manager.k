@@ -114,7 +114,7 @@ manifests = [
     }
   }
 
-  # 5. Wildcard Certificate for mansion.net.metacoma.org
+  # 5. Wildcard Certificate for managed domain
   {
     apiVersion = "cert-manager.io/v1"
     kind = "Certificate"
@@ -128,10 +128,10 @@ manifests = [
         name = "letsencrypt-prod-bind"
         kind = "ClusterIssuer"
       }
-      commonName = "*.mansion.net.metacoma.org"
+      commonName = "*." + cert_manager.managed_domain
       dnsNames = [
-        "*.mansion.net.metacoma.org"
-        "mansion.net.metacoma.org"
+        "*." + cert_manager.managed_domain
+        cert_manager.managed_domain
       ]
     }
   }
