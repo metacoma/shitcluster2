@@ -61,6 +61,7 @@ manifests = [
                             address = peer.neighborIp
                             asn = peer.remoteAs
                             holdTime = str(peer.holdTime) + "s"
+                            keepaliveTime = str(peer.holdTime // 3) + "s"
                             ebgpMultiHop = peer.multihop
                         }
                     ]
