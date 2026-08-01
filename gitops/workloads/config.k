@@ -294,23 +294,4 @@ config = {
         upstreamDns = "172.25.1.8"
         adminPassword = "ref+vault://kv/pihole#adminPassword"
     }
-    antifilter = {
-        namespace = "network"
-        bgpPeers = [
-            {
-                localAs = 64512
-                neighborIp = "172.25.0.1"
-                remoteAs = 64513
-                holdTime = 90
-                multihop = False
-            }
-            {
-                localAs = 65542
-                neighborIp = "45.154.73.71"
-                remoteAs = 65432
-                holdTime = 240
-                multihop = True
-            }
-        ]
-    }
 }
