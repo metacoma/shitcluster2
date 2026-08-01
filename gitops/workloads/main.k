@@ -17,7 +17,7 @@ import .apps.ingress_nginx as ingress_nginx
 import .apps.wireguard as wireguard
 import .apps.dnscrypt_proxy as dnscrypt_proxy
 import .apps.pihole as pihole
-import .apps.cert_manager as cert_manager
+#import .apps.cert_manager as cert_manager
 
 resources = [
     #    argoproj.Application {
@@ -127,7 +127,7 @@ resources = [
     wireguard.manifests
     dnscrypt_proxy.manifests
     pihole.manifests
-    cert_manager.manifests
+#    cert_manager.manifests
 ]
 
 manifests.yaml_stream([
