@@ -55,7 +55,7 @@ manifests = [
         bgp = {
             routers = [
                 {
-                    as = peer.localAs
+                    asn = peer.localAs
                     neighbors = [
                         {
                             address = peer.neighborIp
