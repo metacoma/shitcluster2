@@ -121,11 +121,11 @@ manifests = [
     apiVersion = "cert-manager.io/v1"
     kind = "ClusterIssuer"
     metadata = {
-      name = "letsencrypt-staging-bind"
+      name = "letsencrypt-prod-bind"
     }
     spec = {
       acme = {
-        server = "https://acme-staging-v02.api.letsencrypt.org/directory"
+        server = "https://acme-v02.api.letsencrypt.org/directory"
         email = "admin@metacoma.org"
         privateKeySecretRef = {
           name = "letsencrypt-prod-account-key"
@@ -155,12 +155,12 @@ manifests = [
     kind = "Certificate"
     metadata = {
       name = "mansion-wildcard-cert"
-      namespace = "network" # Target namespace where cert will be used
+      namespace = cert_manager.namespace # Target namespace where cert will be used
     }
     spec = {
       secretName = "mansion-net-tls"
       issuerRef = {
-        name = "letsencrypt-staging-bind"
+        name = "letsencrypt-prod-bind"
         kind = "ClusterIssuer"
       }
       commonName = "*." + cert_manager.managed_domain
