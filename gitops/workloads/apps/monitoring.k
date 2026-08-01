@@ -297,20 +297,14 @@ manifests = [
     sync = {}
   )
 
-  {
-    apiVersion = "cert-manager.io/v1"
-    kind = "Certificate"
+  # Shared Wildcard Certificate (Reflected from cert-manager namespace)
+  k8s.Secret {
     metadata = {
-      name = "grafana-tls"
+      name = "mansion-net-tls"
       namespace = monitoring.namespace
-    }
-    spec = {
-      secretName = "grafana-tls"
-      issuerRef = {
-        name = _config.cert_manager.issuer_name
-        kind = "ClusterIssuer"
+      annotations = {
+        "reflector.v1.k8s.emberstack.com/reflect-from" = "cert-manager/mansion-net-tls"
       }
-      dnsNames = ["grafana." + _config.cert_manager.managed_domain]
     }
   }
 
@@ -328,7 +322,7 @@ manifests = [
       tls = [
         {
           hosts = ["grafana." + _config.cert_manager.managed_domain]
-          secretName = "grafana-tls"
+          secretName = "mansion-net-tls"
         }
       ]
       rules = [
