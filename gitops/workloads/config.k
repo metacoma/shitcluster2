@@ -294,4 +294,15 @@ config = {
         upstreamDns = "172.25.1.8"
         adminPassword = "ref+vault://kv/pihole#adminPassword"
     }
+    cert_manager = {
+        namespace = "cert-manager"
+        lb_ip = "172.24.1.10"
+        helm = {
+            chart_name = "cert-manager"
+            repo = "oci://quay.io/jetstack/charts"
+            release_name = "cert-manager"
+            chart_version = "v1.21.1"
+            app_version = "v1.21.1"
+        }
+    }
 }
