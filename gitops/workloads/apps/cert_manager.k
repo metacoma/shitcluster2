@@ -56,12 +56,12 @@ manifests = [
       config = json.encode({
         cniVersion = "0.3.1"
         type = "macvlan"
-        master = "net1"
+        master = "br-management"
         mode = "bridge"
         ipam = {
           type = "static"
           addresses = [{
-            address = "172.24.1.2/24"
+            address = "172.24.1.2/16"
             gateway = "172.24.0.1"
           }]
         }
@@ -80,7 +80,7 @@ manifests = [
           {
             "name": "macvlan-management-cert-manager",
             "interface": "net1",
-            "ips": ["172.24.1.2/24"]
+            "ips": ["172.24.1.2/16"]
           }
         ])
       }
