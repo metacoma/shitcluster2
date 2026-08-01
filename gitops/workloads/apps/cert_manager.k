@@ -61,7 +61,7 @@ manifests = [
         ipam = {
           type = "static"
           addresses = [{
-            address = "172.24.1.2/16"
+            address = "172.24.1.2/24"
             gateway = "172.24.0.1"
           }]
         }
@@ -80,7 +80,7 @@ manifests = [
           {
             "name": "macvlan-management-cert-manager",
             "interface": "net1",
-            "ips": ["172.24.1.2/16"]
+            "ips": ["172.24.1.2/24"]
           }
         ])
       }
