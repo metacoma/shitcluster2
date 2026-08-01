@@ -135,7 +135,7 @@ manifests = [
           {
             dns01 = {
               rfc2136 = {
-                nameservers = ["172.24.0.2"]
+                nameserver = "172.24.0.2"
                 tsigKeyName = "cert_manager_key"
                 tsigAlgorithm = "HMACSHA256"
                 tsigSecretSecretRef = {
