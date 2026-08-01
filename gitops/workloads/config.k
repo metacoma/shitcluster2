@@ -306,4 +306,14 @@ config = {
             app_version = "v1.21.1"
         }
     }
+    reflector = {
+        namespace = "reflector"
+        helm = {
+            release_name = "reflector"
+            chart_name = "reflector"
+            repo = "oci://ghcr.io/emberstack/helm-charts/reflector"
+            chart_version = "10.0.61"
+            app_version = "10.0.61"
+        }
+    }
 }
