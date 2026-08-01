@@ -43,33 +43,31 @@ manifests = [
     }
   }
 
-  # BGP Configuration via FRRConfiguration CRDs
-] + [
-    {
-      apiVersion = "frrk8s.metallb.io/v1beta1"
-      kind = "FRRConfiguration"
-      metadata = {
-          name = "bgp-peerings-" + str(peer.localAs)
-          namespace = af.namespace
-      }
-      spec = {
-          bgp = {
-              routers = [
-                  {
-                      asn = peer.localAs
-                      vrf = "vrf-" + str(peer.localAs)
-                      neighbors = [
-                          {
-                              address = peer.neighborIp
-                              asn = peer.remoteAs
-                              holdTime = str(peer.holdTime) + "s"
-                              keepaliveTime = str(peer.holdTime // 3) + "s"
-                              ebgpMultiHop = peer.multihop
-                          }
-                      ]
-                  }
-              ]
-          }
-      }
-    } for peer in af.bgpPeers
-]
+  # BGP Configuration via FRRConfiguration CRD
+  {
+    apiVersion = "frrk8s.metallb.io/v1beta1"
+    kind = "FRRConfiguration"
+    metadata = {
+        name = "frr-bgp-config"
+        namespace = af.namespace
+    }
+    spec = {
+        bgp = {
+            routers = [
+                {
+                    asn = peer.localAs
+                    vrf = "vrf-" + str(peer.localAs)
+                    neighbors = [
+                        {
+                            address = peer.neighborIp
+                            asn = peer.remoteAs
+                            holdTime = str(peer.holdTime) + "s"
+                            keepaliveTime = str(peer.holdTime // 3) + "s"
+                            ebgpMultiHop = peer.multihop
+                        }
+                    ]
+                } for peer in af.bgpPeers
+            ]
+        }
+    }
+  }
