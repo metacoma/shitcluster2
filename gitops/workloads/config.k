@@ -382,7 +382,7 @@ config = {
             helm = {
                 repo = "oci://ghcr.io/grafana-community/helm-charts/grafana-mcp"
                 chart = "grafana-mcp"
-                version = "latest"
+                version = "0.19.0"
                 release_name = "grafana-mcp"
             }
             image = {
