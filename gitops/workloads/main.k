@@ -23,6 +23,7 @@ import .apps.mcphub as mcphub
 # import .apps.ddgs as ddgs
 import .apps.kubernetes_mcp as kubernetes_mcp
 import .apps.hound_mcp as hound_mcp
+import .apps.github_mcp as github_mcp
 
 resources = [
     ssh_tunnel.manifests
@@ -44,6 +45,7 @@ resources = [
     # ddgs.manifests
     kubernetes_mcp.manifests
     hound_mcp.manifests
+    github_mcp.manifests
 ]
 
 manifests.yaml_stream([
