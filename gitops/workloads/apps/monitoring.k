@@ -259,6 +259,11 @@ manifests = [
             revision = 1
             datasource = "VictoriaMetrics"
           }
+          "pi-hole-exporter" = {
+            gnetId = 10176
+            revision = 1
+            datasource = "VictoriaMetrics"
+          }
         }
       }
       datasources = {
