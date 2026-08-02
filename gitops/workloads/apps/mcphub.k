@@ -29,6 +29,10 @@ _settings = """{
     }
   },
   "systemConfig": {
+    "routing": {
+      "enableBearerAuth": false,
+      "skipAuth": true
+    },
     "auth": {
       "betterAuth": {}
     }
