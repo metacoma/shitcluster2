@@ -331,10 +331,22 @@ config = {
         k8s_mcp = {
             prefix = "k8s-mcp"
             helm = {
-                repo = "oci://ghcr.io/containers/charts"
+                repo = "oci://ghcr.io/containers/charts/kubernetes-mcp-server"
                 chart = "kubernetes-mcp-server"
                 version = "0.1.0"
                 release_name = "kubernetes-mcp-server"
+            }
+            values = {
+                replicaCount = 1
+                serviceAccount = { create = True }
+                rbac = { create = True }
+                ingress = {
+                    enabled = True
+                    tls = { secretName = "mansion-net-tls" }
+                }
+                metrics = {
+                    serviceMonitor = { enabled = True }
+                }
             }
         }
     }
