@@ -21,6 +21,7 @@ import .apps.cert_manager as cert_manager
 import .apps.reflector as reflector
 import .apps.mcphub as mcphub
 # import .apps.ddgs as ddgs
+import .apps.kubernetes_mcp as kubernetes_mcp
 import .apps.hound_mcp as hound_mcp
 
 resources = [
@@ -41,6 +42,7 @@ resources = [
     cert_manager.manifests
     mcphub.manifests
     # ddgs.manifests
+    kubernetes_mcp.manifests
     hound_mcp.manifests
 ]
 

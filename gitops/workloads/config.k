@@ -328,5 +328,8 @@ config = {
             image = "metacoma/hound-mcp:v2"
             port = 8765
         }
+        k8s_mcp = {
+            ingress_host = "k8s-mcp.mansion.metacoma.org"
+        }
     }
 }
