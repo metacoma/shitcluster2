@@ -322,5 +322,9 @@ config = {
             image = "docker.io/library/ddgs-mcp-ddgs-mcp:latest"
             port = 8096
         }
+        hound_mcp = {
+            image = "metacoma/hound-mcp:latest"
+            port = 8765
+        }
     }
 }
