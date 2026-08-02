@@ -11,25 +11,31 @@ manifests = [
   # ArgoCD Application for Helm Chart
   argoproj.Application {
     metadata = {
-      name = "kubernetes-mcp-server"
+      name = k8s_mcp.helm.release_name
       namespace = _config.argocd.namespace
     }
     spec = {
       project = "default"
       source = {
-        chart = "kubernetes-mcp-server"
-        repoURL = "oci://ghcr.io/containers/charts"
-        targetRevision = "0.1.0"
+        chart = k8s_mcp.helm.chart
+        repoURL = k8s_mcp.helm.repo
+        targetRevision = k8s_mcp.helm.version
         helm = {
           values = yaml.encode({
             replicaCount = 1
             serviceAccount = { create = True }
             rbac = { create = True }
-            ingress = { enabled = False }
+            ingress = {
+              enabled = True
+              host = k8s_mcp.prefix + "." + _config.cert_manager.managed_domain
+              tls = {
+                secretName = "mansion-net-tls"
+              }
+            }
             metrics = {
               serviceMonitor = {
                 enabled = True
-                labels = { "release": "kubernetes-mcp-server" }
+                labels = { "release": k8s_mcp.helm.release_name }
               }
             }
           })
@@ -42,48 +48,6 @@ manifests = [
       syncPolicy = {
         automated = { prune = True, selfHeal = True }
       }
-    }
-  }
-
-  # Ingress (following hound-mcp pattern)
-  {
-    apiVersion = "networking.k8s.io/v1"
-    kind = "Ingress"
-    metadata = {
-      name = "kubernetes-mcp-ingress"
-      namespace = mcp.namespace
-      annotations = {
-        "kubernetes.io/ingress.class" = "nginx"
-      }
-    }
-    spec = {
-      tls = [
-        {
-          hosts = [k8s_mcp.prefix + "." + _config.cert_manager.managed_domain]
-          secretName = "mansion-net-tls"
-        }
-      ]
-      rules = [
-        {
-          host = k8s_mcp.prefix + "." + _config.cert_manager.managed_domain
-          http = {
-            paths = [
-              {
-                path = "/"
-                pathType = "Prefix"
-                backend = {
-                  service = {
-                    name = "kubernetes-mcp-server"
-                    port = {
-                      number = 8080
-                    }
-                  }
-                }
-              }
-            ]
-          }
-        }
-      ]
     }
   }
 ]
