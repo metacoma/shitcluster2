@@ -59,13 +59,13 @@ manifests = [
     spec = {
       tls = [
         {
-          hosts = [k8s_mcp.ingress_host]
+          hosts = [k8s_mcp.prefix + "." + _config.cert_manager.managed_domain]
           secretName = "mansion-net-tls"
         }
       ]
       rules = [
         {
-          host = k8s_mcp.ingress_host
+          host = k8s_mcp.prefix + "." + _config.cert_manager.managed_domain
           http = {
             paths = [
               {
