@@ -49,7 +49,7 @@ manifests = [
                 pathType = "Prefix"
                 backend = {
                   service = {
-                    name = ph.helm.release_name
+                    name = ph.helm.release_name + "-web"
                     port = {
                       number = 80
                     }
