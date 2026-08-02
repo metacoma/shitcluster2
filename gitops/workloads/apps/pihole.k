@@ -22,6 +22,7 @@ manifests = [
         "reflector.v1.k8s.emberstack.com/reflects" = "cert-manager/mansion-net-tls"
       }
     }
+    type = "kubernetes.io/tls"
   }
 
   {
