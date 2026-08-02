@@ -182,6 +182,18 @@ manifests = [
   }
 
   monitoring_app(
+    monitoring.vm_single.helm, values = {
+      server = {
+        nodeSelector = _config.nodeSelector.worker
+        persistentVolume = {
+          enabled = True
+          storageClassName = _config.storageClass
+        }
+      }
+    }, sync = {}
+  )
+
+  monitoring_app(
     monitoring.vm_agent.helm, values = {
       nodeSelector = _config.nodeSelector.worker
       remoteWrite = [{

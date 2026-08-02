@@ -114,8 +114,8 @@ config = {
         vm_single = {
             helm = {
                 release_name = "vm-single"
-                chart_version = "0.27.0"
-                app_version = "v1.132.0"
+                chart_version = "0.43.0"
+                app_version = "v1.148.0"
                 repo = "https://victoriametrics.github.io/helm-charts/"
                 chart_name = "victoria-metrics-single"
             }
