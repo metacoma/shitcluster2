@@ -3,32 +3,27 @@ import k8s.api.apps.v1 as apps
 import k8s.api.networking.v1 as net
 import config as cfg
 
-_config = cfg.config
-mcp = _config.mcp
-_app_cfg = mcp.github_mcp
-_name = _app_cfg.name
-_image = _app_cfg.image
-_ingress_host = _app_cfg.ingress_host
+app = cfg.config.mcp.github_mcp
 
 manifests = [
     apps.Deployment {
         metadata = {
-            name = _name
-            namespace = mcp.namespace
+            name = app.name
+            namespace = cfg.config.mcp.namespace
         }
         spec = {
             replicas = 1
-            selector = {matchLabels = {app = _name}}
+            selector = {matchLabels = {app = app.name}}
             template = {
-                metadata = {labels = {app = _name}}
+                metadata = {labels = {app = app.name}}
                 spec = {
                     containers = [{
-                        name = _name
-                        image = _image
+                        name = app.name
+                        image = app.image
                         args = [
                             "http", 
                             "--scope-challenge", 
-                            "--base-url", "https://" + _ingress_host
+                            "--base-url", "https://" + app.ingress_host
                         ]
                         ports = [{containerPort = 8082}]
                         env = [
@@ -44,36 +39,36 @@ manifests = [
     },
     core.Service {
         metadata = {
-            name = _name
-            namespace = mcp.namespace
+            name = app.name
+            namespace = cfg.config.mcp.namespace
         }
         spec = {
-            selector = {app = _name}
+            selector = {app = app.name}
             ports = [{port = 80, targetPort = 8082}]
         }
     },
     net.Ingress {
         metadata = {
-            name = _name
-            namespace = mcp.namespace
+            name = app.name
+            namespace = cfg.config.mcp.namespace
             annotations = {
                 "kubernetes.io/ingress.class": "nginx"
             }
         }
         spec = {
             tls = [{
-                hosts = [_ingress_host]
+                hosts = [app.ingress_host]
                 secretName = "mansion-net-tls"
             }]
             rules = [{
-                host = _ingress_host
+                host = app.ingress_host
                 http = {
                     paths = [{
                         path = "/"
                         pathType = "Prefix"
                         backend = {
                             service = {
-                                name = _name
+                                name = app.name
                                 port = {number = 80}
                             }
                         }
