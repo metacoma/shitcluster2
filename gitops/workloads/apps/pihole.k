@@ -1,7 +1,9 @@
 import k8s.api.core.v1 as k8s
+import k8s.api.apps.v1 as v1
 import config as cfg
 import argoproj.v1alpha1 as argoproj
 import yaml
+import victoria_metrics_operator.v1beta1.operator_victoriametrics_com_v1beta1_vm_service_scrape as vm_service_scrape
 
 _config = cfg.config
 ph = _config.pihole
@@ -95,6 +97,10 @@ manifests = [
                   loadBalancerIP = ph.loadBalancerIP
                   mixedService = True
                   externalTrafficPolicy = "Local"
+                  annotations = {
+                    "prometheus.io/scrape": "true"
+                    "prometheus.io/port": "9617"
+                  }
                 }
                 serviceDhcp = {
                   enabled = False
@@ -151,6 +157,22 @@ manifests = [
                 selfHeal = True
             }
         }
+    }
+  }
+
+  vm_service_scrape.VMServiceScrape {
+    metadata = {
+      name = "pihole-metrics"
+      namespace = ph.namespace
+    }
+    spec = {
+      selector.matchLabels = {
+        "app.kubernetes.io/name" = "pihole"
+      }
+      endpoints = [{
+        port = "prometheus"
+        interval = "30s"
+      }]
     }
   }
 ]
