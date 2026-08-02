@@ -386,8 +386,8 @@ config = {
                 release_name = "grafana-mcp"
             }
             image = {
-                repository = "ghcr.io/grafana/mcp-grafana"
-                tag = "latest"
+                repository = "grafana/mcp-grafana"
+                tag = "0.17.2"
             }
         }
     }
