@@ -318,6 +318,8 @@ config = {
     }
     mcp = {
         namespace = "mcp"
+        admin_password = "ref+vault://kv/mcphub#admin_password"
+        ingress_host = "mcphub.mansion.metacoma.org"
         ddgs = {
             image = "docker.io/library/ddgs-mcp-ddgs-mcp:latest"
             port = 8096
