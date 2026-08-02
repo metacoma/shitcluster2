@@ -15,6 +15,7 @@ chart_values = {
   rbac = k8s_mcp.values.rbac
   ingress = {
     enabled = k8s_mcp.values.ingress.enabled
+    className = "nginx"
     host = k8s_mcp.prefix + "." + _config.cert_manager.managed_domain
     tls = k8s_mcp.values.ingress.tls
   }
