@@ -316,4 +316,11 @@ config = {
             app_version = "9.1.39"
         }
     }
+    mcp = {
+        namespace = "mcp"
+        ddgs = {
+            image = "docker.io/library/ddgs-mcp-ddgs-mcp:latest"
+            port = 8096
+        }
+    }
 }
