@@ -338,14 +338,37 @@ config = {
             }
             values = {
                 replicaCount = 1
-                serviceAccount = { create = True }
-                rbac = { create = True }
+                serviceAccount = {create = True}
+                rbac = {
+                    create = True
+                    extraClusterRoles = [{
+                        name = "cluster-reader"
+                        rules = [
+                            {
+                                apiGroups = [""]
+                                resources = ["nodes", "pods", "persistentvolumeclaims", "namespaces", "events"]
+                                verbs = ["get", "list", "watch"]
+                            }
+                            {
+                                apiGroups = ["apps"]
+                                resources = ["deployments", "statefulsets", "daemonsets"]
+                                verbs = ["get", "list", "watch"]
+                            }
+                        ]
+                    }]
+                    extraClusterRoleBindings = [{
+                        name = "cluster-reader-binding"
+                        roleRef = {
+                            name = "cluster-reader"
+                        }
+                    }]
+                }
                 ingress = {
                     enabled = True
-                    tls = { secretName = "mansion-net-tls" }
+                    tls = {secretName = "mansion-net-tls"}
                 }
                 metrics = {
-                    serviceMonitor = { enabled = False }
+                    serviceMonitor = {enabled = False}
                 }
             }
         }
