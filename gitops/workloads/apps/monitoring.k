@@ -197,7 +197,7 @@ manifests = [
     mon_cfg.vm_agent.helm, values = {
       nodeSelector = _config.nodeSelector.worker
       remoteWrite = [{
-        url = "http://vm-single-victoria-metrics-single-server.monitoring:8428/api/v1/write"
+        url = "http://vm-single-victoria-metrics-single-server:8428/api/v1/write"
       }]
     }, sync = {}
   )
