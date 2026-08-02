@@ -269,6 +269,11 @@ manifests = [
             revision = 1
             datasource = "VictoriaMetrics"
           }
+          "longhorn-dashboard" = {
+            gnetId = 17626
+            revision = 1
+            datasource = "VictoriaMetrics"
+          }
         }
       }
       datasources = {
@@ -420,6 +425,23 @@ manifests = [
     stringData = {
       telegram_bot_token = mon_cfg.notifications.telegram.bot_token
       telegram_chat_id = mon_cfg.notifications.telegram.chat_id
+    }
+  }
+
+  vm_service_scrape.VMServiceScrape {
+    metadata = {
+      name = "longhorn-metrics"
+      namespace = _config.monitoring.namespace
+    }
+    spec = {
+      selector.matchLabels = {
+        "app" = "longhorn-manager"
+      }
+      namespaceSelector.matchNames = ["longhorn-system"]
+      endpoints = [{
+        port = "manager"
+        interval = "30s"
+      }]
     }
   }
 
