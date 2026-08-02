@@ -29,9 +29,6 @@ _settings = """{
 }"""
 
 manifests = [
-    core.Namespace {
-        metadata.name = mcp.namespace
-    },
     core.PersistentVolumeClaim {
         metadata = {
             name = _name + "-data"
