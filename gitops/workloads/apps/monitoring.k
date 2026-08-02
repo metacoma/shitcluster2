@@ -361,11 +361,48 @@ manifests = [
     }
   }
 
-  k8s.Secret {
+  {
+    apiVersion = "networking.k8s.io/v1"
+    kind = "Ingress"
     metadata = {
-      name = monitoring.alertmanager.secret_name
+      name = "victoria-ingress"
       namespace = monitoring.namespace
+      annotations = {
+        "kubernetes.io/ingress.class" = "nginx"
+      }
     }
+    spec = {
+      tls = [
+        {
+          hosts = ["victoria." + _config.cert_manager.managed_domain]
+          secretName = "mansion-net-tls"
+        }
+      ]
+      rules = [
+        {
+          host = "victoria." + _config.cert_manager.managed_domain
+          http = {
+            paths = [
+              {
+                path = "/"
+                pathType = "Prefix"
+                backend = {
+                  service = {
+                    name = "${monitoring.vm_single.helm.release_name}-victoria-metrics-single-server"
+                    port = {
+                      number = 8428
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+
+  k8s.Secret {
     stringData = {
       telegram_bot_token = monitoring.notifications.telegram.bot_token
       telegram_chat_id = monitoring.notifications.telegram.chat_id
