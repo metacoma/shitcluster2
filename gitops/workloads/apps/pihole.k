@@ -96,6 +96,9 @@ manifests = [
                   mixedService = True
                   externalTrafficPolicy = "Local"
                 }
+                serviceDhcp = {
+                  enabled = False
+                }
                 
                 # Storage (Longhorn)
                 persistentVolumeClaim = {
