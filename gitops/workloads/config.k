@@ -328,5 +328,14 @@ config = {
             image = "metacoma/hound-mcp:v2"
             port = 8765
         }
+        k8s_mcp = {
+            prefix = "k8s-mcp"
+            helm = {
+                repo = "oci://ghcr.io/containers/charts"
+                chart = "kubernetes-mcp-server"
+                version = "0.1.0"
+                release_name = "kubernetes-mcp-server"
+            }
+        }
     }
 }
