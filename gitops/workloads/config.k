@@ -345,7 +345,7 @@ config = {
                     tls = { secretName = "mansion-net-tls" }
                 }
                 metrics = {
-                    serviceMonitor = { enabled = True }
+                    serviceMonitor = { enabled = False }
                 }
             }
         }

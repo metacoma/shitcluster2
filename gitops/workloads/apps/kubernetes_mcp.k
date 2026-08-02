@@ -2,6 +2,7 @@ import k8s.api.core.v1 as k8s
 import ..argoproj.v1alpha1 as argoproj
 import config as cfg
 import yaml
+import victoria_metrics_operator.v1beta1.operator_victoriametrics_com_v1beta1_vm_service_scrape as vm_service_scrape
 
 _config = cfg.config
 mcp = _config.mcp
@@ -49,6 +50,23 @@ manifests = [
       syncPolicy = {
         automated = { prune = True, selfHeal = True }
       }
+    }
+  },
+
+  # VictoriaMetrics scrape resource
+  vm_service_scrape.VMServiceScrape {
+    metadata = {
+      name = k8s_mcp.helm.release_name + "-metrics"
+      namespace = mcp.namespace
+    }
+    spec = {
+      selector.matchLabels = {
+        "app.kubernetes.io/name" = k8s_mcp.helm.release_name
+      }
+      endpoints = [{
+        port = "http"
+        interval = "30s"
+      }]
     }
   }
 ]
