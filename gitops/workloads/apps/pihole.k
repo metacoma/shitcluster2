@@ -11,7 +11,60 @@ manifests = [
     metadata.name = ph.namespace
   }
 
+  # Shared Wildcard Certificate (Reflected from cert-manager namespace)
+  k8s.Secret {
+    metadata = {
+      name = "mansion-net-tls"
+      namespace = ph.namespace
+      annotations = {
+        "reflector.v1.k8s.emberstack.com/reflects" = "cert-manager/mansion-net-tls"
+      }
+    }
+  }
+
+  {
+    apiVersion = "networking.k8s.io/v1"
+    kind = "Ingress"
+    metadata = {
+      name = "pihole-ingress"
+      namespace = ph.namespace
+      annotations = {
+        "kubernetes.io/ingress.class" = "nginx"
+      }
+    }
+    spec = {
+      tls = [
+        {
+          hosts = ["pihole." + _config.cert_manager.managed_domain]
+          secretName = "mansion-net-tls"
+        }
+      ]
+      rules = [
+        {
+          host = "pihole." + _config.cert_manager.managed_domain
+          http = {
+            paths = [
+              {
+                path = "/"
+                pathType = "Prefix"
+                backend = {
+                  service = {
+                    name = ph.helm.release_name
+                    port = {
+                      number = 80
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+
   argoproj.Application {
+
     metadata = {
         name = ph.helm.release_name
         namespace = _config.argocd.namespace
