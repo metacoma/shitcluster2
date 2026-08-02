@@ -12,3 +12,11 @@ infra = {
     scheme = "http"
   }
 }
+
+mcp = {
+  namespace = "mcp"
+  ddgs = {
+    image = "docker.io/library/ddgs-mcp-ddgs-mcp:latest"
+    port = 8096
+  }
+}
