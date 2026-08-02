@@ -19,7 +19,7 @@ import .apps.dnscrypt_proxy as dnscrypt_proxy
 import .apps.pihole as pihole
 import .apps.cert_manager as cert_manager
 import .apps.reflector as reflector
-import .apps.ddgs as ddgs
+// import .apps.ddgs as ddgs
 
 resources = [
     ssh_tunnel.manifests
@@ -37,7 +37,7 @@ resources = [
     dnscrypt_proxy.manifests
     pihole.manifests
     cert_manager.manifests
-    ddgs.manifests
+    // ddgs.manifests
 ]
 
 manifests.yaml_stream([
