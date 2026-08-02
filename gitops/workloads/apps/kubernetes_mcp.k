@@ -7,6 +7,24 @@ _config = cfg.config
 mcp = _config.mcp
 k8s_mcp = mcp.k8s_mcp
 
+# Construct final values by combining static config and dynamic properties
+chart_values = {
+  replicaCount = k8s_mcp.values.replicaCount
+  serviceAccount = k8s_mcp.values.serviceAccount
+  rbac = k8s_mcp.values.rbac
+  ingress = {
+    enabled = k8s_mcp.values.ingress.enabled
+    host = k8s_mcp.prefix + "." + _config.cert_manager.managed_domain
+    tls = k8s_mcp.values.ingress.tls
+  }
+  metrics = {
+    serviceMonitor = {
+      enabled = k8s_mcp.values.metrics.serviceMonitor.enabled
+      labels = { "release": k8s_mcp.helm.release_name }
+    }
+  }
+}
+
 manifests = [
   # ArgoCD Application for Helm Chart
   argoproj.Application {
@@ -17,28 +35,11 @@ manifests = [
     spec = {
       project = "default"
       source = {
-        chart = "containers/charts/kubernetes-mcp-server"
-        repoURL = "ghcr.io"
+        chart = k8s_mcp.helm.chart
+        repoURL = k8s_mcp.helm.repo
         targetRevision = k8s_mcp.helm.version
         helm = {
-          values = yaml.encode({
-            replicaCount = 1
-            serviceAccount = { create = True }
-            rbac = { create = True }
-            ingress = {
-              enabled = True
-              host = k8s_mcp.prefix + "." + _config.cert_manager.managed_domain
-              tls = {
-                secretName = "mansion-net-tls"
-              }
-            }
-            metrics = {
-              serviceMonitor = {
-                enabled = True
-                labels = { "release": k8s_mcp.helm.release_name }
-              }
-            }
-          })
+          values = yaml.encode(chart_values)
         }
       }
       destination = {
