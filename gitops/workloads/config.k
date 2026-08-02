@@ -323,7 +323,7 @@ config = {
             port = 8096
         }
         hound_mcp = {
-            image = "metacoma/hound-mcp:latest"
+            image = "metacoma/hound-mcp:v2"
             port = 8765
         }
     }
