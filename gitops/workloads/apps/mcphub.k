@@ -66,6 +66,7 @@ manifests = [
                     containers = [{
                         name = _name
                         image = _image
+                        command = ["sh", "-c", "cp /etc/mcphub-config/mcp_settings.json /app/mcp_settings.json && node dist/index.js"]
                         ports = [{containerPort = 3000}]
                         env = [{
                             name = "ADMIN_PASSWORD"
@@ -73,9 +74,9 @@ manifests = [
                         }]
                         volumeMounts = [
                             {
-                                name = "settings"
-                                mountPath = "/app/mcp_settings.json"
-                                subPath = "mcp_settings.json"
+                                name = "settings-vol"
+                                mountPath = "/etc/mcphub-config"
+                                readOnly = True
                             }
                             {
                                 name = "data"
@@ -85,7 +86,7 @@ manifests = [
                     }]
                     volumes = [
                         {
-                            name = "settings"
+                            name = "settings-vol"
                             configMap = {name = _name + "-settings"}
                         }
                         {
