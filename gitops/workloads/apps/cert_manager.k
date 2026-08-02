@@ -92,13 +92,25 @@ manifests = [
           memory = "128Mi"
         }
         limits = {
-          cpu = "500m"
+          cpu = "1000m"
           memory = "256Mi"
         }
+      }
+      livenessProbe = {
+        timeoutSeconds = 5
+      }
+      readinessProbe = {
+        timeoutSeconds = 5
       }
       webhook = {
         nodeSelector = {
           "node-role.kubernetes.io/worker": ""
+        }
+        livenessProbe = {
+          timeoutSeconds = 5
+        }
+        readinessProbe = {
+          timeoutSeconds = 5
         }
       }
       cainjector = {
