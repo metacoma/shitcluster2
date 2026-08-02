@@ -133,8 +133,8 @@ config = {
             helm = {
                 repo = "https://grafana.github.io/helm-charts"
                 release_name = "grafana"
-                chart_version = "10.4.0"
-                app_version = "12.0.4"
+                chart_version = "10.5.15"
+                app_version = "12.3.1"
                 chart_name = "grafana"
             }
         }
