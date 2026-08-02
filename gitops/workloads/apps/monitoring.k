@@ -303,7 +303,7 @@ manifests = [
       name = "mansion-net-tls"
       namespace = monitoring.namespace
       annotations = {
-        "reflector.v1.k8s.emberstack.com/reflect-from" = "cert-manager/mansion-net-tls"
+        "reflector.v1.k8s.emberstack.com/reflects" = "cert-manager/mansion-net-tls"
       }
     }
   }
