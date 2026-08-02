@@ -347,24 +347,44 @@ config = {
                 rbac = {
                     create = True
                     extraClusterRoles = [{
-                        name = "cluster-reader"
+                        name = "kubernetes-mcp-admin"
                         rules = [
                             {
                                 apiGroups = [""]
-                                resources = ["nodes", "pods", "persistentvolumeclaims", "namespaces", "events"]
-                                verbs = ["get", "list", "watch"]
+                                resources = ["nodes", "pods", "persistentvolumeclaims", "namespaces", "events", "configmaps", "services", "secrets"]
+                                verbs = ["get", "list", "watch", "create", "update", "patch", "delete"]
+                            }
+                            {
+                                apiGroups = [""]
+                                resources = ["pods/log", "nodes/proxy"]
+                                verbs = ["get"]
+                            }
+                            {
+                                apiGroups = [""]
+                                resources = ["pods/exec"]
+                                verbs = ["create"]
                             }
                             {
                                 apiGroups = ["apps"]
-                                resources = ["deployments", "statefulsets", "daemonsets"]
+                                resources = ["deployments", "statefulsets", "daemonsets", "replicasets"]
+                                verbs = ["get", "list", "watch", "create", "update", "patch", "delete"]
+                            }
+                            {
+                                apiGroups = ["metrics.k8s.io"]
+                                resources = ["nodes", "pods"]
+                                verbs = ["get", "list", "watch"]
+                            }
+                            {
+                                apiGroups = ["rbac.authorization.k8s.io"]
+                                resources = ["roles", "clusterroles", "rolebindings", "clusterrolebindings"]
                                 verbs = ["get", "list", "watch"]
                             }
                         ]
                     }]
                     extraClusterRoleBindings = [{
-                        name = "cluster-reader-binding"
+                        name = "kubernetes-mcp-admin-binding"
                         roleRef = {
-                            name = "cluster-reader"
+                            name = "kubernetes-mcp-admin"
                         }
                     }]
                 }
