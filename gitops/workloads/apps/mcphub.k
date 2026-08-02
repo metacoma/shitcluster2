@@ -34,6 +34,17 @@ manifests = [
     },
     core.PersistentVolumeClaim {
         metadata = {
+            name = _name + "-settings-data"
+            namespace = mcp.namespace
+        }
+        spec = {
+            accessModes = ["ReadWriteOnce"]
+            resources = {requests = {storage = "100Mi"}}
+            storageClassName = _config.storageClass
+        }
+    },
+    core.PersistentVolumeClaim {
+        metadata = {
             name = _name + "-data"
             namespace = mcp.namespace
         }
@@ -63,10 +74,25 @@ manifests = [
             template = {
                 metadata = {labels = {app = _name}}
                 spec = {
+                    initContainers = [{
+                        name = "init-settings"
+                        image = "busybox:latest"
+                        command = ["sh", "-c", "cp /etc/mcphub-config/mcp_settings.json /app/mcp_settings.json"]
+                        volumeMounts = [
+                            {
+                                name = "settings-cm"
+                                mountPath = "/etc/mcphub-config"
+                                readOnly = True
+                            }
+                            {
+                                name = "settings-pvc"
+                                mountPath = "/app"
+                            }
+                        ]
+                    }]
                     containers = [{
                         name = _name
                         image = _image
-                        command = ["sh", "-c", "cp /etc/mcphub-config/mcp_settings.json /app/mcp_settings.json && node dist/index.js"]
                         ports = [{containerPort = 3000}]
                         env = [{
                             name = "ADMIN_PASSWORD"
@@ -74,9 +100,9 @@ manifests = [
                         }]
                         volumeMounts = [
                             {
-                                name = "settings-vol"
-                                mountPath = "/etc/mcphub-config"
-                                readOnly = True
+                                name = "settings-pvc"
+                                mountPath = "/app/mcp_settings.json"
+                                subPath = "mcp_settings.json"
                             }
                             {
                                 name = "data"
@@ -86,8 +112,12 @@ manifests = [
                     }]
                     volumes = [
                         {
-                            name = "settings-vol"
+                            name = "settings-cm"
                             configMap = {name = _name + "-settings"}
+                        }
+                        {
+                            name = "settings-pvc"
+                            persistentVolumeClaim = {claimName = _name + "-settings-data"}
                         }
                         {
                             name = "data"
