@@ -13,17 +13,6 @@ manifests = [
     metadata.name = ph.namespace
   }
 
-  # Shared Wildcard Certificate (Reflected from cert-manager namespace)
-  k8s.Secret {
-    metadata = {
-      name = "mansion-net-tls"
-      namespace = ph.namespace
-      annotations = {
-        "reflector.v1.k8s.emberstack.com/reflects" = "cert-manager/mansion-net-tls"
-      }
-    }
-    type = "kubernetes.io/tls"
-  }
 
   {
     apiVersion = "networking.k8s.io/v1"

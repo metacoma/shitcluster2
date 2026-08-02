@@ -181,6 +181,7 @@ manifests = [
         annotations = {
           "reflector.v1.k8s.emberstack.com/reflection-allowed" = "true"
           "reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces" = "monitoring,ingress-nginx,network"
+          "reflector.v1.k8s.emberstack.com/reflection-auto-enabled" = "true"
         }
       }
     }
