@@ -377,5 +377,18 @@ config = {
                 }
             }
         }
+        grafana_mcp = {
+            name = "grafana-mcp"
+            helm = {
+                repo = "oci://ghcr.io/grafana-community/helm-charts/grafana-mcp"
+                chart = "grafana-mcp"
+                version = "latest"
+                release_name = "grafana-mcp"
+            }
+            image = {
+                repository = "ghcr.io/grafana/mcp-grafana"
+                tag = "latest"
+            }
+        }
     }
 }
