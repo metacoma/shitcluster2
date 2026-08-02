@@ -71,7 +71,7 @@ manifests = [
                             {
                                 name = "settings"
                                 mountPath = "/config-ro"
-                                readOnly = true
+                                readOnly = True
                             }
                             {
                                 name = "data"
