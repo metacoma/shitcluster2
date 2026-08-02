@@ -63,20 +63,37 @@ manifests = [
             template = {
                 metadata = {labels = {app = _name}}
                 spec = {
+                    initContainers = [{
+                        name = "prepare-config"
+                        image = "busybox:1.28"
+                        command = ["sh", "-c", "cp /config-ro/mcp_settings.json /app/data/mcp_settings.json"]
+                        volumeMounts = [
+                            {
+                                name = "settings"
+                                mountPath = "/config-ro"
+                                readOnly = true
+                            }
+                            {
+                                name = "data"
+                                mountPath = "/app/data"
+                            }
+                        ]
+                    }]
                     containers = [{
                         name = _name
                         image = _image
                         ports = [{containerPort = 3000}]
-                        env = [{
-                            name = "ADMIN_PASSWORD"
-                            value = mcp.admin_password
-                        }]
-                        volumeMounts = [
+                        env = [
                             {
-                                name = "settings"
-                                mountPath = "/app/mcp_settings.json"
-                                subPath = "mcp_settings.json"
+                                name = "ADMIN_PASSWORD"
+                                value = mcp.admin_password
                             }
+                            {
+                                name = "MCPHUB_SETTING_PATH"
+                                value = "/app/data/mcp_settings.json"
+                            }
+                        ]
+                        volumeMounts = [
                             {
                                 name = "data"
                                 mountPath = "/app/data"
