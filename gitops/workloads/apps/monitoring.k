@@ -264,6 +264,11 @@ manifests = [
             revision = 1
             datasource = "VictoriaMetrics"
           }
+          "cert-manager" = {
+            gnetId = 11001
+            revision = 1
+            datasource = "VictoriaMetrics"
+          }
         }
       }
       datasources = {
@@ -415,6 +420,57 @@ manifests = [
     stringData = {
       telegram_bot_token = mon_cfg.notifications.telegram.bot_token
       telegram_chat_id = mon_cfg.notifications.telegram.chat_id
+    }
+  }
+
+  vm_service_scrape.VMServiceScrape {
+    metadata = {
+      name = "cert-manager-controller-metrics"
+      namespace = _config.monitoring.namespace
+    }
+    spec = {
+      selector.matchLabels = {
+        "app.kubernetes.io/name" = "cert-manager"
+      }
+      namespaceSelector.matchNames = ["cert-manager"]
+      endpoints = [{
+        port = "http-metrics"
+        interval = "30s"
+      }]
+    }
+  }
+
+  vm_service_scrape.VMServiceScrape {
+    metadata = {
+      name = "cert-manager-cainjector-metrics"
+      namespace = _config.monitoring.namespace
+    }
+    spec = {
+      selector.matchLabels = {
+        "app.kubernetes.io/name" = "cainjector"
+      }
+      namespaceSelector.matchNames = ["cert-manager"]
+      endpoints = [{
+        port = "http-metrics"
+        interval = "30s"
+      }]
+    }
+  }
+
+  vm_service_scrape.VMServiceScrape {
+    metadata = {
+      name = "cert-manager-webhook-metrics"
+      namespace = _config.monitoring.namespace
+    }
+    spec = {
+      selector.matchLabels = {
+        "app.kubernetes.io/name" = "webhook"
+      }
+      namespaceSelector.matchNames = ["cert-manager"]
+      endpoints = [{
+        port = "http-metrics"
+        interval = "30s"
+      }]
     }
   }
 
