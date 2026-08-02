@@ -10,7 +10,7 @@ grafana_mcp = mcp.grafana_mcp
 chart_values = {
   replicaCount = 1
   image = {
-    registry = "ghcr.io"
+    registry = "docker.io"
     repository = "grafana/mcp-grafana"
     tag = grafana_mcp.image.tag
   }
