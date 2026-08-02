@@ -5,9 +5,10 @@ import config as cfg
 
 _config = cfg.config
 mcp = _config.mcp
-_name = "github-mcp"
-_image = "ghcr.io/github/github-mcp-server:latest"
-_ingress_host = mcp.github_mcp.ingress_host
+_app_cfg = mcp.github_mcp
+_name = _app_cfg.name
+_image = _app_cfg.image
+_ingress_host = _app_cfg.ingress_host
 
 manifests = [
     apps.Deployment {

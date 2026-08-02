@@ -321,7 +321,9 @@ config = {
         admin_password = "ref+vault://kv/mcphub#admin_password"
         ingress_host = "mcphub.mansion.metacoma.org"
         github_mcp = {
-            ingress_host = "github-mcp.mansion.metacoma.org"
+            name = "github-mcp"
+            image = "ghcr.io/github/github-mcp-server:latest"
+            ingress_host = "github-mcp.ref+vault://kv/spaceship_dns#managed_domain"
         }
         ddgs = {
             image = "docker.io/library/ddgs-mcp-ddgs-mcp:latest"
