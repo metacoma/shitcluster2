@@ -49,7 +49,7 @@ manifests = [
         spec = {
           dnsPolicy = "ClusterFirst"
           dnsConfig = {
-            nameservers = ["1.1.1.1", "9.9.9.9"]
+            nameservers = ["172.25.1.9", "172.25.0.2"]
           }
           containers = [
             {
@@ -69,11 +69,11 @@ manifests = [
               resources = {
                 requests = {
                   cpu = "200m"
-                  memory = "512Mi"
+                  memory = "2Gi"
                 }
                 limits = {
                   cpu = "1"
-                  memory = "3Gi"
+                  memory = "5Gi"
                 }
               }
               volumeMounts = [
