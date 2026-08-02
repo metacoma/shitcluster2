@@ -19,6 +19,7 @@ import .apps.dnscrypt_proxy as dnscrypt_proxy
 import .apps.pihole as pihole
 import .apps.cert_manager as cert_manager
 import .apps.reflector as reflector
+import .apps.mcphub as mcphub
 # import .apps.ddgs as ddgs
 import .apps.hound_mcp as hound_mcp
 
@@ -38,6 +39,7 @@ resources = [
     dnscrypt_proxy.manifests
     pihole.manifests
     cert_manager.manifests
+    mcphub.manifests
     # ddgs.manifests
     hound_mcp.manifests
 ]
