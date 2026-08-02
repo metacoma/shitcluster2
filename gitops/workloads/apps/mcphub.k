@@ -134,6 +134,10 @@ manifests = [
             }
         }
         spec = {
+            tls = [{
+                hosts = [mcp.ingress_host]
+                secretName = "mansion-net-tls"
+            }]
             rules = [{
                 host = mcp.ingress_host
                 http = {
