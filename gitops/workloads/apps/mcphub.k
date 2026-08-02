@@ -26,6 +26,17 @@ _settings = """{
       "enabled": true,
       "visibility": "public",
       "owner": "admin"
+    },
+    "github-mcp": {
+      "type": "streamable-http",
+      "url": "https://github-mcp.mansion.metacoma.org",
+      "headers": {
+        "Authorization": "Bearer ref+vault://kv/metacoma#github"
+      },
+      "timeout": 60000,
+      "enabled": true,
+      "visibility": "public",
+      "owner": "admin"
     }
   },
   "systemConfig": {
