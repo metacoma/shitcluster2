@@ -138,6 +138,7 @@ manifests = [
                 nodeSelector = _config.nodeSelector.worker
                 extraEnvVars = {
                   DNSMASQ_USER = "root"
+                  FTLCONF_dns_queryLogging = "false"
                 }
               })
             }
