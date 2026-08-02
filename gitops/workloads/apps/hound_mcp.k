@@ -169,16 +169,4 @@ manifests = [
       ]
     }
   }
-
-  # Reflector Secret for TLS (same as ddgs)
-  k8s.Secret {
-    metadata = {
-      name = "mansion-net-tls"
-      namespace = mcp.namespace
-      annotations = {
-        "reflector.v1.k8s.embue.io/reflects": "cert-manager/mansion-net-tls"
-      }
-    }
-    type = "kubernetes.io/tls"
-  }
 ]

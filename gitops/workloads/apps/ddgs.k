@@ -7,18 +7,6 @@ mcp = _config.mcp
 ddgs = mcp.ddgs
 
 manifests = [
-  # Reflector Secret for TLS
-  k8s.Secret {
-    metadata = {
-      name = "mansion-net-tls"
-      namespace = mcp.namespace
-      annotations = {
-        "reflector.v1.k8s.embue.io/reflects": "cert-manager/mansion-net-tls"
-      }
-    }
-    type = "kubernetes.io/tls"
-  }
-
   # Deployment
   v1.Deployment {
     metadata = {
