@@ -312,8 +312,8 @@ config = {
             release_name = "reflector"
             chart_name = "reflector"
             repo = "oci://ghcr.io/emberstack/helm-charts/reflector"
-            chart_version = "10.0.61"
-            app_version = "10.0.61"
+            chart_version = "9.1.39"
+            app_version = "9.1.39"
         }
     }
 }
