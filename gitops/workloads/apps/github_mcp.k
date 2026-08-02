@@ -30,6 +30,10 @@ manifests = [
                             {
                                 name = "GITHUB_PERSONAL_ACCESS_TOKEN"
                                 value = "ref+vault://kv/metacoma#github"
+                            },
+                            {
+                                name = "GITHUB_TOOLSETS"
+                                value = "all"
                             }
                         ]
                     }]
