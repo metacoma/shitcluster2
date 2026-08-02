@@ -49,7 +49,7 @@ manifests = [
         spec = {
           dnsPolicy = "ClusterFirst"
           dnsConfig = {
-            nameservers = ["pihole.network.svc.cluster.local", "172.25.0.2"]
+            nameservers = ["172.25.1.9", "172.25.0.2"]
           }
           containers = [
             {
