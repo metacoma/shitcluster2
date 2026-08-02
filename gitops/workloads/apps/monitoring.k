@@ -6,7 +6,7 @@ import yaml
 import victoria_metrics_operator.v1beta1.operator_victoriametrics_com_v1beta1_vm_service_scrape as vm_service_scrape
 
 _config = cfg.config
-monitoring = _config.monitoring
+mon_cfg = _config.monitoring
 
 monitoring_app = lambda helm : any, values : any, sync : any -> argoproj.Application {
 #monitoring_app = lambda helm : any, values : any, sync : any -> any {
@@ -17,7 +17,7 @@ monitoring_app = lambda helm : any, values : any, sync : any -> argoproj.Applica
     }
     spec = {
         destination = {
-            namespace = monitoring.namespace
+            namespace = mon_cfg.namespace
             name = "in-cluster"
         }
         project = "default"
@@ -41,10 +41,10 @@ monitoring_app = lambda helm : any, values : any, sync : any -> argoproj.Applica
 
 manifests = [
   k8s.Namespace {
-    metadata.name = monitoring.namespace
+    metadata.name = mon_cfg.namespace
   }
   monitoring_app(
-    monitoring.kube_state_metrics.helm, values = {
+    mon_cfg.kube_state_metrics.helm, values = {
       nodeSelector = _config.nodeSelector.worker
       resources.requests = {
         cpu = "10m"
@@ -59,7 +59,7 @@ manifests = [
   )
 
   monitoring_app(
-    monitoring.node_exporter.helm, values = {
+    mon_cfg.node_exporter.helm, values = {
       service = {
         annotations = {
           "prometheus.io/port" = "9100"
@@ -69,14 +69,14 @@ manifests = [
 
   )
   monitoring_app(
-    monitoring.blackbox_exporter.helm, values = {
+    mon_cfg.blackbox_exporter.helm, values = {
       nodeSelector = _config.nodeSelector.worker
     },
     sync = {}
   )
 
   monitoring_app(
-    monitoring.alertmanager.helm, values = {
+    mon_cfg.alertmanager.helm, values = {
       nodeSelector = _config.nodeSelector.worker
       extraArgs = {
         "log.level" = "debug"
@@ -85,7 +85,7 @@ manifests = [
         name = "secret-files"
         mountPath = "/etc/secrets"
         subPath = ""
-        secretName = monitoring.alertmanager.secret_name
+        secretName = mon_cfg.alertmanager.secret_name
         readOnly = True
       }]
       config = {
@@ -123,7 +123,7 @@ manifests = [
               telegram_configs = [
                   {
                       bot_token_file = "/etc/secrets/telegram_bot_token"
-                      chat_id = monitoring.notifications.telegram.chat_id
+                      chat_id = mon_cfg.notifications.telegram.chat_id
                       message = r"""
 🚨 *{{ .CommonLabels.alertname }}*  ({{ .CommonLabels.severity }})
 
@@ -153,7 +153,7 @@ manifests = [
   )
 
   monitoring_app(
-    monitoring.vm_operator.helm, values = {
+    mon_cfg.vm_operator.helm, values = {
       nodeSelector = _config.nodeSelector.worker
     }
     sync = {
@@ -166,15 +166,15 @@ manifests = [
       {
         group = ""
         kind = "Secret"
-        name = "${monitoring.vm_operator.release_name}-validation"
-        namespace = monitoring.namespace
+        name = "${mon_cfg.vm_operator.helm.release_name}-validation"
+        namespace = mon_cfg.namespace
         jsonPointers = ["/data"]
       }
       {
         group = "admissionregistration.k8s.io"
         kind = "ValidatingWebhookConfiguration"
-        name = "${monitoring.vm_operator.release_name}-validation"
-        namespace = monitoring.namespace
+        name = "${mon_cfg.vm_operator.helm.release_name}-validation"
+        namespace = mon_cfg.namespace
         jqPathExpressions = ['.webhooks[]?.clientConfig.caBundle']
       }
 
@@ -182,7 +182,7 @@ manifests = [
   }
 
   monitoring_app(
-    monitoring.vm_single.helm, values = {
+    mon_cfg.vm_single.helm, values = {
       server = {
         nodeSelector = _config.nodeSelector.worker
         persistentVolume = {
@@ -194,7 +194,7 @@ manifests = [
   )
 
   monitoring_app(
-    monitoring.vm_agent.helm, values = {
+    mon_cfg.vm_agent.helm, values = {
       nodeSelector = _config.nodeSelector.worker
       remoteWrite = [{
         url = "http://vm-single-victoria-metrics-single-server.monitoring:8428/api/v1/write"
@@ -223,12 +223,12 @@ manifests = [
   ]
 
   monitoring_app(
-    monitoring.grafana.helm, values = {
+    mon_cfg.grafana.helm, values = {
       nodeSelector = _config.nodeSelector.worker
 
       adminUser = "ref+vault://kv/grafana#adminUser"
       adminPassword = "ref+vault://kv/grafana#adminPassword"
-      image.tag = monitoring.grafana.helm.app_version
+      image.tag = mon_cfg.grafana.helm.app_version
       service = {
         type = "LoadBalancer"
         loadBalancerIP = "172.25.1.5"
@@ -313,7 +313,7 @@ manifests = [
   k8s.Secret {
     metadata = {
       name = "mansion-net-tls"
-      namespace = monitoring.namespace
+      namespace = mon_cfg.namespace
       annotations = {
         "reflector.v1.k8s.emberstack.com/reflects" = "cert-manager/mansion-net-tls"
       }
@@ -325,7 +325,7 @@ manifests = [
     kind = "Ingress"
     metadata = {
       name = "grafana-ingress"
-      namespace = monitoring.namespace
+      namespace = mon_cfg.namespace
       annotations = {
         "kubernetes.io/ingress.class" = "nginx"
       }
@@ -347,7 +347,7 @@ manifests = [
                 pathType = "Prefix"
                 backend = {
                   service = {
-                    name = monitoring.grafana.helm.release_name
+                    name = mon_cfg.grafana.helm.release_name
                     port = {
                       number = 80
                     }
@@ -366,7 +366,7 @@ manifests = [
     kind = "Ingress"
     metadata = {
       name = "victoria-ingress"
-      namespace = monitoring.namespace
+      namespace = mon_cfg.namespace
       annotations = {
         "kubernetes.io/ingress.class" = "nginx"
       }
@@ -388,7 +388,7 @@ manifests = [
                 pathType = "Prefix"
                 backend = {
                   service = {
-                    name = "${monitoring.vm_single.helm.release_name}-victoria-metrics-single-server"
+                    name = "${mon_cfg.vm_single.helm.release_name}-victoria-metrics-single-server"
                     port = {
                       number = 8428
                     }
@@ -403,9 +403,13 @@ manifests = [
   }
 
   k8s.Secret {
+    metadata = {
+      name = mon_cfg.alertmanager.secret_name
+      namespace = mon_cfg.namespace
+    }
     stringData = {
-      telegram_bot_token = monitoring.notifications.telegram.bot_token
-      telegram_chat_id = monitoring.notifications.telegram.chat_id
+      telegram_bot_token = mon_cfg.notifications.telegram.bot_token
+      telegram_chat_id = mon_cfg.notifications.telegram.chat_id
     }
   }
 
