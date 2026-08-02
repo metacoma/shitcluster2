@@ -62,7 +62,6 @@ manifests = [
           type = "static"
           addresses = [{
             address = "172.24.1.2/16"
-            gateway = "172.24.0.1"
           }]
         }
       })
