@@ -21,7 +21,7 @@ chart_values = {
     GRAFANA_USERNAME = "ref+vault://kv/grafana#adminUser"
     GRAFANA_PASSWORD = "ref+vault://kv/grafana#adminPassword"
   }
-  extraArgs = ["--allowed-hosts=*"]
+  extraArgs = ["--allowed-hosts=*", "--transport streamable-http"]
   service = {
     type = "ClusterIP"
     port = 8000
