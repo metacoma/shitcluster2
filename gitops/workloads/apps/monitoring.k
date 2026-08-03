@@ -4,7 +4,6 @@ import config as cfg
 import ..argoproj.v1alpha1 as argoproj
 import yaml
 import victoria_metrics_operator.v1beta1.operator_victoriametrics_com_v1beta1_vm_service_scrape as vm_service_scrape
-import victoria_metrics_operator.v1beta1.operator_victoriametrics_com_v1beta1_vm_static_scrape as vm_static_scrape
 
 _config = cfg.config
 mon_cfg = _config.monitoring
@@ -204,6 +203,25 @@ manifests = [
       remoteWrite = [{
         url = "http://vm-single-victoria-metrics-single-server:8428/api/v1/write"
       }]
+      extraScrapeConfigs = [
+        {
+          job_name = "litellm"
+          metrics_path = _config.external.litellm.metrics_path
+          scrape_interval = _config.external.litellm.interval
+          bearer_token = _config.external.litellm.bearer_token
+          static_configs = [{
+            targets = ["${_config.external.litellm.host}:${_config.external.litellm.port}"]
+          }]
+        }
+        {
+          job_name = "llamacpp"
+          metrics_path = _config.external.llamacpp.metrics_path
+          scrape_interval = _config.external.llamacpp.interval
+          static_configs = [{
+            targets = ["${_config.external.llamacpp.host}:${_config.external.llamacpp.port}"]
+          }]
+        }
+      ]
     }, sync = {}
   )
   [
@@ -491,57 +509,5 @@ manifests = [
     }
   }
 
-  {
-    apiVersion = "operator.victoriametrics.com/v1beta1"
-    kind = "VMStaticScrape"
-    metadata = {
-      name = "litellm-metrics"
-      namespace = _config.monitoring.namespace
-    }
-    spec = {
-      metricRelabelConfigs = [{
-        action = "replace"
-        regex = "(.*)"
-        replacement = "litellm"
-        sourceLabels = ["__name__"]
-        targetLabel = "job"
-      }]
-      static = [{
-        targets = ["${_config.external.litellm.host}:${_config.external.litellm.port}"]
-      }]
-      targetEndpoints = [{
-        port = "metrics"
-        path = _config.external.litellm.metrics_path
-      }]
-      interval = _config.external.litellm.interval
-      bearerToken = _config.external.litellm.bearer_token
-    }
-  }
-
-  {
-    apiVersion = "operator.victoriametrics.com/v1beta1"
-    kind = "VMStaticScrape"
-    metadata = {
-      name = "llamacpp-metrics"
-      namespace = _config.monitoring.namespace
-    }
-    spec = {
-      metricRelabelConfigs = [{
-        action = "replace"
-        regex = "(.*)"
-        replacement = "llamacpp"
-        sourceLabels = ["__name__"]
-        targetLabel = "job"
-      }]
-      static = [{
-        targets = ["${_config.external.llamacpp.host}:${_config.external.llamacpp.port}"]
-      }]
-      targetEndpoints = [{
-        port = "metrics"
-        path = _config.external.llamacpp.metrics_path
-      }]
-      interval = _config.external.llamacpp.interval
-    }
-  }
-
 ]
+
