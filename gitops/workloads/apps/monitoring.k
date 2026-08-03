@@ -257,7 +257,7 @@ manifests = [
                     datasource = "VictoriaMetrics"
                 }
                 "longhorn-dashboard" = {
-                    gnetId = 17626
+                    gnetId = 22705
                     revision = 1
                     datasource = "VictoriaMetrics"
                 }
