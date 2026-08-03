@@ -509,8 +509,11 @@ manifests = [
       static = [{
         targets = ["${_config.external.litellm.host}:${_config.external.litellm.port}"]
       }]
+      targetEndpoints = [{
+        port = "metrics"
+        path = _config.external.litellm.metrics_path
+      }]
       interval = _config.external.litellm.interval
-      metricsPath = _config.external.litellm.metrics_path
       bearerToken = _config.external.litellm.bearer_token
     }
   }
@@ -533,8 +536,11 @@ manifests = [
       static = [{
         targets = ["${_config.external.llamacpp.host}:${_config.external.llamacpp.port}"]
       }]
+      targetEndpoints = [{
+        port = "metrics"
+        path = _config.external.llamacpp.metrics_path
+      }]
       interval = _config.external.llamacpp.interval
-      metricsPath = _config.external.llamacpp.metrics_path
     }
   }
 
