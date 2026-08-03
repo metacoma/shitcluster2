@@ -227,22 +227,26 @@ manifests = [
   [
   vm_service_scrape.VMServiceScrape {
     metadata = {
-      name = "${service_name}-exporter"
+      name = "${entry.name}-exporter"
       namespace = _config.monitoring.namespace
     }
     spec = {
       selector.matchLabels = {
-        "app.kubernetes.io/name" = service_name
+        "app.kubernetes.io/name" = entry.name
       }
       namespaceSelector.matchNames = [_config.monitoring.namespace]
       endpoints = [{
-        port = "metrics"
+        port = entry.port
         interval = "30s"
       }]
 
     }
   }
-  for service_name in ["prometheus-node-exporter", "kube-state-metrics", "prometheus-blackbox-exporter" ]
+  for entry in [
+    {name = "prometheus-node-exporter", port = "metrics"},
+    {name = "kube-state-metrics", port = "http"},
+    {name = "prometheus-blackbox-exporter", port = "http"},
+  ]
   ]
 
   monitoring_app(
