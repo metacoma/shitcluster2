@@ -25,6 +25,7 @@ import .apps.kubernetes_mcp as kubernetes_mcp
 import .apps.hound_mcp as hound_mcp
 import .apps.github_mcp as github_mcp
 import .apps.grafana_mcp as grafana_mcp
+import .apps.helm_mcp as helm_mcp
 
 resources = [
     ssh_tunnel.manifests
@@ -48,6 +49,7 @@ resources = [
     hound_mcp.manifests
     github_mcp.manifests
     grafana_mcp.manifests
+    helm_mcp.manifests
 ]
 
 manifests.yaml_stream([

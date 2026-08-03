@@ -410,5 +410,11 @@ config = {
                 tag = "0.17.2"
             }
         }
+        helm_mcp = {
+            name = "mcp-helm"
+            image = "ghcr.io/zekker6/mcp-helm:v1.3.0"
+            port = 8012
+            ingress_host = "mcp-helm.ref+vault://kv/spaceship_dns#managed_domain"
+        }
     }
 }
