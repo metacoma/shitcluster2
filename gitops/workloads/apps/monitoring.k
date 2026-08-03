@@ -3,8 +3,6 @@ import k8s.api.apps.v1 as v1
 import config as cfg
 import ..argoproj.v1alpha1 as argoproj
 import yaml
-import victoria_metrics_operator.v1beta1.operator_victoriametrics_com_v1beta1_vm_service_scrape as vm_service_scrape
-
 _config = cfg.config
 mon_cfg = _config.monitoring
 
@@ -46,6 +44,9 @@ manifests = [
   monitoring_app(
     mon_cfg.kube_state_metrics.helm, values = {
       nodeSelector = _config.nodeSelector.worker
+      service.annotations = {
+        "prometheus.io/port" = "8080"
+      }
       resources.requests = {
         cpu = "10m"
         memory = "32Mi"
@@ -71,6 +72,10 @@ manifests = [
   monitoring_app(
     mon_cfg.blackbox_exporter.helm, values = {
       nodeSelector = _config.nodeSelector.worker
+      service.annotations = {
+        "prometheus.io/scrape" = "true"
+        "prometheus.io/port" = "9115"
+      }
     },
     sync = {}
   )
@@ -224,31 +229,6 @@ manifests = [
       ]
     }, sync = {}
   )
-  [
-  vm_service_scrape.VMServiceScrape {
-    metadata = {
-      name = "${entry.name}-exporter"
-      namespace = _config.monitoring.namespace
-    }
-    spec = {
-      selector.matchLabels = {
-        "app.kubernetes.io/name" = entry.name
-      }
-      namespaceSelector.matchNames = [_config.monitoring.namespace]
-      endpoints = [{
-        port = entry.port
-        interval = "30s"
-      }]
-
-    }
-  }
-  for entry in [
-    {name = "prometheus-node-exporter", port = "metrics"},
-    {name = "kube-state-metrics", port = "http"},
-    {name = "prometheus-blackbox-exporter", port = "http"},
-  ]
-  ]
-
   monitoring_app(
     mon_cfg.grafana.helm, values = {
       nodeSelector = _config.nodeSelector.worker
@@ -487,74 +467,6 @@ manifests = [
     stringData = {
       telegram_bot_token = mon_cfg.notifications.telegram.bot_token
       telegram_chat_id = mon_cfg.notifications.telegram.chat_id
-    }
-  }
-
-  vm_service_scrape.VMServiceScrape {
-    metadata = {
-      name = "longhorn-metrics"
-      namespace = _config.monitoring.namespace
-    }
-    spec = {
-      selector.matchLabels = {
-        "app" = "longhorn-manager"
-      }
-      namespaceSelector.matchNames = ["longhorn-system"]
-      endpoints = [{
-        port = "manager"
-        interval = "30s"
-      }]
-    }
-  }
-
-  vm_service_scrape.VMServiceScrape {
-    metadata = {
-      name = "cert-manager-controller-metrics"
-      namespace = _config.monitoring.namespace
-    }
-    spec = {
-      selector.matchLabels = {
-        "app.kubernetes.io/name" = "cert-manager"
-      }
-      namespaceSelector.matchNames = ["cert-manager"]
-      endpoints = [{
-        port = "http-metrics"
-        interval = "30s"
-      }]
-    }
-  }
-
-  vm_service_scrape.VMServiceScrape {
-    metadata = {
-      name = "cert-manager-cainjector-metrics"
-      namespace = _config.monitoring.namespace
-    }
-    spec = {
-      selector.matchLabels = {
-        "app.kubernetes.io/name" = "cainjector"
-      }
-      namespaceSelector.matchNames = ["cert-manager"]
-      endpoints = [{
-        port = "http-metrics"
-        interval = "30s"
-      }]
-    }
-  }
-
-  vm_service_scrape.VMServiceScrape {
-    metadata = {
-      name = "cert-manager-webhook-metrics"
-      namespace = _config.monitoring.namespace
-    }
-    spec = {
-      selector.matchLabels = {
-        "app.kubernetes.io/name" = "webhook"
-      }
-      namespaceSelector.matchNames = ["cert-manager"]
-      endpoints = [{
-        port = "http-metrics"
-        interval = "30s"
-      }]
     }
   }
 
