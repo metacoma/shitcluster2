@@ -4,6 +4,7 @@ import config as cfg
 import ..argoproj.v1alpha1 as argoproj
 import yaml
 import victoria_metrics_operator.v1beta1.operator_victoriametrics_com_v1beta1_vm_service_scrape as vm_service_scrape
+import victoria_metrics_operator.v1beta1.operator_victoriametrics_com_v1beta1_vm_static_scrape as vm_static_scrape
 
 _config = cfg.config
 mon_cfg = _config.monitoring
@@ -192,6 +193,7 @@ manifests = [
         extraArgs = {
           "opentelemetry.usePrometheusNaming" = "true"
         }
+
       }
     }, sync = {}
   )
@@ -486,6 +488,53 @@ manifests = [
         port = "http-metrics"
         interval = "30s"
       }]
+    }
+  }
+
+  {
+    apiVersion = "operator.victoriametrics.com/v1beta1"
+    kind = "VMStaticScrape"
+    metadata = {
+      name = "litellm-metrics"
+      namespace = _config.monitoring.namespace
+    }
+    spec = {
+      metricRelabelConfigs = [{
+        action = "replace"
+        regex = "(.*)"
+        replacement = "litellm"
+        sourceLabels = ["__name__"]
+        targetLabel = "job"
+      }]
+      static = [{
+        targets = ["${_config.external.litellm.host}:${_config.external.litellm.port}"]
+      }]
+      interval = _config.external.litellm.interval
+      metricsPath = _config.external.litellm.metrics_path
+      bearerToken = _config.external.litellm.bearer_token
+    }
+  }
+
+  {
+    apiVersion = "operator.victoriametrics.com/v1beta1"
+    kind = "VMStaticScrape"
+    metadata = {
+      name = "llamacpp-metrics"
+      namespace = _config.monitoring.namespace
+    }
+    spec = {
+      metricRelabelConfigs = [{
+        action = "replace"
+        regex = "(.*)"
+        replacement = "llamacpp"
+        sourceLabels = ["__name__"]
+        targetLabel = "job"
+      }]
+      static = [{
+        targets = ["${_config.external.llamacpp.host}:${_config.external.llamacpp.port}"]
+      }]
+      interval = _config.external.llamacpp.interval
+      metricsPath = _config.external.llamacpp.metrics_path
     }
   }
 

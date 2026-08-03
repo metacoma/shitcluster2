@@ -317,6 +317,21 @@ config = {
             app_version = "9.1.39"
         }
     }
+    external = {
+        litellm = {
+            host = "mcmp10.mgmt.mansion.shitcluster.io"
+            port = "4000"
+            metrics_path = "/metrics/"
+            bearer_token = "sk-local"
+            interval = "30s"
+        }
+        llamacpp = {
+            host = "mcmp10.mgmt.mansion.shitcluster.io"
+            port = "8083"
+            metrics_path = "/metrics"
+            interval = "30s"
+        }
+    }
     mcp = {
         namespace = "mcp"
         admin_password = "ref+vault://kv/mcphub#admin_password"
