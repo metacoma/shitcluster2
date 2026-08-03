@@ -111,23 +111,6 @@ manifests = [
           "node-role.kubernetes.io/worker": ""
         }
       }
-      # Fix asymmetric routing: PBR for cluster CIDR -> eth0
-      # Without this, responses to liveness probes (from node 172.24.0.x)
-      # are routed via eth1 (macvlan /16) and dropped
-      extraInitContainers = [
-        {
-          name = "fix-routing"
-          image = "nicolaka/netshoot:latest"
-          command = ["sh", "-c", "ip route add default via 169.254.1.1 dev eth0 table 100 && ip rule add from 10.233.64.0/18 table 100"]
-          securityContext = {
-            capabilities = { add = ["NET_ADMIN"] }
-          }
-          resources = {
-            requests = { cpu = "10m", memory = "16Mi" }
-            limits = { cpu = "50m", memory = "32Mi" }
-          }
-        }
-      ]
     }
   )
 
@@ -151,7 +134,7 @@ manifests = [
     }
     spec = {
       acme = {
-        server = "https://acme-v02.api.letsencrypt.org/directory"
+        server = "https://acme-v02.api.letsencrypt.org/dns-01"
         email = "admin@metacoma.org"
         privateKeySecretRef = {
           name = "letsencrypt-prod-account-key"
