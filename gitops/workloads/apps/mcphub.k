@@ -46,14 +46,6 @@ _settings = """{
       "visibility": "public",
       "owner": "admin"
     },
-    "helm-mcp": {
-      "type": "streamable-http",
-      "url": "https://mcp-helm.mansion.metacoma.org/mcp",
-      "timeout": 60000,
-      "enabled": true,
-      "visibility": "public",
-      "owner": "admin"
-    }
   },
   "systemConfig": {
     "routing": {
@@ -103,7 +95,7 @@ manifests = [
                     initContainers = [{
                         name = "prepare-config"
                         image = "busybox:1.28"
-                        command = ["sh", "-c", "cp /config-ro/mcp_settings.json /app/data/mcp_settings.json"]
+                        command = ["sh", "-c", "test -f /app/data/mcp_settings.json || cp /config-ro/mcp_settings.json /app/data/mcp_settings.json"]
                         volumeMounts = [
                             {
                                 name = "settings"
