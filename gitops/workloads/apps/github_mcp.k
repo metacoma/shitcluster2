@@ -21,8 +21,7 @@ manifests = [
                         name = app.name
                         image = app.image
                         args = [
-                            "http", 
-                            "--scope-challenge", 
+                            "http",
                             "--base-url", "https://" + app.ingress_host
                         ]
                         ports = [{containerPort = 8082}]
