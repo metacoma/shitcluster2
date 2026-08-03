@@ -433,14 +433,4 @@ config = {
             ingress_host = "mcp-helm.ref+vault://kv/spaceship_dns#managed_domain"
         }
     }
-    metrics_server = {
-        namespace = "kube-system"
-        helm = {
-            chart_name = "metrics-server"
-            repo = "https://kubernetes-sigs.github.io/metrics-server/"
-            release_name = "metrics-server"
-            chart_version = "3.13.1"
-            app_version = "0.8.1"
-        }
-    }
 }
