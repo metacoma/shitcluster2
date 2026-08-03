@@ -297,6 +297,11 @@ manifests = [
             revision = 1
             datasource = "VictoriaMetrics"
           }
+          "litellm" = {
+            gnetId = 24965
+            revision = 1
+            datasource = "VictoriaMetrics"
+          }
         }
       }
       datasources = {
