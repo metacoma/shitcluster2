@@ -271,11 +271,18 @@ alert = {
   vector_app(
     vector.vector.helm, {
       role = "Agent"
-      tolerations = [{
-          key = "node-role.kubernetes.io/control-plane"
-          operator = "Exists"
-          effect = "NoSchedule"
-      }]
+      tolerations = [
+          {
+              key = "node-role.kubernetes.io/control-plane"
+              operator = "Exists"
+              effect = "NoSchedule"
+          }
+          {
+              key = "node.longhorn.io/storage"
+              operator = "Exists"
+              effect = "NoSchedule"
+          }
+      ]
       customConfig = {
         data_dir = "/vector-data-dir"
         api = {
