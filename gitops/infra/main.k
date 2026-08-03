@@ -11,25 +11,20 @@ import k8s.api.core.v1 as k8s
 import config
 
 manifests.yaml_stream([
-
-  k8s.Namespace {
-    metadata.name = config.infra.ns
-  }
-
-  k8s.Secret {
-    metadata = {
-      name = config.infra.sops.secret
-      namespace = config.infra.ns
+    k8s.Namespace {
+        metadata.name = config.infra.ns
     }
-    stringData = {
-      public_key = config.infra.sops.public_key
-      age_key = config.infra.sops.age_key
+    k8s.Secret {
+        metadata = {
+            name = config.infra.sops.secret
+            namespace = config.infra.ns
+        }
+        stringData = {
+            public_key = config.infra.sops.public_key
+            age_key = config.infra.sops.age_key
+        }
     }
-  }
-
-  tekton.manifests
-
-  vault_unseal.manifests
-
-  mcp_ns.manifests
+    tekton.manifests
+    vault_unseal.manifests
+    mcp_ns.manifests
 ])
