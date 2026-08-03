@@ -206,7 +206,7 @@ manifests = [
                 metrics_path = "/metrics"
                 scrape_interval = "30s"
                 static_configs = [{
-                    targets = ["${_config.longhorn.metrics_service}.${_config.longhorn.namespace}.svc.cluster.local:${_config.longhorn.metrics_port}"]
+                    targets = ["${_config.longhorn.metrics_service}.${_config.longhorn.namespace}:${_config.longhorn.metrics_port}"]
                 }]
             }
         ]
