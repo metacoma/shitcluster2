@@ -160,7 +160,7 @@ config = {
             }
         }
         otlp = {
-            ingress_host = "otlp.mansion.metacoma.org"
+            ingress_host = "otlp." + _config.cert_manager.managed_domain
             helm = {
                 repo = "https://open-telemetry.github.io/opentelemetry-helm-charts"
                 release_name = "otlp"
