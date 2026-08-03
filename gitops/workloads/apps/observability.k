@@ -73,7 +73,7 @@ manifests = [
         persistence = {
           enabled = True
           size = "20Gi"
-          storageClass = "longhorn"
+          storageClass = _config.storageClass
           accessModes = [ "ReadWriteOnce" ]
         }
       }
@@ -98,7 +98,6 @@ manifests = [
         storageClass = _config.storageClass
         mountPath = "/var/tempo"
       }
-
     }
     sync = {}
   )
@@ -110,6 +109,15 @@ manifests = [
       image = {
         repository = "otel/opentelemetry-collector-contrib"
         digest = ""
+      }
+      service = {
+        ports = {
+          otlp = {
+            enabled = True
+            port = 4318
+            targetPort = 4318
+          }
+        }
       }
       config = {
         receivers = {
@@ -124,17 +132,17 @@ manifests = [
         exporters = {
           #debug.verbosity = "detailed"
           "otlp/tempo" = {
-            endpoint = "${observability.tempo.release_name}:4317"
+            endpoint = "${observability.tempo.helm.release_name}:4317"
             tls.insecure = True
           }
           "otlphttp/loki" = {
-            endpoint = "${observability.loki.release_name}:3100/otlp"
+            endpoint = "${observability.loki.helm.release_name}:3100/otlp"
           }
           "otlphttp/victoriametrics" = {
-            endpoint = "http://vm-single-victoria-metrics-single-server.monitoring.svc:8428/opentelemetry"
+            endpoint = "http://${_config.monitoring.vm_single.helm.release_name}-victoria-metrics-single-server.${_config.monitoring.namespace}.svc:8428/opentelemetry"
             tls.insecure = True
           }
-          otlphttp.endpoint = "http://${observability.loki.release_name}:3100/otlp/v1/logs"
+          otlphttp.endpoint = "http://${observability.loki.helm.release_name}:3100/otlp/v1/logs"
 
         }
 
@@ -166,24 +174,44 @@ manifests = [
     sync = {}
   )
 
-  k8s.Service {
+  {
+    apiVersion = "networking.k8s.io/v1"
+    kind = "Ingress"
     metadata = {
-      name = "otlp-nodeport"
+      name = "otlp-ingress"
       namespace = observability.namespace
+      annotations = {
+        "kubernetes.io/ingress.class" = "nginx"
+      }
     }
     spec = {
-      type = "NodePort"
-      selector = {
-        "app.kubernetes.io/instance" = "otlp"
-        "app.kubernetes.io/name" = "opentelemetry-collector"
-        component = "standalone-collector"
-      }
-      ports = [{
-        name = "otlp-http"
-        port = 4318
-        targetPort = 4318
-        nodePort = 30418
-      }]
+      tls = [
+        {
+          hosts = [observability.otlp.ingress_host]
+          secretName = "mansion-net-tls"
+        }
+      ]
+      rules = [
+        {
+          host = observability.otlp.ingress_host
+          http = {
+            paths = [
+              {
+                path = "/"
+                pathType = "Prefix"
+                backend = {
+                  service = {
+                    name = observability.otlp.helm.release_name
+                    port = {
+                      number = 4318
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   }
 ]
