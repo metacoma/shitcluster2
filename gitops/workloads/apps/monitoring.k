@@ -259,7 +259,10 @@ manifests = [
                 "longhorn-dashboard" = {
                     gnetId = 22705
                     revision = 1
-                    datasource = "VictoriaMetrics"
+                    datasource = [{
+                        name = "DS_PROMETHEUS"
+                        value = "VictoriaMetrics"
+                    }]
                 }
                 "litellm" = {
                     gnetId = 24965
