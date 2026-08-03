@@ -110,15 +110,6 @@ manifests = [
         repository = "otel/opentelemetry-collector-contrib"
         digest = ""
       }
-      service = {
-        ports = {
-          otlp = {
-            enabled = True
-            port = 4318
-            targetPort = 4318
-          }
-        }
-      }
       config = {
         receivers = {
           otlp.protocols = {
@@ -201,7 +192,7 @@ manifests = [
                 pathType = "Prefix"
                 backend = {
                   service = {
-                    name = observability.otlp.helm.release_name
+                    name = "${observability.otlp.helm.release_name}-opentelemetry-collector"
                     port = {
                       number = 4318
                     }
