@@ -23,7 +23,7 @@ chart_values = {
   }
   service = {
     type = "ClusterIP"
-    port = 8080
+    port = 8000
   }
   ingress = {
     enabled = True

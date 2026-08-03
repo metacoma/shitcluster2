@@ -37,6 +37,14 @@ _settings = """{
       "enabled": true,
       "visibility": "public",
       "owner": "admin"
+    },
+    "grafana-mcp": {
+      "type": "streamable-http",
+      "url": "https://grafana-mcp.mansion.metacoma.org/mcp",
+      "timeout": 60000,
+      "enabled": true,
+      "visibility": "public",
+      "owner": "admin"
     }
   },
   "systemConfig": {
