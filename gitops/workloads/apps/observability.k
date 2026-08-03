@@ -126,14 +126,12 @@ manifests = [
             endpoint = "${observability.tempo.helm.release_name}:4317"
             tls.insecure = True
           }
-          "otlphttp/loki" = {
-            endpoint = "${observability.loki.helm.release_name}:3100/otlp"
-          }
           "otlphttp/victoriametrics" = {
             endpoint = "http://${_config.monitoring.vm_single.helm.release_name}-victoria-metrics-single-server.${_config.monitoring.namespace}.svc:8428/opentelemetry"
             tls.insecure = True
           }
-          otlphttp.endpoint = "http://${observability.loki.helm.release_name}:3100/otlp/v1/logs"
+          # otlphttp appends /v1/logs automatically for logs pipeline
+          otlphttp.endpoint = "http://${observability.loki.helm.release_name}:3100/otlp"
 
         }
 
