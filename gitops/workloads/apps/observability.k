@@ -130,9 +130,10 @@ manifests = [
           "otlphttp/loki" = {
             endpoint = "${observability.loki.release_name}:3100/otlp"
           }
-          #"prometheus" = {
-          #  endpoint = "0.0.0.0:8888"
-          #}
+          "otlphttp/victoriametrics" = {
+            endpoint = "http://vm-single-victoria-metrics-single-server.monitoring.svc:8428/opentelemetry"
+            tls.insecure = True
+          }
           otlphttp.endpoint = "http://${observability.loki.release_name}:3100/otlp/v1/logs"
 
         }
@@ -150,11 +151,11 @@ manifests = [
               processors = ["memory_limiter", "batch"]
               exporters = ["otlp/tempo"]
             }
-            #metrics = {
-            #  receivers = ["otlp"]
-            #  processors = ["memory_limiter", "batch"]
-            #  exporters = ["prometheus"]
-            #}
+            metrics = {
+              receivers = ["otlp"]
+              processors = ["memory_limiter", "batch"]
+              exporters = ["otlphttp/victoriametrics"]
+            }
           }
         }
       }
@@ -164,4 +165,25 @@ manifests = [
     }
     sync = {}
   )
+
+  k8s.Service {
+    metadata = {
+      name = "otlp-nodeport"
+      namespace = observability.namespace
+    }
+    spec = {
+      type = "NodePort"
+      selector = {
+        "app.kubernetes.io/instance" = "otlp"
+        "app.kubernetes.io/name" = "opentelemetry-collector"
+        component = "standalone-collector"
+      }
+      ports = [{
+        name = "otlp-http"
+        port = 4318
+        targetPort = 4318
+        nodePort = 30418
+      }]
+    }
+  }
 ]
