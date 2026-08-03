@@ -302,6 +302,46 @@ manifests = [
             revision = 1
             datasource = "VictoriaMetrics"
           }
+          "node-exporter-full" = {
+            gnetId = 1860
+            revision = 45
+            datasource = "VictoriaMetrics"
+          }
+          "kubernetes-pods" = {
+            gnetId = 6417
+            revision = 1
+            datasource = "VictoriaMetrics"
+          }
+          "kubernetes-pod-dashboard" = {
+            gnetId = 21298
+            revision = 1
+            datasource = "VictoriaMetrics"
+          }
+          "kubernetes-monitoring" = {
+            gnetId = 13077
+            revision = 3
+            datasource = "VictoriaMetrics"
+          }
+          "k8s-views-global" = {
+            gnetId = 15757
+            revision = 43
+            datasource = "VictoriaMetrics"
+          }
+          "k8s-views-namespaces" = {
+            gnetId = 15758
+            revision = 46
+            datasource = "VictoriaMetrics"
+          }
+          "k8s-views-nodes" = {
+            gnetId = 15759
+            revision = 40
+            datasource = "VictoriaMetrics"
+          }
+          "k8s-views-pods" = {
+            gnetId = 15760
+            revision = 39
+            datasource = "VictoriaMetrics"
+          }
         }
       }
       datasources = {
