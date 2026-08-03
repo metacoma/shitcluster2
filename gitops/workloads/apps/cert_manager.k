@@ -61,8 +61,11 @@ manifests = [
         ipam = {
           type = "static"
           addresses = [{
-            address = "172.24.1.2/16"
+            address = "172.24.1.2/32"
           }]
+          routes = [
+            { dst = "172.24.0.2/32" }
+          ]
         }
       })
     }
