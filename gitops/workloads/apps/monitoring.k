@@ -189,6 +189,9 @@ manifests = [
           enabled = True
           storageClassName = _config.storageClass
         }
+        extraArgs = {
+          "opentelemetry.usePrometheusNaming" = "true"
+        }
       }
     }, sync = {}
   )

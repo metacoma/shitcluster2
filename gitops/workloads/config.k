@@ -160,6 +160,7 @@ config = {
             }
         }
         otlp = {
+            ingress_host = "otlp.ref+vault://kv/spaceship_dns#managed_domain"
             helm = {
                 repo = "https://open-telemetry.github.io/opentelemetry-helm-charts"
                 release_name = "otlp"

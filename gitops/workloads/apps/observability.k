@@ -73,7 +73,7 @@ manifests = [
         persistence = {
           enabled = True
           size = "20Gi"
-          storageClass = "longhorn"
+          storageClass = _config.storageClass
           accessModes = [ "ReadWriteOnce" ]
         }
       }
@@ -98,7 +98,6 @@ manifests = [
         storageClass = _config.storageClass
         mountPath = "/var/tempo"
       }
-
     }
     sync = {}
   )
@@ -124,16 +123,17 @@ manifests = [
         exporters = {
           #debug.verbosity = "detailed"
           "otlp/tempo" = {
-            endpoint = "${observability.tempo.release_name}:4317"
+            endpoint = "${observability.tempo.helm.release_name}:4317"
             tls.insecure = True
           }
           "otlphttp/loki" = {
-            endpoint = "${observability.loki.release_name}:3100/otlp"
+            endpoint = "${observability.loki.helm.release_name}:3100/otlp"
           }
-          #"prometheus" = {
-          #  endpoint = "0.0.0.0:8888"
-          #}
-          otlphttp.endpoint = "http://${observability.loki.release_name}:3100/otlp/v1/logs"
+          "otlphttp/victoriametrics" = {
+            endpoint = "http://${_config.monitoring.vm_single.helm.release_name}-victoria-metrics-single-server.${_config.monitoring.namespace}.svc:8428/opentelemetry"
+            tls.insecure = True
+          }
+          otlphttp.endpoint = "http://${observability.loki.helm.release_name}:3100/otlp/v1/logs"
 
         }
 
@@ -150,11 +150,11 @@ manifests = [
               processors = ["memory_limiter", "batch"]
               exporters = ["otlp/tempo"]
             }
-            #metrics = {
-            #  receivers = ["otlp"]
-            #  processors = ["memory_limiter", "batch"]
-            #  exporters = ["prometheus"]
-            #}
+            metrics = {
+              receivers = ["otlp"]
+              processors = ["memory_limiter", "batch"]
+              exporters = ["otlphttp/victoriametrics"]
+            }
           }
         }
       }
@@ -164,4 +164,45 @@ manifests = [
     }
     sync = {}
   )
+
+  {
+    apiVersion = "networking.k8s.io/v1"
+    kind = "Ingress"
+    metadata = {
+      name = "otlp-ingress"
+      namespace = observability.namespace
+      annotations = {
+        "kubernetes.io/ingress.class" = "nginx"
+      }
+    }
+    spec = {
+      tls = [
+        {
+          hosts = [observability.otlp.ingress_host]
+          secretName = "mansion-net-tls"
+        }
+      ]
+      rules = [
+        {
+          host = observability.otlp.ingress_host
+          http = {
+            paths = [
+              {
+                path = "/"
+                pathType = "Prefix"
+                backend = {
+                  service = {
+                    name = "${observability.otlp.helm.release_name}-opentelemetry-collector"
+                    port = {
+                      number = 4318
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
 ]
