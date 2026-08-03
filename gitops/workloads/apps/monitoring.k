@@ -201,6 +201,14 @@ manifests = [
                     targets = ["${_config.external.llamacpp.host}:${_config.external.llamacpp.port}"]
                 }]
             }
+            {
+                job_name = "longhorn"
+                metrics_path = "/metrics"
+                scrape_interval = "30s"
+                static_configs = [{
+                    targets = ["${_config.longhorn.metrics_service}.${_config.longhorn.namespace}.svc.cluster.local:${_config.longhorn.metrics_port}"]
+                }]
+            }
         ]
     }, sync={})
     monitoring_app(mon_cfg.grafana.helm, values={

@@ -317,6 +317,11 @@ config = {
             app_version = "9.1.39"
         }
     }
+    longhorn = {
+        namespace = "longhorn-system"
+        metrics_service = "longhorn-backend"
+        metrics_port = "9500"
+    }
     external = {
         litellm = {
             host = "mcmp10.mgmt.mansion.shitcluster.io"
