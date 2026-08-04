@@ -40,7 +40,7 @@ manifests = [
                                 pathType = "Prefix"
                                 backend = {
                                     service = {
-                                        name = fj.helm.release_name
+                                        name = fj.helm.release_name + "-http"
                                         port = {
                                             number = 3000
                                         }
