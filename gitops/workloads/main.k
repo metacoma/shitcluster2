@@ -26,6 +26,7 @@ import .apps.hound_mcp as hound_mcp
 import .apps.github_mcp as github_mcp
 import .apps.grafana_mcp as grafana_mcp
 import .apps.helm_mcp as helm_mcp
+import .apps.artifacthub_mcp as artifacthub_mcp
 
 resources = [
     ssh_tunnel.manifests
@@ -50,6 +51,7 @@ resources = [
     github_mcp.manifests
     grafana_mcp.manifests
     helm_mcp.manifests
+    artifacthub_mcp.manifests
 ]
 
 manifests.yaml_stream([

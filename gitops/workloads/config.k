@@ -437,5 +437,9 @@ config = {
             port = 8012
             ingress_host = "mcp-helm.ref+vault://kv/spaceship_dns#managed_domain"
         }
+        artifacthub_mcp = {
+            image = "ghcr.io/metacoma/artifacthub-mcp-proxy:latest"
+            port = 8080
+        }
     }
 }
