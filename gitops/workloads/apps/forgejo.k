@@ -172,6 +172,7 @@ manifests = [
                             # --- app.ini overrides ---
                             config = {
                                 APP_NAME = fj.app_name
+                                ROOT_URL = "https://" + fj.ingress_host + "/"
                                 RUN_MODE = "prod"
                                 server = {
                                     SSH_PORT = 22
