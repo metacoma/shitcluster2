@@ -174,6 +174,7 @@ manifests = [
                                 APP_NAME = fj.app_name
                                 RUN_MODE = "prod"
                                 server = {
+                                    DOMAIN = fj.ingress_host
                                     ROOT_URL = "https://" + fj.ingress_host + "/"
                                     SSH_PORT = 22
                                     SSH_LISTEN_PORT = 2222
