@@ -441,5 +441,9 @@ config = {
             image = "ghcr.io/metacoma/artifacthub-mcp-proxy:latest"
             port = 8080
         }
+        package_version_check_mcp = {
+            image = "ghcr.io/mshekow/package-version-check-mcp:latest"
+            port = 8000
+        }
     }
 }
