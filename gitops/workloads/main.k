@@ -27,6 +27,7 @@ import .apps.github_mcp as github_mcp
 import .apps.grafana_mcp as grafana_mcp
 import .apps.helm_mcp as helm_mcp
 import .apps.artifacthub_mcp as artifacthub_mcp
+import .apps.package_version_check_mcp as package_version_check_mcp
 
 resources = [
     ssh_tunnel.manifests
@@ -52,6 +53,7 @@ resources = [
     grafana_mcp.manifests
     helm_mcp.manifests
     artifacthub_mcp.manifests
+    package_version_check_mcp.manifests
 ]
 
 manifests.yaml_stream([
