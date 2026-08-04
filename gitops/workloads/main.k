@@ -28,6 +28,7 @@ import .apps.grafana_mcp as grafana_mcp
 import .apps.helm_mcp as helm_mcp
 import .apps.artifacthub_mcp as artifacthub_mcp
 import .apps.package_version_check_mcp as package_version_check_mcp
+import .apps.forgejo as forgejo
 
 resources = [
     ssh_tunnel.manifests
@@ -54,6 +55,7 @@ resources = [
     helm_mcp.manifests
     artifacthub_mcp.manifests
     package_version_check_mcp.manifests
+    forgejo.manifests
 ]
 
 manifests.yaml_stream([

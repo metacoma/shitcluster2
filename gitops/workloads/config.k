@@ -317,6 +317,42 @@ config = {
             app_version = "9.1.39"
         }
     }
+    forgejo = {
+        namespace = "forgejo"
+        ingress_host = "forgejo.mansion.metacoma.org"
+        ssh_lb_ip = "172.25.1.130"
+        app_name = "Forgejo"
+        image = {
+            registry = "code.forgejo.org"
+            repository = "forgejo/forgejo"
+            # defaults to chart appVersion
+            tag = ""
+        }
+        helm = {
+            repo = "oci://code.forgejo.org/forgejo-helm/forgejo"
+            chart_name = "forgejo"
+            release_name = "forgejo"
+            chart_version = "17.1.4"
+        }
+        admin = {
+            username = "forgejo_admin"
+            password = "ref+vault://kv/forgejo#admin_password"
+            email = "forgejo@shitcluster.io"
+        }
+        persistence = {
+            size = "20Gi"
+        }
+        resources = {
+            limits = {
+                cpu = "1000m"
+                memory = "2Gi"
+            }
+            requests = {
+                cpu = "200m"
+                memory = "512Mi"
+            }
+        }
+    }
     longhorn = {
         namespace = "longhorn-system"
         metrics_service = "longhorn-backend"
