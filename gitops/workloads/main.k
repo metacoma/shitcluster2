@@ -29,6 +29,7 @@ import .apps.helm_mcp as helm_mcp
 import .apps.artifacthub_mcp as artifacthub_mcp
 import .apps.package_version_check_mcp as package_version_check_mcp
 import .apps.forgejo as forgejo
+import .apps.forgejo_runner as forgejo_runner
 
 resources = [
     ssh_tunnel.manifests
@@ -56,6 +57,7 @@ resources = [
     artifacthub_mcp.manifests
     package_version_check_mcp.manifests
     forgejo.manifests
+    forgejo_runner.manifests
 ]
 
 manifests.yaml_stream([

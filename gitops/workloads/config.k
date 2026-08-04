@@ -353,6 +353,47 @@ config = {
             }
         }
     }
+    forgejo_runner = {
+        namespace = "forgejo"
+        helm = {
+            repo = "oci://codeberg.org/wrenix/helm-charts/forgejo-runner"
+            chart_name = "forgejo-runner"
+            release_name = "forgejo-runner"
+            chart_version = "0.7.6"
+        }
+        image = {
+            registry = "code.forgejo.org"
+            repository = "forgejo/runner"
+            tag = ""
+        }
+        runner = {
+            name = "k8s-runner"
+            instance = "https://forgejo.mansion.metacoma.org"
+            token = "ref+vault://kv/forgejo#runner_registration_token"
+            labels = ["docker", "linux"]
+            capacity = 2
+        }
+        resources = {
+            limits = {
+                cpu = "2000m"
+                memory = "4Gi"
+            }
+            requests = {
+                cpu = "500m"
+                memory = "1Gi"
+            }
+        }
+        dind_resources = {
+            limits = {
+                cpu = "2000m"
+                memory = "4Gi"
+            }
+            requests = {
+                cpu = "500m"
+                memory = "1Gi"
+            }
+        }
+    }
     longhorn = {
         namespace = "longhorn-system"
         metrics_service = "longhorn-backend"
