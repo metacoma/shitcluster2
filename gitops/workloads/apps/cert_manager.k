@@ -183,7 +183,7 @@ manifests = [
       secretTemplate = {
         annotations = {
           "reflector.v1.k8s.emberstack.com/reflection-allowed" = "true"
-          "reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces" = "monitoring,ingress-nginx,network,mcp,observability"
+          "reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces" = "monitoring,ingress-nginx,network,mcp,observability,forgejo"
           "reflector.v1.k8s.emberstack.com/reflection-auto-enabled" = "true"
         }
       }
