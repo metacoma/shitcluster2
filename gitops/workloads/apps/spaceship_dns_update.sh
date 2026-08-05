@@ -5,6 +5,10 @@ API_URL="${SPACESHIP_API_URL}"
 API_KEY="${SPACESHIP_API_KEY}"
 API_SECRET="${SPACESHIP_API_SECRET}"
 DOMAIN="${SPACESHIP_DOMAIN}"
+BIND_NS="${BIND_NS}"
+BIND_TSIG_KEY="${BIND_TSIG_KEY}"
+BIND_TSIG_KEY_NAME="${BIND_TSIG_KEY_NAME:-cert_manager_key}"
+BIND_ZONE="${BIND_ZONE:-mansion.metacoma.org}"
 
 get_public_ip() {
   for url in \
@@ -155,11 +159,41 @@ update_ns_record() {
   spaceship_add_ns_record "NS" "$record_name" "$sslip"
 }
 
+bind_nsupdate() {
+  local ip="$1"
+  local keyfile
+  keyfile=$(mktemp)
+
+  # Write TSIG key file for nsupdate
+  cat > "${keyfile}" <<EOF
+key "${BIND_TSIG_KEY_NAME}" {
+  algorithm hmac-sha256;
+  secret "${BIND_TSIG_KEY}";
+};
+EOF
+  chmod 600 "${keyfile}"
+
+  echo "Updating BIND ext view: ${BIND_ZONE} A => ${ip}"
+  nsupdate -v -k "${keyfile}" <<EOF
+server ${BIND_NS}
+zone ${BIND_ZONE}.
+update delete ${BIND_ZONE}. A
+update add ${BIND_ZONE}. 300 A ${ip}
+update delete *.${BIND_ZONE}. A
+update add *.${BIND_ZONE}. 300 A ${ip}
+send
+EOF
+
+  rm -f "${keyfile}"
+}
+
 PUBLIC_IP=$(get_public_ip)
 echo "Public IP: ${PUBLIC_IP}"
 
 update_a_record "A" "mansion" "${PUBLIC_IP}"
 update_a_record "A" "mansion.net" "${PUBLIC_IP}"
 update_ns_record "mansion" "${PUBLIC_IP}"
+
+bind_nsupdate "${PUBLIC_IP}"
 
 echo "DNS records updated successfully"
