@@ -6,7 +6,7 @@
         "builtIn": 1,
         "datasource": {
           "type": "prometheus",
-          "uid": "${datasource}"
+          "uid": "vm"
         },
         "enable": true,
         "hide": true,
@@ -26,7 +26,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "vm"
       },
       "description": "BGP establishment status",
       "fieldConfig": {
@@ -103,7 +103,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "editorMode": "code",
           "expr": "bird_protocol_up{proto=\"BGP\", instance=\"$instance:9324\", ip_version=\"$version\"}",
@@ -119,7 +119,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "vm"
       },
       "description": "Number of established BGP sessions",
       "fieldConfig": {
@@ -197,7 +197,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "expr": "count(bird_protocol_up{proto=\"BGP\", instance=\"$instance:9324\", ip_version=\"$version\"})",
           "legendFormat": "sessions"
@@ -210,7 +210,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "vm"
       },
       "description": "Uptime of the BGP protocol.",
       "fieldConfig": {
@@ -273,7 +273,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "editorMode": "code",
           "expr": "bird_protocol_uptime{proto=\"BGP\", instance=\"$instance:9324\", ip_version=\"$version\"}",
@@ -299,7 +299,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "description": "The rate of imported routes via the BGP protocol.",
           "fieldConfig": {
@@ -391,7 +391,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${datasource}"
+                "uid": "vm"
               },
               "editorMode": "code",
               "expr": "rate(bird_protocol_prefix_import_count{proto=\"BGP\", instance=\"$instance:9324\", ip_version=\"$version\"}[$__rate_interval])",
@@ -409,7 +409,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "description": "The rate of exported routes via the BGP protocol.",
           "fieldConfig": {
@@ -501,7 +501,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${datasource}"
+                "uid": "vm"
               },
               "editorMode": "code",
               "expr": "rate(bird_protocol_prefix_export_count{proto=\"BGP\", instance=\"$instance:9324\", ip_version=\"$version\"}[$__rate_interval])",
@@ -517,7 +517,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "description": "The rate of filtered routes via the BGP protocol.",
           "fieldConfig": {
@@ -609,7 +609,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${datasource}"
+                "uid": "vm"
               },
               "editorMode": "code",
               "expr": "rate(bird_protocol_prefix_filter_count{proto=\"BGP\", instance=\"$instance:9324\", ip_version=\"$version\"}[$__rate_interval])",
@@ -625,7 +625,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "description": "Number of preferred routes.",
           "fieldConfig": {
@@ -689,7 +689,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${datasource}"
+                "uid": "vm"
               },
               "editorMode": "code",
               "expr": "bird_protocol_prefix_preferred_count{proto=\"BGP\", instance=\"$instance:9324\", ip_version=\"$version\"}",
@@ -719,7 +719,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "description": "The rate of received updates.",
           "fieldConfig": {
@@ -810,7 +810,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${datasource}"
+                "uid": "vm"
               },
               "editorMode": "code",
               "expr": "rate(bird_protocol_changes_update_import_receive_count{proto=\"BGP\", instance=\"$instance:9324\", ip_version=\"$version\"}[$__rate_interval])",
@@ -826,7 +826,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "description": "The rate of incoming accepted updates received.",
           "fieldConfig": {
@@ -917,7 +917,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${datasource}"
+                "uid": "vm"
               },
               "editorMode": "code",
               "expr": "rate(bird_protocol_changes_update_import_accept_count{proto=\"BGP\", instance=\"$instance:9324\", ip_version=\"$version\"}[$__rate_interval])",
@@ -933,7 +933,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "description": "The rate of incoming rejected updates received.",
           "fieldConfig": {
@@ -1024,7 +1024,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${datasource}"
+                "uid": "vm"
               },
               "editorMode": "code",
               "expr": "rate(bird_protocol_changes_update_import_reject_count{proto=\"BGP\", instance=\"$instance:9324\", ip_version=\"$version\"}[$__rate_interval])",
@@ -1040,7 +1040,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "description": "The rate of sent updates.",
           "fieldConfig": {
@@ -1131,7 +1131,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${datasource}"
+                "uid": "vm"
               },
               "editorMode": "code",
               "expr": "rate(bird_protocol_changes_update_export_receive_count{proto=\"BGP\", instance=\"$instance:9324\", ip_version=\"$version\"}[$__rate_interval])",
@@ -1147,7 +1147,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "description": "The rate of outgoing accepted updates received.",
           "fieldConfig": {
@@ -1238,7 +1238,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${datasource}"
+                "uid": "vm"
               },
               "editorMode": "code",
               "expr": "rate(bird_protocol_changes_update_export_accept_count{proto=\"BGP\", instance=\"$instance:9324\", ip_version=\"$version\"}[$__rate_interval])",
@@ -1254,7 +1254,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "description": "The rate of outgoing rejected updates received.",
           "fieldConfig": {
@@ -1345,7 +1345,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${datasource}"
+                "uid": "vm"
               },
               "editorMode": "code",
               "expr": "rate(bird_protocol_changes_update_export_reject_count{proto=\"BGP\", instance=\"$instance:9324\", ip_version=\"$version\"}[$__rate_interval])",
@@ -1375,7 +1375,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "description": "Total received withdraws.",
           "fieldConfig": {
@@ -1466,7 +1466,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${datasource}"
+                "uid": "vm"
               },
               "editorMode": "code",
               "expr": "rate(bird_protocol_changes_withdraw_import_receive_count{proto=\"BGP\", instance=\"$instance:9324\", ip_version=\"$version\"}[$__rate_interval])",
@@ -1482,7 +1482,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "description": "Incoming accepted withdrawals.",
           "fieldConfig": {
@@ -1573,7 +1573,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${datasource}"
+                "uid": "vm"
               },
               "editorMode": "code",
               "expr": "rate(bird_protocol_changes_withdraw_import_accept_count{proto=\"BGP\", instance=\"$instance:9324\", ip_version=\"$version\"}[$__rate_interval])",
@@ -1589,7 +1589,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "description": "Total send withdraws.",
           "fieldConfig": {
@@ -1680,7 +1680,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${datasource}"
+                "uid": "vm"
               },
               "editorMode": "code",
               "expr": "rate(bird_protocol_changes_withdraw_export_receive_count{proto=\"BGP\", instance=\"$instance:9324\", ip_version=\"$version\"}[$__rate_interval])",
@@ -1696,7 +1696,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "description": "Accepted sent withdrawals.",
           "fieldConfig": {
@@ -1787,7 +1787,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${datasource}"
+                "uid": "vm"
               },
               "editorMode": "code",
               "expr": "rate(bird_protocol_changes_withdraw_import_accept_count{proto=\"BGP\", instance=\"$instance:9324\", ip_version=\"$version\"}[$__rate_interval])",
