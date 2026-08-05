@@ -303,6 +303,12 @@ config = {
         # Secondary IP in NL tunnel subnet (172.25.0.0/16) on mgmt interface:
         # BIRD resolves static nexthops (172.25.220.2) only via on-link subnets
         tunnel_subnet_ip = "172.25.0.19/16"
+        exporter = {
+            image = "docker.io/czerwonk/bird_exporter:v1.2.6"
+            port = 9324
+            # BIRD control socket shared with exporter via emptyDir volume
+            socket = "/run/bird/bird.ctl"
+        }
     }
     cert_manager = {
         namespace = "cert-manager"

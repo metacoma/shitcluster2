@@ -14,128 +14,172 @@ nad_name = "bird-management"
 bird_conf = file.read("apps/bird_data/bird.conf")
 
 manifests = [
-  # 1. Namespace
-  k8s.Namespace {
-    metadata.name = _bird.namespace
-  }
-
-  # 2. Network Attachment Definition on br-management (management network)
-  network_attach.NetworkAttachmentDefinition {
-    metadata = {
-      name = nad_name
-      namespace = _bird.namespace
+    # 1. Namespace
+    k8s.Namespace {
+        metadata.name = _bird.namespace
     }
-    spec = {
-      config = json.encode({
-        cniVersion = "0.3.1"
-        type = "bridge"
-        bridge = "br-management"
-        hairpinMode = True
-        ipam = {
-          type = "static"
-          addresses = [{
-            address = _bird.ip
-            gateway = _bird.gateway
-          }]
-          routes = [
-            { dst = "0.0.0.0/0", gw = _bird.gateway }
-          ]
-        }
-      })
-    }
-  }
-
-  # 3. ConfigMap with bird.conf
-  k8s.ConfigMap {
-    metadata = {
-      name = "bird-conf"
-      namespace = _bird.namespace
-    }
-    data = {
-      "bird.conf": bird_conf
-    }
-  }
-
-  # 4. Deployment
-  v1.Deployment {
-    metadata = {
-      name = "bird"
-      namespace = _bird.namespace
-      labels = {
-        app = "bird"
-      }
-    }
-    spec = {
-      replicas = 1
-      selector.matchLabels = {app = "bird"}
-      template = {
+    # 2. Network Attachment Definition on br-management (management network)
+    network_attach.NetworkAttachmentDefinition {
         metadata = {
-          labels.app = "bird"
-          annotations = {
-            "k8s.v1.cni.cncf.io/networks" = json.encode([
-              {
-                name = nad_name
-                namespace = _bird.namespace
-                interface = "public"
-              }
-            ])
-          }
+            name = nad_name
+            namespace = _bird.namespace
         }
         spec = {
-          dnsPolicy = "None"
-          dnsConfig.nameservers = [_bird.gateway]
-
-          nodeSelector = _config.nodeSelector.worker
-          hostNetwork = False
-
-          containers = [{
-            name = "bird"
-            image = _bird.image
-            imagePullPolicy = "IfNotPresent"
-            command = ["/bin/sh"]
-            args = ["-c", """
-              sysctl -w net.ipv4.ip_forward=1
-              sysctl -w net.ipv4.conf.all.forwarding=1
-              # Secondary IP in NL tunnel subnet (172.25.0.0/16) on the mgmt
-              # interface: BIRD resolves static nexthops (172.25.220.2) only
-              # via on-link (connected) subnets, not via the routing table.
-              ip addr add ${_bird.tunnel_subnet_ip} dev public
-              exec bird -f -c /etc/bird/bird.conf
-            """]
-            securityContext = {
-              privileged = True
-              capabilities.add = ["NET_ADMIN", "NET_RAW", "SYS_ADMIN"]
-            }
-            volumeMounts = [{
-              name = "bird-conf"
-              mountPath = "/etc/bird"
-              readOnly = True
-            }]
-            readinessProbe = {
-              exec = {
-                command = ["birdc", "show", "status"]
-              }
-              initialDelaySeconds = 10
-              periodSeconds = 10
-              timeoutSeconds = 5
-            }
-            livenessProbe = {
-              exec = {
-                command = ["birdc", "show", "status"]
-              }
-              initialDelaySeconds = 15
-              periodSeconds = 30
-              timeoutSeconds = 5
-            }
-          }]
-          volumes = [{
-            name = "bird-conf"
-            configMap = {
-              name = "bird-conf"
-            }
-          }]
+            config = json.encode({
+                cniVersion = "0.3.1"
+                type = "bridge"
+                bridge = "br-management"
+                hairpinMode = True
+                ipam = {
+                    type = "static"
+                    addresses = [{
+                        address = _bird.ip
+                        gateway = _bird.gateway
+                    }]
+                    routes = [
+                        {dst = "0.0.0.0/0", gw = _bird.gateway}
+                    ]
+                }
+            })
         }
-      }
     }
-  }
+    # 3. ConfigMap with bird.conf
+    k8s.ConfigMap {
+        metadata = {
+            name = "bird-conf"
+            namespace = _bird.namespace
+        }
+        data = {
+            "bird.conf": bird_conf
+        }
+    }
+    # 4. Deployment
+    v1.Deployment {
+        metadata = {
+            name = "bird"
+            namespace = _bird.namespace
+            labels = {
+                app = "bird"
+            }
+        }
+        spec = {
+            replicas = 1
+            selector.matchLabels = {app = "bird"}
+            template = {
+                metadata = {
+                    labels.app = "bird"
+                    annotations = {
+                        "k8s.v1.cni.cncf.io/networks" = json.encode([
+                            {
+                                name = nad_name
+                                namespace = _bird.namespace
+                                interface = "public"
+                            }
+                        ])
+                        # Prometheus (VMAgent kubernetes-pods job) scraping
+                        "prometheus.io/scrape" = "true"
+                        "prometheus.io/port" = "${_bird.exporter.port}"
+                        "prometheus.io/path" = "/metrics"
+                    }
+                }
+                spec = {
+                    dnsPolicy = "None"
+                    dnsConfig.nameservers = [_bird.gateway]
+                    nodeSelector = _config.nodeSelector.worker
+                    hostNetwork = False
+                    containers = [
+                        {
+                            name = "bird"
+                            image = _bird.image
+                            imagePullPolicy = "IfNotPresent"
+                            command = ["/bin/sh"]
+                            args = ["-c", """
+                sysctl -w net.ipv4.ip_forward=1
+                sysctl -w net.ipv4.conf.all.forwarding=1
+                # Secondary IP in NL tunnel subnet (172.25.0.0/16) on the mgmt
+                # interface: BIRD resolves static nexthops (172.25.220.2) only
+                # via on-link (connected) subnets, not via the routing table.
+                ip addr add ${_bird.tunnel_subnet_ip} dev public
+                exec bird -f -s ${_bird.exporter.socket} -c /etc/bird/bird.conf
+              """]
+                            securityContext = {
+                                privileged = True
+                                capabilities.add = ["NET_ADMIN", "NET_RAW", "SYS_ADMIN"]
+                            }
+                            volumeMounts = [
+                                {
+                                    name = "bird-conf"
+                                    mountPath = "/etc/bird"
+                                    readOnly = True
+                                }
+                                {
+                                    name = "bird-socket"
+                                    mountPath = "/run/bird"
+                                }
+                            ]
+                            readinessProbe = {
+                                exec = {
+                                    command = ["birdc", "-s", _bird.exporter.socket, "show", "status"]
+                                }
+                                initialDelaySeconds = 10
+                                periodSeconds = 10
+                                timeoutSeconds = 5
+                            }
+                            livenessProbe = {
+                                exec = {
+                                    command = ["birdc", "-s", _bird.exporter.socket, "show", "status"]
+                                }
+                                initialDelaySeconds = 15
+                                periodSeconds = 30
+                                timeoutSeconds = 5
+                            }
+                        }
+                        {
+                            # bird_exporter sidecar: exposes BIRD metrics via unix socket
+                            name = "bird-exporter"
+                            image = _bird.exporter.image
+                            imagePullPolicy = "IfNotPresent"
+                            args = [
+                                "-bird.v2=true"
+                                "-format.new=true"
+                                "-bird.socket=${_bird.exporter.socket}"
+                            ]
+                            ports = [{
+                                containerPort = _bird.exporter.port
+                                name = "metrics"
+                            }]
+                            volumeMounts = [{
+                                name = "bird-socket"
+                                mountPath = "/run/bird"
+                                readOnly = True
+                            }]
+                            resources = {
+                                requests = {
+                                    cpu = "10m"
+                                    memory = "16Mi"
+                                }
+                                limits = {
+                                    cpu = "50m"
+                                    memory = "32Mi"
+                                }
+                            }
+                        }
+                    ]
+                    volumes = [
+                        {
+                            name = "bird-conf"
+                            configMap = {
+                                name = "bird-conf"
+                            }
+                        }
+                        {
+                            # Shared unix socket dir for BIRD control socket used by exporter
+                            name = "bird-socket"
+                            emptyDir = {}
+                        }
+                    ]
+                }
+            }
+        }
+    }
 ]
