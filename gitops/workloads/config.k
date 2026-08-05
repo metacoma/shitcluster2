@@ -373,14 +373,20 @@ config = {
         metrics_service = "longhorn-backend"
         metrics_port = "9500"
     }
-    external = {
-        litellm = {
-            host = "mcmp10.mgmt.mansion.shitcluster.io"
-            port = "4000"
-            metrics_path = "/metrics/"
-            bearer_token = "sk-local"
-            interval = "30s"
+    litellm = {
+        namespace = "ai"
+        ingress_host = "litellm.mansion.metacoma.org"
+        master_key = "ref+vault://kv/litellm#master_key"
+        backend_host = "mcmp10.mgmt.mansion.shitcluster.io"
+        helm = {
+            repo = "oci://ghcr.io/berriai/litellm-helm"
+            chart_name = "litellm"
+            release_name = "litellm"
+            chart_version = "1.95.0"
+            app_version = "1.95.0"
         }
+    }
+    external = {
         llamacpp = {
             host = "mcmp10.mgmt.mansion.shitcluster.io"
             port = "8083"
