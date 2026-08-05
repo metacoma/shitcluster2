@@ -295,6 +295,12 @@ config = {
         upstreamDns = "172.25.1.8"
         adminPassword = "ref+vault://kv/pihole#adminPassword"
     }
+    bird = {
+        namespace = "network"
+        image = "docker.io/metacoma/bird:2.15"
+        ip = "172.24.0.19/16"
+        gateway = "172.24.0.1"
+    }
     cert_manager = {
         namespace = "cert-manager"
         issuer_name = "letsencrypt-prod-bind"

@@ -17,6 +17,7 @@ import .apps.ingress_nginx as ingress_nginx
 import .apps.wireguard as wireguard
 import .apps.dnscrypt_proxy as dnscrypt_proxy
 import .apps.pihole as pihole
+import .apps.bird as bird
 import .apps.cert_manager as cert_manager
 import .apps.reflector as reflector
 import .apps.mcphub as mcphub
@@ -45,6 +46,7 @@ resources = [
     wireguard.manifests
     dnscrypt_proxy.manifests
     pihole.manifests
+    bird.manifests
     cert_manager.manifests
     mcphub.manifests
     # ddgs.manifests
