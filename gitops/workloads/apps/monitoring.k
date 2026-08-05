@@ -187,11 +187,11 @@ manifests = [
         extraScrapeConfigs = [
             {
                 job_name = "litellm"
-                metrics_path = _config.external.litellm.metrics_path
-                scrape_interval = _config.external.litellm.interval
-                bearer_token = _config.external.litellm.bearer_token
+                metrics_path = "/metrics"
+                scrape_interval = "30s"
+                bearer_token = "ref+vault://kv/litellm#master_key"
                 static_configs = [{
-                    targets = ["${_config.external.litellm.host}:${_config.external.litellm.port}"]
+                    targets = ["litellm.ai.svc:4000"]
                 }]
             }
             {

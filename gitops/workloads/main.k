@@ -30,6 +30,7 @@ import .apps.helm_mcp as helm_mcp
 import .apps.artifacthub_mcp as artifacthub_mcp
 import .apps.package_version_check_mcp as package_version_check_mcp
 import .apps.forgejo as forgejo
+import .apps.litellm as litellm
 
 resources = [
     ssh_tunnel.manifests
@@ -58,6 +59,7 @@ resources = [
     artifacthub_mcp.manifests
     package_version_check_mcp.manifests
     forgejo.manifests
+    litellm.manifests
 ]
 
 manifests.yaml_stream([
