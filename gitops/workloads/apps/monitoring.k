@@ -314,6 +314,10 @@ manifests = [
                     json = file.read("apps/grafana_data/lact-gpu-metrics.json")
                     datasource = "VictoriaMetrics"
                 }
+                "bird-bgp" = {
+                    json = file.read("apps/grafana_data/bird-bgp.json")
+                    datasource = "VictoriaMetrics"
+                }
             }
         }
         datasources = {
