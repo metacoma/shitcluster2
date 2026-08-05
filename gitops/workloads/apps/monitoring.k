@@ -3,6 +3,7 @@ import k8s.api.apps.v1 as v1
 import config as cfg
 import ..argoproj.v1alpha1 as argoproj
 import yaml
+import file
 
 _config = cfg.config
 mon_cfg = _config.monitoring
@@ -307,6 +308,10 @@ manifests = [
                 "k8s-views-pods" = {
                     gnetId = 15760
                     revision = 39
+                    datasource = "VictoriaMetrics"
+                }
+                "lact-gpu-metrics" = {
+                    json = file.read("apps/grafana_data/lact-gpu-metrics.json")
                     datasource = "VictoriaMetrics"
                 }
             }
