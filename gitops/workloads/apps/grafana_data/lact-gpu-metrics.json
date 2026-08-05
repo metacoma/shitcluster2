@@ -33,7 +33,7 @@
         "type": "query",
         "datasource": {
           "type": "prometheus",
-          "uid": "${datasource}"
+          "uid": "vm"
         },
         "definition": "label_values(lact_gpu_usage_percent, gpu_id)",
         "query": {
@@ -71,7 +71,7 @@
       },
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "vm"
       },
       "fieldConfig": {
         "defaults": {
@@ -133,7 +133,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "expr": "lact_gpu_usage_percent{gpu_id=~\"$gpu\"}",
           "interval": "",
@@ -154,7 +154,7 @@
       },
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "vm"
       },
       "fieldConfig": {
         "defaults": {
@@ -216,7 +216,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "expr": "lact_gpu_power_usage_watts{gpu_id=~\"$gpu\"}",
           "interval": "",
@@ -237,7 +237,7 @@
       },
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "vm"
       },
       "fieldConfig": {
         "defaults": {
@@ -299,7 +299,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "expr": "lact_gpu_fan_percent{gpu_id=~\"$gpu\"}",
           "interval": "",
@@ -320,7 +320,7 @@
       },
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "vm"
       },
       "fieldConfig": {
         "defaults": {
@@ -382,7 +382,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "expr": "lact_gpu_temperature_celsius{sensor=\"GPU\", gpu_id=~\"$gpu\"}",
           "interval": "",
@@ -403,7 +403,7 @@
       },
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "vm"
       },
       "fieldConfig": {
         "defaults": {
@@ -465,7 +465,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "expr": "lact_gpu_clockspeed_hertz{clockspeed_type=\"gpu_current\", gpu_id=~\"$gpu\"} / 1000000",
           "interval": "",
@@ -486,7 +486,7 @@
       },
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "vm"
       },
       "fieldConfig": {
         "defaults": {
@@ -548,7 +548,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "expr": "lact_gpu_clockspeed_hertz{clockspeed_type=\"memory\", gpu_id=~\"$gpu\"} / 1000000",
           "interval": "",
@@ -569,7 +569,7 @@
       },
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "vm"
       },
       "fieldConfig": {
         "defaults": {
@@ -631,7 +631,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "expr": "lact_gpu_vram_used_bytes{gpu_id=~\"$gpu\"} / 1024 * 1024 * 1024",
           "interval": "",
@@ -652,7 +652,7 @@
       },
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "vm"
       },
       "fieldConfig": {
         "defaults": {
@@ -714,7 +714,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "expr": "100 * lact_gpu_vram_used_bytes{gpu_id=~\"$gpu\"} / lact_gpu_vram_total_bytes{gpu_id=~\"$gpu\"}",
           "interval": "",
@@ -735,7 +735,7 @@
       },
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "vm"
       },
       "fieldConfig": {
         "defaults": {
@@ -807,7 +807,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "expr": "lact_gpu_usage_percent{gpu_id=~\"$gpu\"}",
           "interval": "",
@@ -828,7 +828,7 @@
       },
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "vm"
       },
       "fieldConfig": {
         "defaults": {
@@ -900,7 +900,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "expr": "100 * lact_gpu_vram_used_bytes{gpu_id=~\"$gpu\"} / lact_gpu_vram_total_bytes{gpu_id=~\"$gpu\"}",
           "interval": "",
@@ -921,7 +921,7 @@
       },
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "vm"
       },
       "fieldConfig": {
         "defaults": {
@@ -993,7 +993,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "expr": "lact_gpu_temperature_celsius{sensor=\"GPU\", gpu_id=~\"$gpu\"}",
           "interval": "",
@@ -1014,7 +1014,7 @@
       },
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "vm"
       },
       "fieldConfig": {
         "defaults": {
@@ -1086,7 +1086,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "expr": "lact_gpu_power_usage_watts{gpu_id=~\"$gpu\"}",
           "interval": "",
@@ -1107,7 +1107,7 @@
       },
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "vm"
       },
       "fieldConfig": {
         "defaults": {
@@ -1179,7 +1179,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "expr": "lact_gpu_vram_used_bytes{gpu_id=~\"$gpu\"} / 1024 / 1024 / 1024",
           "interval": "",
@@ -1189,7 +1189,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "expr": "lact_gpu_vram_total_bytes{gpu_id=~\"$gpu\"} / 1024 / 1024 / 1024",
           "interval": "",
@@ -1210,7 +1210,7 @@
       },
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "vm"
       },
       "fieldConfig": {
         "defaults": {
@@ -1282,7 +1282,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "expr": "lact_gpu_fan_percent{gpu_id=~\"$gpu\"}",
           "interval": "",
@@ -1303,7 +1303,7 @@
       },
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "vm"
       },
       "fieldConfig": {
         "defaults": {
@@ -1375,7 +1375,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "expr": "lact_gpu_clockspeed_hertz{clockspeed_type=\"gpu_current\", gpu_id=~\"$gpu\"} / 1000000",
           "interval": "",
@@ -1396,7 +1396,7 @@
       },
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "vm"
       },
       "fieldConfig": {
         "defaults": {
@@ -1468,7 +1468,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "vm"
           },
           "expr": "lact_gpu_clockspeed_hertz{clockspeed_type=\"memory\", gpu_id=~\"$gpu\"} / 1000000",
           "interval": "",
