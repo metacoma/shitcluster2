@@ -128,6 +128,7 @@ manifests = [
                 "nginx.ingress.kubernetes.io/proxy-read-timeout" = "1800"
                 "nginx.ingress.kubernetes.io/proxy-send-timeout" = "1800"
                 "nginx.ingress.kubernetes.io/proxy-buffering" = "off"
+                "nginx.ingress.kubernetes.io/proxy-body-size" = "0"
             }
         }
         spec = {
