@@ -29,6 +29,7 @@ import .apps.grafana_mcp as grafana_mcp
 import .apps.helm_mcp as helm_mcp
 import .apps.artifacthub_mcp as artifacthub_mcp
 import .apps.package_version_check_mcp as package_version_check_mcp
+import .apps.qdrant_mcp as qdrant_mcp
 import .apps.forgejo as forgejo
 import .apps.litellm as litellm
 
@@ -58,6 +59,7 @@ resources = [
     helm_mcp.manifests
     artifacthub_mcp.manifests
     package_version_check_mcp.manifests
+    qdrant_mcp.manifests
     forgejo.manifests
     litellm.manifests
 ]
