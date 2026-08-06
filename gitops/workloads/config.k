@@ -502,5 +502,14 @@ config = {
             image = "ghcr.io/mshekow/package-version-check-mcp:latest"
             port = 8000
         }
+        qdrant_mcp = {
+            name = "qdrant-mcp"
+            image = "metacoma/mcp-server-qdrant:0.8.1"
+            port = 8000
+            qdrant_url = "http://172.24.0.28:6333"
+            collection = "mcp-memory"
+            embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
+            ingress_host = "qdrant-mcp.ref+vault://kv/spaceship_dns#managed_domain"
+        }
     }
 }
