@@ -125,6 +125,9 @@ manifests = [
             namespace = ll.namespace
             annotations = {
                 "kubernetes.io/ingress.class" = "nginx"
+                "nginx.ingress.kubernetes.io/proxy-read-timeout" = "1800"
+                "nginx.ingress.kubernetes.io/proxy-send-timeout" = "1800"
+                "nginx.ingress.kubernetes.io/proxy-buffering" = "off"
             }
         }
         spec = {
