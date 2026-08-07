@@ -373,6 +373,14 @@ config = {
         metrics_service = "longhorn-backend"
         metrics_port = "9500"
     }
+    tei = {
+        namespace = "ai"
+        name = "tei"
+        image = "ghcr.io/huggingface/text-embeddings-inference:cpu-1.5"
+        model = "sentence-transformers/all-MiniLM-L6-v2"
+        port = 80
+        trust_remote_code = True
+    }
     litellm = {
         namespace = "ai"
         ingress_host = "litellm.mansion.metacoma.org"
@@ -508,9 +516,9 @@ config = {
             port = 8080
             qdrant_url = "http://172.24.0.28:6333"
             collection = "documents"
-            llm_base_url = "http://litellm.ai:4000"
-            llm_api_key = "ref+vault://kv/litellm#master_key"
-            llm_embedding_model = "all-MiniLM-L6-v2"
+            llm_base_url = "http://tei.ai:80"
+            llm_api_key = "local"
+            llm_embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
             ingress_host = "qdrant-loader-mcp.ref+vault://kv/spaceship_dns#managed_domain"
         }
     }

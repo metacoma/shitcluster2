@@ -99,14 +99,6 @@ _model_list = [
             api_key = "local"
         }
     }
-    # Embeddings model (served in-process via sentence-transformers)
-    {
-        model_name = "all-MiniLM-L6-v2"
-        litellm_params = {
-            model = "sentence-transformers/all-MiniLM-L6-v2"
-            api_key = "local"
-        }
-    }
 ]
 
 manifests = [
@@ -189,7 +181,7 @@ manifests = [
                     values = yaml.encode({
                         replicaCount = 1
                         image = {
-                            repository = "metacoma/litellm"
+                            repository = "ghcr.io/berriai/litellm-database"
                             pullPolicy = "IfNotPresent"
                             tag = ll.helm.app_version
                         }
