@@ -376,8 +376,8 @@ config = {
     tei = {
         namespace = "ai"
         name = "tei"
-        image = "ghcr.io/huggingface/text-embeddings-inference:cpu-1.5"
-        model = "sentence-transformers/all-MiniLM-L6-v2"
+        image = "metacoma/tei-minilm:1.5"
+        model = "/data/model"
         port = 80
         trust_remote_code = True
     }
