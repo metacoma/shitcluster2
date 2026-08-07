@@ -62,9 +62,9 @@ _settings = """{
       "visibility": "public",
       "owner": "admin"
     },
-    "qdrant-mcp": {
+    "qdrant-loader-mcp": {
       "type": "streamable-http",
-      "url": "https://qdrant-mcp.mansion.metacoma.org/mcp/",
+      "url": "https://qdrant-loader-mcp.mansion.metacoma.org/mcp",
       "timeout": 60000,
       "enabled": true,
       "visibility": "public",

@@ -502,14 +502,16 @@ config = {
             image = "ghcr.io/mshekow/package-version-check-mcp:latest"
             port = 8000
         }
-        qdrant_mcp = {
-            name = "qdrant-mcp"
-            image = "metacoma/mcp-server-qdrant:0.8.1"
-            port = 8000
+        qdrant_loader_mcp = {
+            name = "qdrant-loader-mcp"
+            image = "metacoma/qdrant-loader-mcp-server:1.0.4"
+            port = 8080
             qdrant_url = "http://172.24.0.28:6333"
-            collection = "mcp-memory"
-            embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
-            ingress_host = "qdrant-mcp.ref+vault://kv/spaceship_dns#managed_domain"
+            collection = "documents"
+            llm_base_url = "http://litellm.ai:4000"
+            llm_api_key = "ref+vault://kv/litellm#master_key"
+            llm_embedding_model = "all-MiniLM-L6-v2"
+            ingress_host = "qdrant-loader-mcp.ref+vault://kv/spaceship_dns#managed_domain"
         }
     }
 }
