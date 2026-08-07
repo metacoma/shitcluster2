@@ -23,7 +23,6 @@ manifests = [
                         args = [
                             "--model-id", app.model
                             "--port", "80"
-                            "--trust-remote-code"
                         ]
                         ports = [{containerPort = 80}]
                         resources = {
