@@ -20,10 +20,7 @@ manifests = [
                     containers = [{
                         name = app.name
                         image = app.image
-                        args = [
-                            "--model-id", app.model
-                            "--port", "80"
-                        ]
+                        args = ["--port", "80"]
                         ports = [{containerPort = 80}]
                         resources = {
                             requests = {cpu = "500m", memory = "1Gi"}
