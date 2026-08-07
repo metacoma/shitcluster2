@@ -20,6 +20,10 @@ manifests = [
                     containers = [{
                         name = app.name
                         image = app.image
+                        # auto-truncate: TEI rejects inputs >256 tokens with 413 unless truncated.
+                        # The MiniLM tokenizer counts more tokens than the loader's cl100k tokenizer,
+                        # so chunks that pass loader-side truncation can still exceed TEI's limit.
+                        args = ["--auto-truncate"]
                         ports = [{containerPort = 80}]
                         resources = {
                             requests = {cpu = "500m", memory = "1Gi"}
