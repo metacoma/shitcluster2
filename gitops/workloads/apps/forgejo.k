@@ -21,6 +21,7 @@ manifests = [
             namespace = fj.namespace
             annotations = {
                 "kubernetes.io/ingress.class" = "nginx"
+                "nginx.ingress.kubernetes.io/proxy-body-size" = "0"
             }
         }
         spec = {
