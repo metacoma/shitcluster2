@@ -85,7 +85,8 @@ manifests = [
             # telegram bot bridge config (tg.json with botToken + allowedUserId)
             "tg.json": "ref+vault://kv/pi_agent#tg_json_base64"
             # GH_TOKEN (metacoma) -> git push/pull to github.com from the pod
-            "gh_token": "ref+vault://kv/metacoma#github"
+            # (github_base64: Secret data values must be valid base64)
+            "gh_token": "ref+vault://kv/metacoma#github_base64"
         }
     },
 
