@@ -137,11 +137,18 @@ manifests = [
                                     name = "POSTGRES_DB"
                                     value = m.postgresql.database
                                 }
+                                {
+                                    # Mount PVC root at a parent dir and initdb into a
+                                    # fresh subdir — initdb refuses dirs containing
+                                    # lost+found (ext4 artifact at PVC mount point)
+                                    name = "PGDATA"
+                                    value = "/var/lib/postgresql/data"
+                                }
                             ]
                             volumeMounts = [
                                 {
                                     name = "data"
-                                    mountPath = "/var/lib/postgresql/data"
+                                    mountPath = "/var/lib/postgresql"
                                 }
                             ]
                             resources = {
