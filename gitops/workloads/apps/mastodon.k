@@ -66,53 +66,84 @@ manifests = [
             ]
         }
     }
-    # 3. ArgoCD Application — PostgreSQL (bitnami) for Mastodon
-    argoproj.Application {
+    # 3. PostgreSQL — native manifests, official image (non-FIPS)
+    k8s.Secret {
         metadata = {
-            name = m.postgresql.helm.release_name
-            namespace = _config.argocd.namespace
+            name = m.postgresql.service_name
+            namespace = m.namespace
+        }
+        stringData = {
+            username = m.postgresql.username
+            password = m.postgresql.password
+        }
+    }
+    {
+        apiVersion = "apps/v1"
+        kind = "StatefulSet"
+        metadata = {
+            name = m.postgresql.service_name
+            namespace = m.namespace
         }
         spec = {
-            destination = {
-                namespace = m.namespace
-                name = "in-cluster"
+            serviceName = m.postgresql.service_name
+            replicas = 1
+            selector = {
+                matchLabels = {
+                    app = m.postgresql.service_name
+                }
             }
-            project = "default"
-            source = {
-                # Vendored chart (git source): OCI registry digest lookup from
-                # ArgoCD is flaky (intermittent 401 from Docker Hub)
-                repoURL = "https://github.com/metacoma/shitcluster2"
-                path = "gitops/vendor/postgresql"
-                targetRevision = "master"
-                helm = {
-                    values = yaml.encode({
-                        # Chart default tag (docker.io/bitnami/postgresql:17.6.0-debian-12-r4)
-                        # was removed by Bitnami; pin to an existing image
-                        image = {
-                            registry = "registry-1.docker.io"
-                            repository = "bitnamicharts/postgresql"
-                            tag = "16.7.9"
-                        }
-                        global = {
-                            # Bitnami chart fails on non-official image refs unless allowed
-                            security = {
-                                allowInsecureImages = True
-                            }
-                            postgresql = {
-                                auth = {
-                                    postgresPassword = m.postgresql.password
-                                    username = m.postgresql.username
-                                    password = m.postgresql.password
-                                    database = m.postgresql.database
+            template = {
+                metadata = {
+                    labels = {
+                        app = m.postgresql.service_name
+                    }
+                }
+                spec = {
+                    nodeSelector = _config.nodeSelector.worker
+                    securityContext = {
+                        fsGroup = 999
+                        runAsUser = 999
+                        runAsNonRoot = True
+                    }
+                    containers = [
+                        {
+                            name = "postgresql"
+                            image = m.postgresql.image
+                            ports = [
+                                {
+                                    containerPort = 5432
                                 }
-                            }
-                        }
-                        architecture = "standalone"
-                        primary = {
-                            persistence = {
-                                storageClass = _config.storageClass
-                                size = m.postgresql.persistence
-                            }
+                            ]
+                            env = [
+                                {
+                                    name = "POSTGRES_USER"
+                                    valueFrom = {
+                                        secretKeyRef = {
+                                            name = m.postgresql.service_name
+                                            key = "username"
+                                        }
+                                    }
+                                }
+                                {
+                                    name = "POSTGRES_PASSWORD"
+                                    valueFrom = {
+                                        secretKeyRef = {
+                                            name = m.postgresql.service_name
+                                            key = "password"
+                                        }
+                                    }
+                                }
+                                {
+                                    name = "POSTGRES_DB"
+                                    value = m.postgresql.database
+                                }
+                            ]
+                            volumeMounts = [
+                                {
+                                    name = "data"
+                                    mountPath = "/var/lib/postgresql/data"
+                                }
+                            ]
                             resources = {
                                 requests = {
                                     cpu = "250m"
@@ -123,16 +154,64 @@ manifests = [
                                     memory = "2Gi"
                                 }
                             }
+                            readinessProbe = {
+                                exec = {
+                                    command = [
+                                        "pg_isready"
+                                        "-U"
+                                        m.postgresql.username
+                                    ]
+                                }
+                                initialDelaySeconds = 10
+                                periodSeconds = 10
+                            }
                         }
-                        nodeSelector = _config.nodeSelector.worker
-                    })
+                    ]
+                    volumes = [
+                        {
+                            name = "data"
+                            persistentVolumeClaim = {
+                                claimName = m.postgresql.service_name
+                            }
+                        }
+                    ]
                 }
             }
-            syncPolicy = {
-                automated = {
-                    selfHeal = True
+            volumeClaimTemplates = [
+                {
+                    metadata = {
+                        name = "data"
+                    }
+                    spec = {
+                        accessModes = ["ReadWriteOnce"]
+                        storageClassName = _config.storageClass
+                        resources = {
+                            requests = {
+                                storage = m.postgresql.persistence
+                            }
+                        }
+                    }
                 }
+            ]
+        }
+    }
+    {
+        apiVersion = "v1"
+        kind = "Service"
+        metadata = {
+            name = m.postgresql.service_name
+            namespace = m.namespace
+        }
+        spec = {
+            selector = {
+                app = m.postgresql.service_name
             }
+            ports = [
+                {
+                    port = 5432
+                    targetPort = 5432
+                }
+            ]
         }
     }
     # 4. ArgoCD Application — Redis (bitnami) for Mastodon
@@ -323,8 +402,8 @@ manifests = [
                             hostname = m.postgresql.service_name
                             port = 5432
                             database = m.postgresql.database
-                            username = m.postgresql.username
-                            password = m.postgresql.password
+                            # Auth from our native Secret (keys: username/password)
+                            existingSecret = m.postgresql.service_name
                         }
                         redis = {
                             hostname = m.redis.service_name

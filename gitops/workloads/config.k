@@ -406,19 +406,15 @@ config = {
             app_version = "v4.6.5"
         }
         postgresql = {
-            helm = {
-                chart_name = "postgresql"
-                repo = "oci://registry-1.docker.io/bitnamicharts"
-                release_name = "mastodon-postgresql"
-                # PG 16: bitnami PG 18 image is FIPS-enabled and breaks mastodon's
-                # timestamp_id() md5() function
-                chart_version = "16.7.27"
-            }
+            # Native manifests + official postgres image (no bitnami chart: their
+            # helm repo is 403, versioned images were pruned, PG18 image is FIPS
+            # and breaks mastodon's md5()-based timestamp_id())
             database = "mastodon"
             username = "mastodon"
             password = "ref+vault://kv/mastodon#db_password"
             persistence = "10Gi"
             service_name = "mastodon-postgresql"
+            image = "docker.io/library/postgres:16.7"
         }
         redis = {
             helm = {
