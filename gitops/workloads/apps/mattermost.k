@@ -247,6 +247,11 @@ manifests = [
                                 mountPath = "/mattermost/data"
                             }]
                             nodeSelector = _config.nodeSelector.worker
+                            # Mattermost image runs as uid 2000; fsGroup gives the
+                            # Longhorn PVC mount group write access
+                            securityContext = {
+                                fsGroup = 2000
+                            }
                             resources = {
                                 requests = mm.resources.requests
                                 limits = mm.resources.limits
