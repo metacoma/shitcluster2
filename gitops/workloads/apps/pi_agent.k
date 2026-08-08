@@ -184,10 +184,12 @@ manifests = [
                                 }
                             }
                         ]
+                        # pi-agent mostly idles in tmux; keep requests small so it
+                        # fits the dense schedulable nodes (mcmp4/6/8)
                         resources = {
                             requests = {
-                                cpu = "500m"
-                                memory = "1Gi"
+                                cpu = "200m"
+                                memory = "512Mi"
                             }
                             limits = {
                                 cpu = "2"
