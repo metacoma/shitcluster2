@@ -408,7 +408,7 @@ config = {
         postgresql = {
             helm = {
                 chart_name = "postgresql"
-                repo = "https://charts.bitnami.com/bitnami"
+                repo = "oci://registry-1.docker.io/bitnamicharts"
                 release_name = "mastodon-postgresql"
                 chart_version = "18.8.6"
             }
@@ -421,7 +421,7 @@ config = {
         redis = {
             helm = {
                 chart_name = "redis"
-                repo = "https://charts.bitnami.com/bitnami"
+                repo = "oci://registry-1.docker.io/bitnamicharts"
                 release_name = "mastodon-redis"
                 chart_version = "28.0.0"
             }
