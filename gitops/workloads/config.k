@@ -408,7 +408,7 @@ config = {
         postgresql = {
             helm = {
                 chart_name = "postgresql"
-                repo = "oci://registry-1.docker.io/bitnamicharts"
+                repo = "https://charts.bitnami.com/bitnami"
                 release_name = "mastodon-postgresql"
                 chart_version = "18.8.6"
             }
@@ -421,7 +421,7 @@ config = {
         redis = {
             helm = {
                 chart_name = "redis"
-                repo = "oci://registry-1.docker.io/bitnamicharts"
+                repo = "https://charts.bitnami.com/bitnami"
                 release_name = "mastodon-redis"
                 chart_version = "28.0.0"
             }
@@ -436,6 +436,8 @@ config = {
             are_primary_key = "ref+vault://kv/mastodon#are_primary_key"
             are_deterministic_key = "ref+vault://kv/mastodon#are_deterministic_key"
             are_derivation_salt = "ref+vault://kv/mastodon#are_derivation_salt"
+            smtp_username = "ref+vault://kv/mastodon#smtp_username"
+            smtp_password = "ref+vault://kv/mastodon#smtp_password"
         }
         persistence = {
             assets = "10Gi"
