@@ -299,8 +299,11 @@ manifests = [
                                 }
                             }
                             smtp = {
-                                # Leave defaults; no credentials configured for MVP
-                                # (email delivery will not work — single user, CLI admin)
+                                # Chart requires SMTP username/password unconditionally.
+                                # Dummy creds from Vault: no real mail server for MVP,
+                                # single-user instance is managed via CLI.
+                                username = m.secrets.smtp_username
+                                password = m.secrets.smtp_password
                             }
                         }
                         postgresql = {
