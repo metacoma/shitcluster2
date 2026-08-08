@@ -1,0 +1,237 @@
+import k8s.api.core.v1 as core
+import k8s.api.apps.v1 as apps
+import config as cfg
+
+app = cfg.config.pi_agent
+
+_home = "/home/pi"
+_agent_dir = _home + "/.pi/agent"
+
+# Pi agent config (non-secret parts). models.json (contains the litellm
+# API key) and the kubeconfig are injected via the pi-agent-secrets Secret.
+_settings_json = """{
+  "lastChangelogVersion": "0.83.0",
+  "packages": [
+    "npm:pi-mcp-adapter",
+    "npm:pi-ai"
+  ],
+  "theme": "dark",
+  "defaultProvider": "litellm",
+  "defaultModel": "openai/deepseek-v4-flash-q3",
+  "defaultProjectTrust": "always",
+  "compaction": {
+    "enabled": false
+  },
+  "hideThinkingBlock": false,
+  "httpIdleTimeoutMs": 1800000,
+  "retry": {
+    "enabled": true,
+    "maxRetries": 3,
+    "baseDelayMs": 2000,
+    "provider": {
+      "timeoutMs": 7200000,
+      "maxRetries": 0,
+      "maxRetryDelayMs": 60000
+    }
+  },
+  "defaultThinkingLevel": "high"
+}"""
+
+_mcp_json = """{
+  "mcpServers": {
+    "mcphub": {
+      "url": "https://mcphub.mansion.metacoma.org/mcp",
+      "transport": "streamable-http",
+      "directTools": true
+    }
+  }
+}"""
+
+manifests = [
+    # ------------------------------------------------------------------
+    # ConfigMap: non-secret pi agent config files
+    # ------------------------------------------------------------------
+    core.ConfigMap {
+        metadata = {
+            name = "pi-agent-config"
+            namespace = app.namespace
+        }
+        data = {
+            "settings.json": _settings_json
+            "mcp.json": _mcp_json
+            "auth.json": "{}"
+        }
+    },
+
+    # ------------------------------------------------------------------
+    # Secret: secret pi agent config (resolved from Vault by vals at
+    # render time in the ArgoCD repo-server)
+    # ------------------------------------------------------------------
+    core.Secret {
+        metadata = {
+            name = "pi-agent-secrets"
+            namespace = app.namespace
+        }
+        type = "Opaque"
+        data = {
+            # models.json contains the litellm master key
+            "models.json": "ref+vault://kv/pi_agent#models_json_base64"
+            # cluster kubeconfig (contains client key material)
+            "kubeconfig": "ref+vault://kv/kubernetes#kubeconfig_base64"
+            # sops age private key -> enables decrypting repo secrets in-container
+            "age_key": "ref+vault://kv/pi_agent#age_key_base64"
+            # vault token for vault CLI / vals / sops_to_vault
+            "vault_token": "ref+vault://kv/vault#token_base64"
+        }
+    },
+
+    # ------------------------------------------------------------------
+    # PVC: persist pi sessions across restarts
+    # ------------------------------------------------------------------
+    core.PersistentVolumeClaim {
+        metadata = {
+            name = "pi-agent-sessions"
+            namespace = app.namespace
+        }
+        spec = {
+            accessModes = ["ReadWriteOnce"]
+            resources = {
+                requests = {
+                    storage = app.session_storage
+                }
+            }
+            storageClassName = cfg.config.storageClass
+        }
+    },
+
+    # ------------------------------------------------------------------
+    # Deployment: pi coding agent (entrypoint starts pi in tmux)
+    # ------------------------------------------------------------------
+    apps.Deployment {
+        metadata = {
+            name = app.name
+            namespace = app.namespace
+            labels = {
+                app = app.name
+            }
+        }
+        spec = {
+            replicas = 1
+            selector = {
+                matchLabels = {app = app.name}
+            }
+            template = {
+                metadata = {
+                    labels = {app = app.name}
+                }
+                spec = {
+                    containers = [{
+                        name = app.name
+                        image = app.image
+                        imagePullPolicy = "Always"
+                        env = [
+                            {
+                                name = "PI_PROVIDER"
+                                value = app.provider
+                            }
+                            {
+                                name = "PI_MODEL"
+                                value = app.model
+                            }
+                            {
+                                name = "VAULT_ADDR"
+                                value = app.vault.addr
+                            }
+                            {
+                                name = "VAULT_TOKEN"
+                                valueFrom = {
+                                    secretKeyRef = {
+                                        name = "pi-agent-secrets"
+                                        key = "vault_token"
+                                    }
+                                }
+                            }
+                        ]
+                        resources = {
+                            requests = {
+                                cpu = "500m"
+                                memory = "1Gi"
+                            }
+                            limits = {
+                                cpu = "2"
+                                memory = "4Gi"
+                            }
+                        }
+                        volumeMounts = [
+                            # pi config files (non-secret)
+                            {
+                                name = "pi-agent-config"
+                                mountPath = _agent_dir + "/settings.json"
+                                subPath = "settings.json"
+                            }
+                            {
+                                name = "pi-agent-config"
+                                mountPath = _agent_dir + "/mcp.json"
+                                subPath = "mcp.json"
+                            }
+                            {
+                                name = "pi-agent-config"
+                                mountPath = _agent_dir + "/auth.json"
+                                subPath = "auth.json"
+                            }
+                            # secret config files
+                            {
+                                name = "pi-agent-secrets"
+                                mountPath = _agent_dir + "/models.json"
+                                subPath = "models.json"
+                            }
+                            {
+                                name = "pi-agent-secrets"
+                                mountPath = _home + "/.kube/config"
+                                subPath = "kubeconfig"
+                            }
+                            {
+                                name = "pi-agent-secrets"
+                                mountPath = _home + "/.config/sops/age/keys.txt"
+                                subPath = "age_key"
+                            }
+                            # workspace (repo clone) + session persistence
+                            {
+                                name = "workspace"
+                                mountPath = "/workspace"
+                            }
+                            {
+                                name = "pi-agent-sessions"
+                                mountPath = _agent_dir + "/sessions"
+                            }
+                        ]
+                    }]
+                    volumes = [
+                        {
+                            name = "pi-agent-config"
+                            configMap = {
+                                name = "pi-agent-config"
+                            }
+                        }
+                        {
+                            name = "pi-agent-secrets"
+                            secret = {
+                                secretName = "pi-agent-secrets"
+                            }
+                        }
+                        {
+                            name = "workspace"
+                            emptyDir = {}
+                        }
+                        {
+                            name = "pi-agent-sessions"
+                            persistentVolumeClaim = {
+                                claimName = "pi-agent-sessions"
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    }
+]

@@ -443,6 +443,19 @@ config = {
             interval = "30s"
         }
     }
+    pi_agent = {
+        namespace = "ai"
+        name = "pi-agent"
+        image = "ghcr.io/metacoma/pi-agent:latest"
+        provider = "litellm"
+        model = "openai/deepseek-v4-flash-q3"
+        vault = {
+            addr = "ref+vault://kv/vault#addr"
+        }
+        session_storage = "1Gi"
+        repo_url = "https://github.com/metacoma/shitcluster2.git"
+        repo_branch = "master"
+    }
     mcp = {
         namespace = "mcp"
         admin_password = "ref+vault://kv/mcphub#admin_password"
