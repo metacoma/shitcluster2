@@ -134,6 +134,11 @@ manifests = [
                     prune = True
                     selfHeal = True
                 }
+                # CRDs (clusters, poolers) exceed the 256KB annotation limit
+                # with client-side apply — ServerSideApply required
+                syncOptions = [
+                    "ServerSideApply=true"
+                ]
             }
         }
     }
