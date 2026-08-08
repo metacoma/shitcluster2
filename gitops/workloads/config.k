@@ -394,6 +394,86 @@ config = {
             app_version = "1.95.0"
         }
     }
+    mastodon = {
+        namespace = "mastodon"
+        ingress_host = "mastodon.mansion.metacoma.org"
+        local_domain = "mastodon.mansion.metacoma.org"
+        helm = {
+            chart_name = "mastodon"
+            repo = "https://mastodon.github.io/helm-charts"
+            release_name = "mastodon"
+            chart_version = "1.1.2"
+            app_version = "v4.6.5"
+        }
+        postgresql = {
+            helm = {
+                chart_name = "postgresql"
+                repo = "oci://registry-1.docker.io/bitnamicharts"
+                release_name = "mastodon-postgresql"
+                chart_version = "18.8.6"
+            }
+            database = "mastodon"
+            username = "mastodon"
+            password = "ref+vault://kv/mastodon#db_password"
+            persistence = "10Gi"
+            service_name = "mastodon-postgresql-postgresql"
+        }
+        redis = {
+            helm = {
+                chart_name = "redis"
+                repo = "oci://registry-1.docker.io/bitnamicharts"
+                release_name = "mastodon-redis"
+                chart_version = "28.0.0"
+            }
+            password = "ref+vault://kv/mastodon#redis_password"
+            persistence = "2Gi"
+            service_name = "mastodon-redis-master"
+        }
+        secrets = {
+            secret_key_base = "ref+vault://kv/mastodon#secret_key_base"
+            vapid_private_key = "ref+vault://kv/mastodon#vapid_private_key"
+            vapid_public_key = "ref+vault://kv/mastodon#vapid_public_key"
+            are_primary_key = "ref+vault://kv/mastodon#are_primary_key"
+            are_deterministic_key = "ref+vault://kv/mastodon#are_deterministic_key"
+            are_derivation_salt = "ref+vault://kv/mastodon#are_derivation_salt"
+        }
+        persistence = {
+            assets = "10Gi"
+            system = "20Gi"
+        }
+        resources = {
+            web = {
+                limits = {
+                    cpu = "1000m"
+                    memory = "1Gi"
+                }
+                requests = {
+                    cpu = "250m"
+                    memory = "512Mi"
+                }
+            }
+            sidekiq = {
+                limits = {
+                    cpu = "1000m"
+                    memory = "1Gi"
+                }
+                requests = {
+                    cpu = "250m"
+                    memory = "512Mi"
+                }
+            }
+            streaming = {
+                limits = {
+                    cpu = "500m"
+                    memory = "512Mi"
+                }
+                requests = {
+                    cpu = "250m"
+                    memory = "128Mi"
+                }
+            }
+        }
+    }
     external = {
         llamacpp = {
             host = "mcmp10.mgmt.mansion.shitcluster.io"
