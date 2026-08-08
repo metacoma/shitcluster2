@@ -86,6 +86,13 @@ manifests = [
                 targetRevision = "master"
                 helm = {
                     values = yaml.encode({
+                        # Chart default tag (docker.io/bitnami/postgresql:17.6.0-debian-12-r4)
+                        # was removed by Bitnami; pin to an existing image
+                        image = {
+                            registry = "registry-1.docker.io"
+                            repository = "bitnamicharts/postgresql"
+                            tag = "16.7.9"
+                        }
                         global = {
                             postgresql = {
                                 auth = {
