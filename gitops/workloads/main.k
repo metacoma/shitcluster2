@@ -33,6 +33,7 @@ import .apps.tei as tei
 import .apps.qdrant_loader_mcp as qdrant_loader_mcp
 import .apps.forgejo as forgejo
 import .apps.litellm as litellm
+import .apps.mattermost as mattermost
 
 resources = [
     ssh_tunnel.manifests
@@ -64,6 +65,7 @@ resources = [
     qdrant_loader_mcp.manifests
     forgejo.manifests
     litellm.manifests
+    mattermost.manifests
 ]
 
 manifests.yaml_stream([
