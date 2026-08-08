@@ -416,7 +416,7 @@ config = {
             username = "mastodon"
             password = "ref+vault://kv/mastodon#db_password"
             persistence = "10Gi"
-            service_name = "mastodon-postgresql-postgresql"
+            service_name = "mastodon-postgresql"
         }
         redis = {
             helm = {
