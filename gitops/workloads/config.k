@@ -446,8 +446,7 @@ config = {
     pi_agent = {
         namespace = "ai"
         name = "pi-agent"
-        # TEMP: pi-telegram-plus test image (pi 0.81.1); revert to :latest after merge
-        image = "ghcr.io/metacoma/pi-agent:feat-pi-telegram-plus"
+        image = "ghcr.io/metacoma/pi-agent:latest"
         provider = "litellm"
         model = "openai/deepseek-v4-flash-q3"
         vault = {
