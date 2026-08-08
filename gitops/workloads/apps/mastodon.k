@@ -101,9 +101,9 @@ manifests = [
                 spec = {
                     nodeSelector = _config.nodeSelector.worker
                     securityContext = {
+                        # Official postgres image entrypoint must run as root
+                        # (it chowns the data dir and re-execs as postgres)
                         fsGroup = 999
-                        runAsUser = 999
-                        runAsNonRoot = True
                     }
                     containers = [
                         {
