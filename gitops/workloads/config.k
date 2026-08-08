@@ -410,7 +410,9 @@ config = {
                 chart_name = "postgresql"
                 repo = "oci://registry-1.docker.io/bitnamicharts"
                 release_name = "mastodon-postgresql"
-                chart_version = "18.8.6"
+                # PG 16: bitnami PG 18 image is FIPS-enabled and breaks mastodon's
+                # timestamp_id() md5() function
+                chart_version = "16.7.27"
             }
             database = "mastodon"
             username = "mastodon"
