@@ -332,6 +332,47 @@ config = {
             app_version = "9.1.39"
         }
     }
+    mattermost = {
+        namespace = "mattermost"
+        ingress_host = "mattermost.mansion.metacoma.org"
+        db_password = "ref+vault://kv/mattermost#db_password"
+        db = {
+            cluster = "mattermost-db"
+            name = "app"
+            user = "app"
+            size = "10Gi"
+            service = "mattermost-db-rw"
+        }
+        cnpg = {
+            helm = {
+                chart_name = "cloudnative-pg"
+                repo = "https://cloudnative-pg.github.io/charts"
+                release_name = "cnpg"
+                chart_version = "0.29.0"
+                app_version = "1.30.0"
+            }
+        }
+        helm = {
+            chart_name = "mattermost"
+            repo = "https://helm.mattermost.com"
+            release_name = "mattermost"
+            chart_version = "2.8.0"
+            app_version = "11.1.1"
+        }
+        persistence = {
+            size = "10Gi"
+        }
+        resources = {
+            limits = {
+                cpu = "1000m"
+                memory = "2Gi"
+            }
+            requests = {
+                cpu = "200m"
+                memory = "512Mi"
+            }
+        }
+    }
     forgejo = {
         namespace = "forgejo"
         ingress_host = "forgejo.mansion.metacoma.org"
