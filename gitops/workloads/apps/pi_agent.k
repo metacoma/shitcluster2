@@ -8,7 +8,8 @@ _home = "/home/pi"
 _agent_dir = _home + "/.pi/agent"
 
 # Pi agent config (non-secret parts). models.json (contains the litellm
-# API key) and the kubeconfig are injected via the pi-agent-secrets Secret.
+# API key) is injected via the pi-agent-secrets Secret. The kubeconfig is
+# generated from the in-cluster ServiceAccount by the entrypoint.
 _settings_json = """{
   "lastChangelogVersion": "0.83.0",
   "packages": [
@@ -76,8 +77,6 @@ manifests = [
         data = {
             # models.json contains the litellm master key
             "models.json": "ref+vault://kv/pi_agent#models_json_base64"
-            # cluster kubeconfig (contains client key material)
-            "kubeconfig": "ref+vault://kv/kubernetes#kubeconfig_base64"
             # sops age private key -> enables decrypting repo secrets in-container
             "age_key": "ref+vault://kv/pi_agent#age_key_base64"
             # vault token for vault CLI / vals / sops_to_vault
@@ -86,18 +85,46 @@ manifests = [
     },
 
     # ------------------------------------------------------------------
-    # PVC: persist pi sessions across restarts
+    # ServiceAccount: in-cluster auth (entrypoint builds kubeconfig from it)
+    # ------------------------------------------------------------------
+    core.ServiceAccount {
+        metadata = {
+            name = app.name
+            namespace = app.namespace
+        }
+    },
+    # ClusterRoleBinding (raw dict — rbac types not in the k8s package)
+    {
+        apiVersion = "rbac.authorization.k8s.io/v1"
+        kind = "ClusterRoleBinding"
+        metadata = {
+            name = app.name + "-admin"
+        }
+        roleRef = {
+            apiGroup = "rbac.authorization.k8s.io"
+            kind = "ClusterRole"
+            name = "cluster-admin"
+        }
+        subjects = [{
+            kind = "ServiceAccount"
+            name = app.name
+            namespace = app.namespace
+        }]
+    },
+
+    # ------------------------------------------------------------------
+    # PVC: 20GB working volume mounted at /data (repo clone + sessions)
     # ------------------------------------------------------------------
     core.PersistentVolumeClaim {
         metadata = {
-            name = "pi-agent-sessions"
+            name = "pi-agent-data"
             namespace = app.namespace
         }
         spec = {
             accessModes = ["ReadWriteOnce"]
             resources = {
                 requests = {
-                    storage = app.session_storage
+                    storage = app.storage
                 }
             }
             storageClassName = cfg.config.storageClass
@@ -137,6 +164,11 @@ manifests = [
                             {
                                 name = "PI_MODEL"
                                 value = app.model
+                            }
+                            {
+                                # pi works from the 20GB PVC mounted at /data
+                                name = "WORKSPACE"
+                                value = "/data"
                             }
                             {
                                 name = "VAULT_ADDR"
@@ -187,25 +219,22 @@ manifests = [
                             }
                             {
                                 name = "pi-agent-secrets"
-                                mountPath = _home + "/.kube/config"
-                                subPath = "kubeconfig"
-                            }
-                            {
-                                name = "pi-agent-secrets"
                                 mountPath = _home + "/.config/sops/age/keys.txt"
                                 subPath = "age_key"
                             }
-                            # workspace (repo clone) + session persistence
+                            # 20GB working volume at /data (repo clone + sessions)
                             {
-                                name = "workspace"
-                                mountPath = "/workspace"
+                                name = "pi-agent-data"
+                                mountPath = "/data"
                             }
                             {
-                                name = "pi-agent-sessions"
+                                name = "pi-agent-data"
                                 mountPath = _agent_dir + "/sessions"
+                                subPath = "sessions"
                             }
                         ]
                     }]
+                    serviceAccountName = app.name
                     volumes = [
                         {
                             name = "pi-agent-config"
@@ -220,13 +249,9 @@ manifests = [
                             }
                         }
                         {
-                            name = "workspace"
-                            emptyDir = {}
-                        }
-                        {
-                            name = "pi-agent-sessions"
+                            name = "pi-agent-data"
                             persistentVolumeClaim = {
-                                claimName = "pi-agent-sessions"
+                                claimName = "pi-agent-data"
                             }
                         }
                     ]
