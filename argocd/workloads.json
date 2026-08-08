@@ -42,6 +42,7 @@
           ".spec.startDelay",
           ".spec.stopDelay",
           ".spec.storage.maintenance",
+          ".spec.storage.resizeInUseVolumes",
           ".spec.switchoverDelay",
           ".spec.managed.roles[].connectionLimit",
           ".spec.managed.roles[].inherit",
