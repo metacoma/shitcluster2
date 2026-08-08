@@ -452,7 +452,7 @@ config = {
         vault = {
             addr = "ref+vault://kv/vault#addr"
         }
-        session_storage = "1Gi"
+        storage = "20Gi"
         repo_url = "https://github.com/metacoma/shitcluster2.git"
         repo_branch = "master"
     }
