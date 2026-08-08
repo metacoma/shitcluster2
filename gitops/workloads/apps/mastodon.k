@@ -94,6 +94,10 @@ manifests = [
                             tag = "16.7.9"
                         }
                         global = {
+                            # Bitnami chart fails on non-official image refs unless allowed
+                            security = {
+                                allowInsecureImages = True
+                            }
                             postgresql = {
                                 auth = {
                                     postgresPassword = m.postgresql.password
