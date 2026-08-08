@@ -16,6 +16,37 @@
           "/metadata/annotations",
           "/metadata/ownerReferences"
         ]
+      },
+      {
+        "group": "postgresql.cnpg.io",
+        "kind": "Cluster",
+        "jqPathExpressions": [
+          ".spec.affinity",
+          ".spec.enablePDB",
+          ".spec.enableSuperuserAccess",
+          ".spec.failoverDelay",
+          ".spec.imageName",
+          ".spec.logLevel",
+          ".spec.maxSyncReplicas",
+          ".spec.minSyncReplicas",
+          ".spec.monitoring",
+          ".spec.postgresGID",
+          ".spec.postgresUID",
+          ".spec.postgresql",
+          ".spec.primaryUpdateMethod",
+          ".spec.primaryUpdateStrategy",
+          ".spec.probes",
+          ".spec.replicationSlots",
+          ".spec.resources",
+          ".spec.smartShutdownTimeout",
+          ".spec.startDelay",
+          ".spec.stopDelay",
+          ".spec.storage.maintenance",
+          ".spec.switchoverDelay",
+          ".spec.managed.roles[].connectionLimit",
+          ".spec.managed.roles[].inherit",
+          ".spec.managed.roles[].comment"
+        ]
       }
     ],
     "syncPolicy": {
