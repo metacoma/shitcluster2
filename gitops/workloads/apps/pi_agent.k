@@ -14,7 +14,8 @@ _settings_json = """{
   "lastChangelogVersion": "0.83.0",
   "packages": [
     "npm:pi-mcp-adapter",
-    "npm:pi-ai"
+    "npm:pi-ai",
+    "npm:pi-telegram-plus"
   ],
   "theme": "dark",
   "defaultProvider": "litellm",
@@ -81,6 +82,8 @@ manifests = [
             "age_key": "ref+vault://kv/pi_agent#age_key_base64"
             # vault token for vault CLI / vals / sops_to_vault
             "vault_token": "ref+vault://kv/vault#token_base64"
+            # telegram bot bridge config (tg.json with botToken + allowedUserId)
+            "tg.json": "ref+vault://kv/pi_agent#tg_json_base64"
         }
     },
 
@@ -152,6 +155,26 @@ manifests = [
                     labels = {app = app.name}
                 }
                 spec = {
+                    initContainers = [{
+                        # tg.json must be writable (extension persists pairing/offsets),
+                        # so copy it from the read-only Secret into a writable emptyDir
+                        name = "tg-config-init"
+                        image = app.image
+                        securityContext = {
+                            runAsUser = 0
+                        }
+                        command = ["sh", "-c", "cp /secret/tg.json /tg-config/tg.json && chown 1001:1001 /tg-config/tg.json && chmod 0600 /tg-config/tg.json"]
+                        volumeMounts = [
+                            {
+                                name = "pi-agent-secrets"
+                                mountPath = "/secret"
+                            }
+                            {
+                                name = "tg-config"
+                                mountPath = "/tg-config"
+                            }
+                        ]
+                    }]
                     containers = [{
                         name = app.name
                         image = app.image
@@ -224,6 +247,12 @@ manifests = [
                                 mountPath = _home + "/.config/sops/age/keys.txt"
                                 subPath = "age_key"
                             }
+                            {
+                                # writable copy of tg.json (see tg-config-init initContainer)
+                                name = "tg-config"
+                                mountPath = _agent_dir + "/tg.json"
+                                subPath = "tg.json"
+                            }
                             # 20GB working volume at /data (repo clone + sessions)
                             {
                                 name = "pi-agent-data"
@@ -255,6 +284,10 @@ manifests = [
                             persistentVolumeClaim = {
                                 claimName = "pi-agent-data"
                             }
+                        }
+                        {
+                            name = "tg-config"
+                            emptyDir = {}
                         }
                     ]
                 }
