@@ -258,3 +258,20 @@ Secrets from Vault are injected at **manifest render time** (in ArgoCD repo-serv
 - Atomic commits — one logical change per commit
 - Run `git diff --check` before committing
 - Squash merge on PR
+
+### Push/pull authentication (GH_TOKEN from sops)
+
+`git push`/`git pull` to `github.com/metacoma/shitcluster2` work via a credential
+helper that decrypts the GitHub token on the fly — nothing is stored in
+plaintext on disk:
+
+- Helper: `scripts/git-sops-credential` (installed globally via
+  `git config --global credential.helper "/data/shitcluster/scripts/git-sops-credential"`)
+- On `git credential get` for `host=github.com` it runs
+  `sops -d secrets/vault_data.sops.yaml` and returns
+  `username=metacoma` + `password=<vault_data.metacoma.github>`
+- `store`/`erase` are no-ops (read-only helper)
+- Test: `printf 'protocol=https\nhost=github.com\n\n' | git credential fill`
+- If the helper is missing (new clone elsewhere), reinstall from the repo:
+  `git config --global credential.helper "$PWD/scripts/git-sops-credential"`
+  (must be an absolute path) or use GitHub MCP tools as fallback
