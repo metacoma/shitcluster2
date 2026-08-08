@@ -84,6 +84,8 @@ manifests = [
             "vault_token": "ref+vault://kv/vault#token_base64"
             # telegram bot bridge config (tg.json with botToken + allowedUserId)
             "tg.json": "ref+vault://kv/pi_agent#tg_json_base64"
+            # GH_TOKEN (metacoma) -> git push/pull to github.com from the pod
+            "gh_token": "ref+vault://kv/metacoma#github"
         }
     },
 
@@ -203,6 +205,15 @@ manifests = [
                                     secretKeyRef = {
                                         name = "pi-agent-secrets"
                                         key = "vault_token"
+                                    }
+                                }
+                            }
+                            {
+                                name = "GH_TOKEN"
+                                valueFrom = {
+                                    secretKeyRef = {
+                                        name = "pi-agent-secrets"
+                                        key = "gh_token"
                                     }
                                 }
                             }
