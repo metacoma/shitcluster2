@@ -33,7 +33,6 @@ import .apps.tei as tei
 import .apps.qdrant_loader_mcp as qdrant_loader_mcp
 import .apps.forgejo as forgejo
 import .apps.litellm as litellm
-import .apps.mastodon as mastodon
 
 resources = [
     ssh_tunnel.manifests
@@ -65,7 +64,6 @@ resources = [
     qdrant_loader_mcp.manifests
     forgejo.manifests
     litellm.manifests
-    mastodon.manifests
 ]
 
 manifests.yaml_stream([
