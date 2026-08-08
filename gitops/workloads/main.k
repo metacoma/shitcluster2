@@ -34,6 +34,7 @@ import .apps.qdrant_loader_mcp as qdrant_loader_mcp
 import .apps.forgejo as forgejo
 import .apps.litellm as litellm
 import .apps.mattermost as mattermost
+import .apps.pongbot as pongbot
 import .apps.pi_agent as pi_agent
 
 resources = [
@@ -67,6 +68,7 @@ resources = [
     forgejo.manifests
     litellm.manifests
     mattermost.manifests
+    pongbot.manifests
     pi_agent.manifests
 ]
 
