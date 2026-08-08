@@ -155,6 +155,26 @@ manifests = [
                     labels = {app = app.name}
                 }
                 spec = {
+                    initContainers = [{
+                        # tg.json must be writable (extension persists pairing/offsets),
+                        # so copy it from the read-only Secret into a writable emptyDir
+                        name = "tg-config-init"
+                        image = app.image
+                        securityContext = {
+                            runAsUser = 0
+                        }
+                        command = ["sh", "-c", "cp /secret/tg.json /tg-config/tg.json && chown 1001:1001 /tg-config/tg.json && chmod 0600 /tg-config/tg.json"]
+                        volumeMounts = [
+                            {
+                                name = "pi-agent-secrets"
+                                mountPath = "/secret"
+                            }
+                            {
+                                name = "tg-config"
+                                mountPath = "/tg-config"
+                            }
+                        ]
+                    }]
                     containers = [{
                         name = app.name
                         image = app.image
@@ -228,7 +248,8 @@ manifests = [
                                 subPath = "age_key"
                             }
                             {
-                                name = "pi-agent-secrets"
+                                # writable copy of tg.json (see tg-config-init initContainer)
+                                name = "tg-config"
                                 mountPath = _agent_dir + "/tg.json"
                                 subPath = "tg.json"
                             }
@@ -263,6 +284,10 @@ manifests = [
                             persistentVolumeClaim = {
                                 claimName = "pi-agent-data"
                             }
+                        }
+                        {
+                            name = "tg-config"
+                            emptyDir = {}
                         }
                     ]
                 }
