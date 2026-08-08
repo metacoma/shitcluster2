@@ -176,7 +176,10 @@ manifests = [
                     }
                 ]
             }
-            nodeSelector = _config.nodeSelector.worker
+            # CNPG Cluster CR has no top-level nodeSelector — use affinity.nodeSelector
+            affinity = {
+                nodeSelector = _config.nodeSelector.worker
+            }
         }
     }
     # 8. ArgoCD Application — Mattermost (official chart, external PostgreSQL)
