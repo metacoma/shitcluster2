@@ -443,6 +443,24 @@ config = {
             interval = "30s"
         }
     }
+    pongbot = {
+        namespace = "mattermost"
+        name = "pongbot"
+        username = "pongbot"
+        mm_url = "https://mattermost.mansion.metacoma.org"
+        token = "ref+vault://kv/pongbot#token"
+        image = "docker.io/library/python:3.12-alpine"
+        resources = {
+            limits = {
+                cpu = "500m"
+                memory = "256Mi"
+            }
+            requests = {
+                cpu = "100m"
+                memory = "128Mi"
+            }
+        }
+    }
     pi_agent = {
         namespace = "ai"
         name = "pi-agent"
