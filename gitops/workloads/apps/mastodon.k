@@ -79,9 +79,11 @@ manifests = [
             }
             project = "default"
             source = {
-                chart = m.postgresql.helm.chart_name
-                repoURL = m.postgresql.helm.repo
-                targetRevision = m.postgresql.helm.chart_version
+                # Vendored chart (git source): OCI registry digest lookup from
+                # ArgoCD is flaky (intermittent 401 from Docker Hub)
+                repoURL = "https://github.com/metacoma/shitcluster2"
+                path = "gitops/vendor/postgresql"
+                targetRevision = "master"
                 helm = {
                     values = yaml.encode({
                         global = {
