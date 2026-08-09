@@ -5,6 +5,18 @@ import config as cfg
 app = cfg.config.opencode_mattermost_bridge
 oc_app = cfg.config.opencode_agent
 
+# Startup command: install opencode, then the openai-compatible provider
+# plugin (without it opencode falls back to built-in cloud model), then
+# start the mattermost connector.
+_bridge_startup_cmd = """\
+if [ ! -f /root/.opencode/bin/opencode ]; then
+  curl -fsSL https://opencode.ai/install | bash
+fi
+cd /root/.config/opencode && \
+  /root/.opencode/bin/opencode plugin @ai-sdk/openai-compatible </dev/null && \
+  exec bun connectors/mattermost.ts
+"""
+
 # chat-bridge.json — config for the opencode-chat-bridge process.
 # Enables the Mattermost connector, sets thread isolation, and configures
 # tool message presentation. The ACP backend (opencode) is auto-installed
@@ -141,6 +153,11 @@ manifests = [
                         name = app.name
                         image = app.image
                         imagePullPolicy = "Always"
+                        # Override entrypoint to install @ai-sdk/openai-compatible
+                        # plugin before starting the bridge. The image's default
+                        # entrypoint installs opencode but not the provider plugin,
+                        # so opencode falls back to its built-in cloud model.
+                        command = ["/bin/sh", "-c", _bridge_startup_cmd]
                         env = [
                             {
                                 name = "CONNECTOR"
