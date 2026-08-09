@@ -36,6 +36,7 @@ import .apps.litellm as litellm
 import .apps.mattermost as mattermost
 import .apps.pongbot as pongbot
 import .apps.pi_agent as pi_agent
+import .apps.opencode_agent as opencode_agent
 
 resources = [
     ssh_tunnel.manifests
@@ -70,6 +71,7 @@ resources = [
     mattermost.manifests
     pongbot.manifests
     pi_agent.manifests
+    opencode_agent.manifests
 ]
 
 manifests.yaml_stream([
