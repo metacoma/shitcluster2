@@ -97,6 +97,22 @@ manifests = [
                     labels = {app = app.name}
                 }
                 spec = {
+                    # Keep bridge on the same node as opencode-agent-k8s so
+                    # the shared RWO PVC (opencode-agent-data) is accessible
+                    affinity = {
+                        podAffinity = {
+                            requiredDuringSchedulingIgnoredDuringExecution = [{
+                                labelSelector = {
+                                    matchExpressions = [{
+                                        key = "app"
+                                        operator = "In"
+                                        values = [oc_app.name]
+                                    }]
+                                }
+                                topologyKey = "kubernetes.io/hostname"
+                            }]
+                        }
+                    }
                     containers = [{
                         name = app.name
                         image = app.image
@@ -109,6 +125,14 @@ manifests = [
                             {
                                 name = "MATTERMOST_URL"
                                 value = app.mattermost_url
+                            }
+                            {
+                                name = "OPENCODE_MODEL_PROVIDER"
+                                value = "litellm"
+                            }
+                            {
+                                name = "OPENCODE_MODEL_ID"
+                                value = "openai/qwen36-27b"
                             }
                             {
                                 name = "MATTERMOST_TOKEN"
