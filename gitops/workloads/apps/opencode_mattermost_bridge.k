@@ -12,7 +12,8 @@ _bridge_startup_cmd = """\
 if [ ! -f /root/.opencode/bin/opencode ]; then
   curl -fsSL https://opencode.ai/install | bash
 fi
-cd /root/.config/opencode && \
+mkdir -p /root/.config/opencode && \
+  cd /root/.config/opencode && \
   /root/.opencode/bin/opencode plugin @ai-sdk/openai-compatible </dev/null && \
   exec bun connectors/mattermost.ts
 """
