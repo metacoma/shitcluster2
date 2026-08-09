@@ -15,6 +15,7 @@ fi
 mkdir -p /root/.config/opencode && \
   cd /root/.config/opencode && \
   /root/.opencode/bin/opencode plugin @ai-sdk/openai-compatible </dev/null && \
+  cd /app && \
   exec bun connectors/mattermost.ts
 """
 
