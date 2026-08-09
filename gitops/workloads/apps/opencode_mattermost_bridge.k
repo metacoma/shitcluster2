@@ -35,12 +35,36 @@ _chat_bridge_json = """
 }
 """
 
-# opencode.json — agent permissions for the bridge.
-# Grants full access since this is an internal trusted bot with
-# cluster-admin privileges (same as the Telegram bridge).
+# opencode.json — provider config + agent permissions for the bridge.
+# The provider section tells opencode how to reach our local LiteLLM;
+# without it opencode falls back to its built-in cloud model.
 _opencode_json = """
 {
   "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "litellm": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "LiteLLM",
+      "options": {
+        "baseURL": "https://litellm.mansion.metacoma.org/v1",
+        "apiKey": "ref+vault://kv/litellm#master_key"
+      },
+      "models": {
+        "openai/qwen36-27b": {
+          "name": "Qwen 3.6 27B"
+        },
+        "openai/qwen36-35b": {
+          "name": "Qwen 3.6 35B"
+        },
+        "openai/gemma4-31b": {
+          "name": "Gemma 4 31B"
+        },
+        "openai/deepseek-v4-flash-q3": {
+          "name": "DeepSeek V4 Flash Q3"
+        }
+      }
+    }
+  },
   "default_agent": "chat-bridge",
   "agent": {
     "chat-bridge": {
@@ -62,7 +86,7 @@ _opencode_json = """
 
 manifests = [
     # ------------------------------------------------------------------
-    # ConfigMap: bridge configuration files
+    # ConfigMap: bridge configuration (chat-bridge.json only)
     # ------------------------------------------------------------------
     core.ConfigMap {
         metadata = {
@@ -71,7 +95,6 @@ manifests = [
         }
         data = {
             "chat-bridge.json": _chat_bridge_json
-            "opencode.json": _opencode_json
         }
     }
     # ------------------------------------------------------------------
@@ -170,9 +193,9 @@ manifests = [
                                 mountPath = "/app/chat-bridge.json"
                                 subPath = "chat-bridge.json"
                             }
-                            # opencode agent config (permissions)
+                            # opencode provider + agent config (contains API key)
                             {
-                                name = "bridge-config"
+                                name = "bridge-secrets"
                                 mountPath = "/app/opencode.json"
                                 subPath = "opencode.json"
                             }
@@ -191,6 +214,12 @@ manifests = [
                             }
                         }
                         {
+                            name = "bridge-secrets"
+                            secret = {
+                                secretName = app.name + "-secrets"
+                            }
+                        }
+                        {
                             name = "opencode-agent-data"
                             persistentVolumeClaim = {
                                 claimName = "opencode-agent-data"
@@ -202,7 +231,9 @@ manifests = [
         }
     }
     # ------------------------------------------------------------------
-    # Secret: Mattermost bot token (resolved from Vault by vals)
+    # Secret: Mattermost bot token + opencode.json (provider config
+    # with litellm API key). opencode.json is here (not ConfigMap) because
+    # it contains the litellm master API key.
     # ------------------------------------------------------------------
     core.Secret {
         metadata = {
@@ -212,6 +243,7 @@ manifests = [
         type = "Opaque"
         stringData = {
             "mattermost_token": app.mattermost_token
+            "opencode.json": _opencode_json
         }
     }
 ]
