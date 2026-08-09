@@ -195,6 +195,22 @@ manifests = [
                                 name = "SESSION_RETENTION_DAYS"
                                 value = "7"
                             }
+                            {
+                                # LiteLLM API key — referenced via {env:LITELLM_API_KEY}
+                                # in OPENCODE_CONFIG_CONTENT (opencode resolves at runtime)
+                                name = "LITELLM_API_KEY"
+                                value = "ref+vault://kv/litellm#master_key"
+                            }
+                            {
+                                # OPENCODE_CONFIG_CONTENT: inline config that forces opencode
+                                # ACP mode to use our litellm provider instead of the
+                                # hardcoded default (opencode/big-pickle).
+                                # Bug: opencode ACP ignores opencode.json (#34743, #4001, #6853).
+                                # OPENCODE_CONFIG_CONTENT is the highest-priority config source
+                                # and is respected even in ACP mode.
+                                name = "OPENCODE_CONFIG_CONTENT"
+                                value = '{"provider":{"litellm":{"npm":"@ai-sdk/openai-compatible","name":"LiteLLM","options":{"baseURL":"https://litellm.mansion.metacoma.org/v1","apiKey":"{env:LITELLM_API_KEY}"}}},"model":"litellm/openai/qwen36-27b","default_agent":"chat-bridge","agent":{"chat-bridge":{"description":"OpenCode chat bridge agent","mode":"primary","model":"litellm/openai/qwen36-27b","permission":{"read":"allow","edit":"allow","write":"allow","bash":"allow","glob":"allow","grep":"allow","task":"allow"}}}}'
+                            }
                         ]
                         resources = {
                             requests = {
