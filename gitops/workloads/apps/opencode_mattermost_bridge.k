@@ -70,6 +70,7 @@ _opencode_json = """
     "chat-bridge": {
       "description": "OpenCode chat bridge agent",
       "mode": "primary",
+      "model": "litellm/openai/qwen36-27b",
       "permission": {
         "read": "allow",
         "edit": "allow",
