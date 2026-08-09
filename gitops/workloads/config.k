@@ -488,6 +488,13 @@ config = {
         repo_url = "https://github.com/metacoma/shitcluster2.git"
         repo_branch = "master"
     }
+    opencode_mattermost_bridge = {
+        namespace = "ai"
+        name = "opencode-mattermost-bridge"
+        image = "lbecchi/opencode-chat-bridge:latest"
+        mattermost_url = "http://mattermost.mattermost:8065"
+        mattermost_token = "ref+vault://kv/mattermost#bot_token"
+    }
     mcp = {
         namespace = "mcp"
         admin_password = "ref+vault://kv/mcphub#admin_password"
