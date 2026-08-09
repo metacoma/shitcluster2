@@ -474,6 +474,20 @@ config = {
         repo_url = "https://github.com/metacoma/shitcluster2.git"
         repo_branch = "master"
     }
+    opencode_agent = {
+        namespace = "ai"
+        name = "opencode-agent-k8s"
+        image = "ghcr.io/metacoma/opencode-agent-k8s:858f24a1e4f04626fc761c5e7bc3da0ef7365d9b"
+        model_provider = "litellm"
+        model = "openai/deepseek-v4-flash-q3"
+        oc_port = 4096
+        vault = {
+            addr = "ref+vault://kv/vault#addr"
+        }
+        storage = "20Gi"
+        repo_url = "https://github.com/metacoma/shitcluster2.git"
+        repo_branch = "master"
+    }
     mcp = {
         namespace = "mcp"
         admin_password = "ref+vault://kv/mcphub#admin_password"
