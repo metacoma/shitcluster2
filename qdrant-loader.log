@@ -1,0 +1,1 @@
+[2m2026-08-10T04:12:33.926737Z[0m [[31m[1merror    [0m] [1mconfig_failed                 [0m [[0m[1m[34mqdrant_loader.cli.cli[0m][0m [36merror[0m=[35m'No config file found. Please specify a config file or create config.yaml in the current directory: config.yaml'[0m [36mfilename[0m=[35mcli.py[0m [36mfunc_name[0m=[35mconfig[0m [36mlineno[0m=[35m302[0m
