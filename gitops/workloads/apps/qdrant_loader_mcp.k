@@ -21,7 +21,7 @@ _config_yaml = yaml.encode({
                 embeddings = app.llm_embedding_model
             }
             embeddings = {
-                vector_size = 384
+                vector_size = 1024
             }
         }
     }

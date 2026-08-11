@@ -607,11 +607,11 @@ config = {
             name = "qdrant-loader-mcp"
             image = "metacoma/qdrant-loader-mcp-server:1.0.4"
             port = 8080
-            qdrant_url = "http://172.24.0.28:6333"
-            collection = "documents"
-            llm_base_url = "http://tei.ai:80"
+            qdrant_url = "http://mcmp10.mgmt.mansion.shitcluster.io:6333"
+            collection = "rnd-service"
+            llm_base_url = "http://mcmp10.mgmt.mansion.shitcluster.io:8089"
             llm_api_key = "local"
-            llm_embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
+            llm_embedding_model = "Qwen3-Embedding-0.6B"
             ingress_host = "qdrant-loader-mcp.ref+vault://kv/spaceship_dns#managed_domain"
         }
     }
