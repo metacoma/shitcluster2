@@ -79,7 +79,7 @@ config = {
             helm = {
                 release_name = "kube-state-metrics"
                 chart_version = "7.0.0"
-                app_version = "2.17.0"
+                app_version = "2.10.0"
                 repo = "https://prometheus-community.github.io/helm-charts"
                 chart_name = "kube-state-metrics"
             }
