@@ -47,6 +47,7 @@ manifests = [
         nodeSelector = _config.nodeSelector.worker
         service.annotations = {
             "prometheus.io/port" = "8080"
+            "operator.victoriametrics.com/static-labels" = "cluster=shitcluster"
         }
         resources.requests = {
             cpu = "100m"
@@ -485,7 +486,7 @@ manifests = [
             }]
         }
     }
-    # VMServiceScrape for kube-state-metrics with cluster label
+    # VMServiceScrape for kube-state-metrics
     vm_service_scrape.VMServiceScrape {
         metadata = {
             name = "kube-state-metrics"
@@ -495,19 +496,12 @@ manifests = [
             }
         }
         spec = {
-            selector = {
-                matchLabels = {
-                    "app.kubernetes.io/name" = "kube-state-metrics"
-                }
+            selector.matchLabels = {
+                "app.kubernetes.io/name" = "kube-state-metrics"
             }
             endpoints = [{
                 port = "http"
                 interval = "15s"
-                honorLabels = true
-            }]
-            relabelings = [{
-                targetLabel = "cluster"
-                replacement = "shitcluster"
             }]
         }
     }
