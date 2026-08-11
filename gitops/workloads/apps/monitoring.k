@@ -4,6 +4,7 @@ import config as cfg
 import ..argoproj.v1alpha1 as argoproj
 import yaml
 import file
+import victoria_metrics_operator.v1beta1.operator_victoriametrics_com_v1beta1_vm_service_scrape as vm_service_scrape
 
 _config = cfg.config
 mon_cfg = _config.monitoring
@@ -481,6 +482,32 @@ manifests = [
                         "description" = "Pod {{ $labels.exported_pod }} (container: {{ $labels.exported_container }}) in namespace vault has restarted {{ $value }} time(s) in the last hour"
                     }
                 }]
+            }]
+        }
+    }
+    # VMServiceScrape for kube-state-metrics with cluster label
+    vm_service_scrape.VMServiceScrape {
+        metadata = {
+            name = "kube-state-metrics"
+            namespace = mon_cfg.namespace
+            labels = {
+                "app.kubernetes.io/name" = "kube-state-metrics"
+            }
+        }
+        spec = {
+            selector = {
+                matchLabels = {
+                    "app.kubernetes.io/name" = "kube-state-metrics"
+                }
+            }
+            endpoints = [{
+                port = "http"
+                interval = "15s"
+                honorLabels = true
+            }]
+            relabelings = [{
+                targetLabel = "cluster"
+                replacement = "shitcluster"
             }]
         }
     }
