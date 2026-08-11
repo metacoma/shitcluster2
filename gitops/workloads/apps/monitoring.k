@@ -48,12 +48,15 @@ manifests = [
             "prometheus.io/port" = "8080"
         }
         resources.requests = {
-            cpu = "10m"
-            memory = "32Mi"
+            cpu = "100m"
+            memory = "128Mi"
         }
         resources.limits = {
-            cpu = "10m"
-            memory = "64Mi"
+            cpu = "500m"
+            memory = "256Mi"
+        }
+        image = {
+            tag = "v2.10.0"
         }
     }, sync={})
     monitoring_app(mon_cfg.node_exporter.helm, values={
