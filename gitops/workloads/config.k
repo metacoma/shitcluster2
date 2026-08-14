@@ -321,7 +321,7 @@ config = {
         ip = "172.24.0.19/16"
         gateway = "172.24.0.1"
         # Secondary IP in NL tunnel subnet (172.25.0.0/16) on mgmt interface:
-        # BIRD resolves static nexthops (172.25.220.2) only via on-link subnets
+        # BIRD resolves static nexthops (172.25.220.3) only via on-link subnets
         tunnel_subnet_ip = "172.25.0.19/16"
         exporter = {
             image = "docker.io/czerwonk/bird_exporter:v1.2.6"

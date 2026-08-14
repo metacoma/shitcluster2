@@ -97,7 +97,7 @@ manifests = [
                 sysctl -w net.ipv4.ip_forward=1
                 sysctl -w net.ipv4.conf.all.forwarding=1
                 # Secondary IP in NL tunnel subnet (172.25.0.0/16) on the mgmt
-                # interface: BIRD resolves static nexthops (172.25.220.2) only
+                # interface: BIRD resolves static nexthops (172.25.220.3) only
                 # via on-link (connected) subnets, not via the routing table.
                 ip addr add ${_bird.tunnel_subnet_ip} dev public
                 exec bird -f -s ${_bird.exporter.socket} -c /etc/bird/bird.conf
