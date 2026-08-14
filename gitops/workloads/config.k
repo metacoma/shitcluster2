@@ -297,7 +297,7 @@ config = {
     }
     vless_tunnel = {
         namespace = "network"
-        image = "docker.io/library/alpine:3.20"
+        image = "docker.io/metacoma/vless-xhttp-sing-box-lx:latest"
         server = "172.233.47.9"
         server_port = 4433
         tun_address = "10.70.0.1/24"
@@ -306,7 +306,6 @@ config = {
             ip = "172.25.220.3/16"
             gw = "172.25.0.1"
         }
-        download_url = "https://github.com/Leadaxe/sing-box-lx/releases/download/v1.14.0-lx.26/sing-box-1.14.0-lx.26-linux-amd64.tar.gz"
         reality = {
             server_name = "www.google.com"
             host = "www.google.com"

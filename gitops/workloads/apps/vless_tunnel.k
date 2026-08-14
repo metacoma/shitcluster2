@@ -73,10 +73,7 @@ ip route del default via 169.254.1.1 2>/dev/null || true
 ip route add default via ${_vt.public.gw} dev public
 # the VLESS carrier (server) must bypass the tun: high-priority rule -> main table
 ip rule add priority 100 to ${_vt.server} lookup main 2>/dev/null || true
-wget -q -O /tmp/sb.tar.gz ${_vt.download_url}
-mkdir -p /opt/singbox
-tar xzf /tmp/sb.tar.gz -C /opt/singbox --strip-components=1
-exec /opt/singbox/sing-box run -c /etc/sing-box/config.json
+exec sing-box run -c /etc/sing-box/config.json
 """
 
 manifests = [
