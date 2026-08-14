@@ -67,10 +67,12 @@ nad_name = "vless-tunnel-public"
 startup_script = """set -e
 # wait for the Multus public interface (CNI attaches before container start)
 for i in 1 2 3 4 5; do [ -d /sys/class/net/public ] && break; sleep 1; done
-# keep the cluster subnet reachable via Calico, then default via public (like ssh_tunnel)
+# like ssh_tunnel: keep cluster reachable via Calico, default via public gw
 ip route add 10.233.0.0/16 via 169.254.1.1 dev eth0 2>/dev/null || true
 ip route del default via 169.254.1.1 2>/dev/null || true
 ip route add default via ${_vt.public.gw} dev public
+# the VLESS carrier (server) must bypass the tun: high-priority rule -> main table
+ip rule add priority 100 to ${_vt.server} lookup main 2>/dev/null || true
 wget -q -O /tmp/sb.tar.gz ${_vt.download_url}
 mkdir -p /opt/singbox
 tar xzf /tmp/sb.tar.gz -C /opt/singbox --strip-components=1
@@ -143,6 +145,10 @@ manifests = [
                     }
                 }
                 spec = {
+                    dnsPolicy = "None"
+                    dnsConfig = {
+                        nameservers = ["172.25.0.2", "172.25.0.1"]
+                    }
                     containers = [{
                         name = "singbox"
                         image = _vt.image
