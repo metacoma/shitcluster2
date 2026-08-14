@@ -307,9 +307,9 @@ config = {
             server_name = "www.google.com"
             host = "www.google.com"
             path = "/video"
-            uuid = "ref+vault://kv/vless_tunnel#uuid"
-            public_key = "ref+vault://kv/vless_tunnel#reality_public_key"
-            short_id = "ref+vault://kv/vless_tunnel#reality_short_id"
+            uuid = "ref+vault://kv/vless_tunnel#uuid+"
+            public_key = "ref+vault://kv/vless_tunnel#reality_public_key+"
+            short_id = "ref+vault://kv/vless_tunnel#reality_short_id+"
         }
     }
     bird = {
