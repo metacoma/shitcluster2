@@ -73,6 +73,12 @@ ip route del default via 169.254.1.1 2>/dev/null || true
 ip route add default via ${_vt.public.gw} dev public
 # the VLESS carrier (server) must bypass the tun: high-priority rule -> main table
 ip rule add priority 100 to ${_vt.server} lookup main 2>/dev/null || true
+# gateway mode (like ssh_tunnel): forward + NAT traffic from the public network into the tunnel
+sysctl -w net.ipv4.ip_forward=1
+sysctl -w net.ipv4.conf.all.forwarding=1
+iptables -t nat -A POSTROUTING -o singtun -j MASQUERADE 2>/dev/null || true
+# forwarded packets arriving on the public interface go into the tun (table 2022)
+ip rule add priority 150 iif public lookup 2022 2>/dev/null || true
 exec sing-box run -c /etc/sing-box/config.json
 """
 

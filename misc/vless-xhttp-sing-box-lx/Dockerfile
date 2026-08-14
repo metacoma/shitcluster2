@@ -9,8 +9,8 @@ RUN wget -q -O /tmp/sb.tar.gz ${SB_URL} \
     && mkdir -p /opt/singbox \
     && tar xzf /tmp/sb.tar.gz -C /opt/singbox --strip-components=1
 
-# Runtime: alpine + iproute2 (real ip with policy-table support) + sing-box-lx
+# Runtime: alpine + iproute2 + iptables (gateway/NAT mode) + sing-box-lx
 FROM alpine:3.20
-RUN apk add --no-cache iproute2 ca-certificates
+RUN apk add --no-cache iproute2 iptables ca-certificates
 COPY --from=builder /opt/singbox/sing-box /usr/local/bin/sing-box
 ENTRYPOINT ["sing-box"]
