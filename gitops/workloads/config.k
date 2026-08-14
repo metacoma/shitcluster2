@@ -297,7 +297,7 @@ config = {
     }
     vless_tunnel = {
         namespace = "network"
-        image = "docker.io/metacoma/vless-xhttp-sing-box-lx:latest"
+        image = "docker.io/metacoma/vless-xhttp-sing-box-lx@sha256:2ab126b8eab8c76b412942289b305e3aa0d99f1d46b196ed3f74f25b02be5657"
         server = "172.233.47.9"
         server_port = 4433
         tun_address = "10.70.0.1/24"
