@@ -138,6 +138,7 @@ manifests = [
                         app = app_name
                     }
                     annotations = {
+                        "vless-tunnel.k/config-revision" = _vt.config_revision
                         "k8s.v1.cni.cncf.io/networks" = json.encode([
                             {
                                 name = nad_name
