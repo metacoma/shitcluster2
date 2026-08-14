@@ -18,6 +18,7 @@ import .apps.wireguard as wireguard
 import .apps.dnscrypt_proxy as dnscrypt_proxy
 import .apps.pihole as pihole
 import .apps.bird as bird
+import .apps.vless_tunnel as vless_tunnel
 import .apps.cert_manager as cert_manager
 import .apps.reflector as reflector
 import .apps.mcphub as mcphub
@@ -56,6 +57,7 @@ resources = [
     dnscrypt_proxy.manifests
     pihole.manifests
     bird.manifests
+    vless_tunnel.manifests
     cert_manager.manifests
     mcphub.manifests
     # ddgs.manifests

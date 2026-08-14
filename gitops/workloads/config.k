@@ -295,6 +295,23 @@ config = {
         upstreamDns = "172.25.1.8"
         adminPassword = "ref+vault://kv/pihole#adminPassword"
     }
+    vless_tunnel = {
+        namespace = "network"
+        image = "docker.io/library/alpine:3.20"
+        server = "172.233.47.9"
+        server_port = 4433
+        tun_address = "10.70.0.1/24"
+        tun_cidr = "10.70.0.0/24"
+        download_url = "https://github.com/Leadaxe/sing-box-lx/releases/download/v1.14.0-lx.26/sing-box-1.14.0-lx.26-linux-amd64.tar.gz"
+        reality = {
+            server_name = "www.google.com"
+            host = "www.google.com"
+            path = "/video"
+            uuid = "ref+vault://kv/vless_tunnel#uuid"
+            public_key = "ref+vault://kv/vless_tunnel#reality_public_key"
+            short_id = "ref+vault://kv/vless_tunnel#reality_short_id"
+        }
+    }
     bird = {
         namespace = "network"
         image = "docker.io/metacoma/bird:2.15"
