@@ -2,6 +2,7 @@ import k8s.api.core.v1 as k8s
 import k8s.api.apps.v1 as v1
 import config as cfg
 import json
+import kubevirt.v1.k8s_cni_cncf_io_v1_network_attachment_definition as network_attach
 
 _config = cfg.config
 _vt = _config.vless_tunnel
@@ -61,7 +62,15 @@ singbox_config = {
     },
 }
 
+nad_name = "vless-tunnel-public"
+
 startup_script = """set -e
+# wait for the Multus public interface (CNI attaches before container start)
+for i in 1 2 3 4 5; do [ -d /sys/class/net/public ] && break; sleep 1; done
+# keep the cluster subnet reachable via Calico, then default via public (like ssh_tunnel)
+ip route add 10.233.0.0/16 via 169.254.1.1 dev eth0 2>/dev/null || true
+ip route del default via 169.254.1.1 2>/dev/null || true
+ip route add default via ${_vt.public.gw} dev public
 wget -q -O /tmp/sb.tar.gz ${_vt.download_url}
 mkdir -p /opt/singbox
 tar xzf /tmp/sb.tar.gz -C /opt/singbox --strip-components=1
@@ -79,6 +88,28 @@ manifests = [
         }
         data = {
             "config.json": json.encode(singbox_config)
+        }
+    }
+    network_attach.NetworkAttachmentDefinition {
+        metadata = {
+            name = nad_name
+            namespace = _vt.namespace
+        }
+        spec = {
+            config = json.encode({
+                cniVersion = "0.3.1"
+                type = "bridge"
+                bridge = "br-public"
+                hairpinMode = True
+                ipam = {
+                    type = "static"
+                    addresses = [{
+                        address = _vt.public.ip
+                        gateway = _vt.public.gw
+                    }]
+                    capabilities.macs = True
+                }
+            })
         }
     }
     v1.Deployment {
@@ -100,6 +131,15 @@ manifests = [
                 metadata = {
                     labels = {
                         app = app_name
+                    }
+                    annotations = {
+                        "k8s.v1.cni.cncf.io/networks" = json.encode([
+                            {
+                                name = nad_name
+                                namespace = _vt.namespace
+                                interface = "public"
+                            }
+                        ])
                     }
                 }
                 spec = {

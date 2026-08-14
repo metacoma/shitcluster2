@@ -302,6 +302,10 @@ config = {
         server_port = 4433
         tun_address = "10.70.0.1/24"
         tun_cidr = "10.70.0.0/24"
+        public = {
+            ip = "172.25.220.3/16"
+            gw = "172.25.0.1"
+        }
         download_url = "https://github.com/Leadaxe/sing-box-lx/releases/download/v1.14.0-lx.26/sing-box-1.14.0-lx.26-linux-amd64.tar.gz"
         reality = {
             server_name = "www.google.com"
