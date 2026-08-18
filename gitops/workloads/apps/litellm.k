@@ -27,6 +27,14 @@ _model_list = [
         }
     }
     {
+        model_name = "qwen38-27b"
+        litellm_params = {
+            model = "openai/qwen38-27b"
+            api_base = "http://${backend}:8093/v1"
+            api_key = "local"
+        }
+    }
+    {
         model_name = "qwen36-35b"
         litellm_params = {
             model = "openai/qwen36-35b"
