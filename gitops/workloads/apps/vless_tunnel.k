@@ -153,6 +153,19 @@ manifests = [
                     dnsConfig = {
                         nameservers = ["172.25.0.2", "172.25.0.1"]
                     }
+                    nodeSelector = _config.nodeSelector.controller
+                    tolerations = [
+                        {
+                            key = "node-role.kubernetes.io/control-plane"
+                            operator = "Exists"
+                            effect = "NoSchedule"
+                        }
+                        {
+                            key = "node.longhorn.io/storage"
+                            operator = "Exists"
+                            effect = "NoSchedule"
+                        }
+                    ]
                     containers = [{
                         name = "singbox"
                         image = _vt.image
