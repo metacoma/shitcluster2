@@ -229,13 +229,14 @@ manifests = [
                         }
                         logLevel = "INFO"
                         # OTel-экспортер в кластерный OTLP-коллектор (ns observability):
-                        # трейсы -> Tempo, метрики -> VictoriaMetrics, события -> Loki
+                        # трейсы -> Tempo, метрики -> VictoriaMetrics
+                        # События (gen_ai.content.* -> Loki) ВЫКЛ: баг litellm #32996
+                        # (None в log-рекордах дропает батч + трейсбеки); вернуть после апгрейда
                         envVars = {
                             OTEL_EXPORTER_OTLP_ENDPOINT = "http://otlp-opentelemetry-collector.observability.svc:4317"
                             OTEL_EXPORTER_OTLP_PROTOCOL = "grpc"
                             OTEL_SERVICE_NAME = "litellm-proxy"
                             LITELLM_OTEL_INTEGRATION_ENABLE_METRICS = "true"
-                            LITELLM_OTEL_INTEGRATION_ENABLE_EVENTS = "true"
                         }
                         nodeSelector = _config.nodeSelector.worker
                         resources = {
