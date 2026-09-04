@@ -214,7 +214,7 @@ manifests = [
                             litellm_settings = {
                                 drop_params = True
                                 request_timeout = 1800
-                                callbacks = ["prometheus"]
+                                callbacks = ["prometheus", "otel"]
                             }
                             general_settings = {
                                 master_key = "os.environ/PROXY_MASTER_KEY"
@@ -228,6 +228,15 @@ manifests = [
                             enabled = False
                         }
                         logLevel = "INFO"
+                        # OTel-экспортер в кластерный OTLP-коллектор (ns observability):
+                        # трейсы -> Tempo, метрики -> VictoriaMetrics, события -> Loki
+                        envVars = {
+                            OTEL_EXPORTER_OTLP_ENDPOINT = "http://otlp-opentelemetry-collector.observability.svc:4317"
+                            OTEL_EXPORTER_OTLP_PROTOCOL = "grpc"
+                            OTEL_SERVICE_NAME = "litellm-proxy"
+                            LITELLM_OTEL_INTEGRATION_ENABLE_METRICS = "true"
+                            LITELLM_OTEL_INTEGRATION_ENABLE_EVENTS = "true"
+                        }
                         nodeSelector = _config.nodeSelector.worker
                         resources = {
                             requests = {
