@@ -272,7 +272,7 @@ manifests = [
                 }
                 "litellm" = {
                     gnetId = 24965
-                    revision = 1
+                    revision = 2
                     datasource = "VictoriaMetrics"
                 }
                 "node-exporter-full" = {
@@ -321,6 +321,13 @@ manifests = [
                 }
                 "bird-bgp" = {
                     json = file.read("apps/grafana_data/bird-bgp.json")
+                    datasource = "VictoriaMetrics"
+                }
+                "litellm-genai-otel" = {
+                    # Дашборд gen_ai.* (OTel-метрики litellm): исходник из
+                    # BerriAI/litellm cookbook dashboard_genai_otel (uid litellm-genai-otel),
+                    # datasource привязан к VictoriaMetrics (uid vm)
+                    json = file.read("apps/grafana_data/litellm-genai-otel.json")
                     datasource = "VictoriaMetrics"
                 }
             }
