@@ -30,7 +30,6 @@ import .apps.grafana_mcp as grafana_mcp
 import .apps.helm_mcp as helm_mcp
 import .apps.artifacthub_mcp as artifacthub_mcp
 import .apps.package_version_check_mcp as package_version_check_mcp
-import .apps.tei as tei
 import .apps.forgejo as forgejo
 import .apps.litellm as litellm
 import .apps.mattermost as mattermost
@@ -67,7 +66,6 @@ resources = [
     helm_mcp.manifests
     artifacthub_mcp.manifests
     package_version_check_mcp.manifests
-    tei.manifests
     forgejo.manifests
     litellm.manifests
     mattermost.manifests

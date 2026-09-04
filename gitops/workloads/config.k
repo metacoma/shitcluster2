@@ -435,14 +435,6 @@ config = {
         metrics_service = "longhorn-backend"
         metrics_port = "9500"
     }
-    tei = {
-        namespace = "ai"
-        name = "tei"
-        image = "metacoma/tei-minilm:1.5"
-        model = "/data/model"
-        port = 80
-        trust_remote_code = True
-    }
     litellm = {
         namespace = "ai"
         ingress_host = "litellm.mansion.metacoma.org"
