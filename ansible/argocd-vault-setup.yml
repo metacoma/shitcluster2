@@ -7,7 +7,7 @@
 #   2. Test secret at kv/argocd-test
 #   3. SOPS/Age keys at kv/sops/gitops
 #   4. Vault policy 'argocd-vals' (read everywhere)
-#   5. Vault token with that policy
+#   5. Бесконечный (root) Vault token для vals/AVP
 #   6. K8s Secret 'argocd-vault-credentials' (for vals/KCL plugin)
 #   7. K8s Secret 'argocd-vault-plugin-credentials' (for AVP plugin)
 #
@@ -122,26 +122,21 @@
         state: absent
 
     # ------------------------------------------------------------------
-    # Step 5: Create Vault token with argocd-vals policy
-    # NOTE: Not idempotent — each run creates a new token.
-    #       Old tokens remain valid until they expire.
+    # Step 5: Vault token for ArgoCD — бесконечный (root) токен.
+    # ВАЖНО (проверено эмпирически на Vault 2.0.3 с дефолтным конфигом):
+    #   auth/token/create с ttl=0s / ttl=0 НЕ даёт «бесконечность»:
+    #   сервер применяет системный дефолт 768h (32 дня) — даже ttl=87600h
+    #   обрезается до 2764800s (max_lease_ttl в конфиге не задан).
+    #   Бесконечный TTL (expire_time=nil, ttl=0s) в такой конфигурации
+    #   имеет только root-токен. Он уже создан при инициализации Vault,
+    #   лежит в секрете vault/vault-bootstrap и передаётся в плейбук
+    #   как vault_token — используем его напрямую, дочерний токен
+    #   не создаём (альтернатива с сохранением least-privilege:
+    #   renewable-токен + cronjob продления, см. план).
     # ------------------------------------------------------------------
-    - name: Create Vault token for ArgoCD
-      community.hashi_vault.vault_write:
-        url: "{{ vault_addr }}"
-        token: "{{ vault_token }}"
-        path: "auth/token/create"
-        data:
-          policies:
-            - "argocd-vals"
-          renewable: "{{ argocd_token_renewable }}"
-        validate_certs: "{{ validate_certs }}"
-      register: vault_token_result
-
-    # Extract token to a separate var so no_log doesn't hide it
-    - name: Store ArgoCD Vault token
+    - name: Use root token as ArgoCD Vault token (infinite TTL)
       ansible.builtin.set_fact:
-        argocd_vault_token: "{{ vault_token_result.data.auth.client_token }}"
+        argocd_vault_token: "{{ vault_token }}"
       no_log: true
 
     # ------------------------------------------------------------------
