@@ -21,10 +21,18 @@ data:
             export KCL_CACHE_PATH=/tmp
             export KCL_PKG_PATH=/tmp
             tempfile=$(mktemp)
-            kcl run -q -o $tempfile  > /dev/null 2>&1
-            error=$?
-            if [ $error -eq 0 ]; then
-              cat $tempfile | vals eval -f -
-              rm $tempfile
+            errfile=$(mktemp)
+            trap 'rm -f "$tempfile" "$errfile"' EXIT
+            if ! kcl run -q -o "$tempfile" 2>"$errfile"; then
+              # ошибка KCL — выводим её в stderr (попадёт в логи repo-server)
+              cat "$errfile" >&2
+              exit 1
             fi
-            exit $error
+            # ВАЖНО: НЕ игнорировать код выхода vals! Раньше скрипт возвращал
+            # код выхода только kcl run, а vals (например, 403 от Vault при
+            # истёкшем токене) молча падал с пустым stdout — ArgoCD считал
+            # «успех с пустым манифестом» и при allowEmpty:true + prune:true
+            # сносил все ресурсы приложения.
+            if ! cat "$tempfile" | vals eval -f -; then
+              exit 1
+            fi
