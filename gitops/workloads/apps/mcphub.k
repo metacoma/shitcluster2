@@ -69,7 +69,7 @@ _settings = """{
       "enabled": true,
       "visibility": "public",
       "owner": "admin"
-    },
+    }
   },
   "systemConfig": {
     "routing": {
