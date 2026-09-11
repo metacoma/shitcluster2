@@ -107,6 +107,17 @@ _model_list = [
             api_key = "local"
         }
     }
+    {
+        # GLM-5.3-Flash (UD-IQ3_XXS, llama.cpp с DFlash2 спекулятивным декодингом)
+        # на mcmp10: docker 127.0.0.1:8087 проброшен на mgmt-IP через
+        # socat (systemd glm-forward.service на mcmp10).
+        model_name = "glm-5.3-flash"
+        litellm_params = {
+            model = "openai/glm-5.3-flash-iq3xxs"
+            api_base = "http://${backend}:8087/v1"
+            api_key = "local"
+        }
+    }
 ]
 
 manifests = [
