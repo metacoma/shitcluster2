@@ -19,6 +19,14 @@ _settings = """{
       "visibility": "public",
       "owner": "admin"
     },
+    "donsetch": {
+      "type": "streamable-http",
+      "url": "https://donsetch-mcp.mansion.metacoma.org/mcp",
+      "timeout": 60000,
+      "enabled": true,
+      "visibility": "public",
+      "owner": "admin"
+    },
     "kubernetes-mcp": {
       "type": "streamable-http",
       "url": "https://k8s-mcp.mansion.metacoma.org/mcp",
