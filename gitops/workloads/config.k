@@ -477,7 +477,9 @@ config = {
     pi_agent = {
         namespace = "ai"
         name = "pi-agent"
-        image = "ghcr.io/metacoma/pi-agent:4715e222a80babf17e530738a417ae87b0fc3324"
+        # pi 0.85.1 + @kdejaeger/pi-telegram-plus + workstation plugins
+        # (см. репо metacoma/pi-agent, commit 8fa6ec8)
+        image = "ghcr.io/metacoma/pi-agent:8fa6ec87d3d938111a3021110512b9af7f50d945"
         provider = "litellm"
         model = "openai/deepseek-v4-flash-q3"
         vault = {

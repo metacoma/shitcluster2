@@ -11,11 +11,15 @@ _agent_dir = _home + "/.pi/agent"
 # API key) is injected via the pi-agent-secrets Secret. The kubeconfig is
 # generated from the in-cluster ServiceAccount by the entrypoint.
 _settings_json = """{
-  "lastChangelogVersion": "0.83.0",
+  "lastChangelogVersion": "0.85.1",
   "packages": [
     "npm:pi-mcp-adapter",
-    "npm:pi-ai",
-    "npm:pi-telegram-plus"
+    "npm:@kdejaeger/pi-telegram-plus",
+    "npm:pi-sidebar-tui",
+    "npm:pi-subagents",
+    "npm:pi-prompt-tracker",
+    "npm:pi-codex-account",
+    "npm:pi-codex-search"
   ],
   "theme": "dark",
   "defaultProvider": "litellm",
