@@ -24,8 +24,9 @@ import .apps.reflector as reflector
 import .apps.mcphub as mcphub
 # import .apps.ddgs as ddgs
 import .apps.kubernetes_mcp as kubernetes_mcp
-import .apps.hound_mcp as hound_mcp
 import .apps.donsetch as donsetch
+# temporarily disabled: hound-mcp
+# import .apps.hound_mcp as hound_mcp
 import .apps.github_mcp as github_mcp
 import .apps.grafana_mcp as grafana_mcp
 import .apps.helm_mcp as helm_mcp
@@ -61,8 +62,8 @@ resources = [
     mcphub.manifests
     # ddgs.manifests
     kubernetes_mcp.manifests
-    hound_mcp.manifests
     donsetch.manifests
+    # hound_mcp.manifests
     github_mcp.manifests
     grafana_mcp.manifests
     helm_mcp.manifests

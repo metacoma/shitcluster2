@@ -15,7 +15,7 @@ _settings = """{
       "type": "streamable-http",
       "url": "https://hound-mcp.mansion.metacoma.org/mcp",
       "timeout": 60000,
-      "enabled": true,
+      "enabled": false,
       "visibility": "public",
       "owner": "admin"
     },
