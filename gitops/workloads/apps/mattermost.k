@@ -10,7 +10,7 @@ mm = _config.mattermost
 # DB connection string (vals resolves ref+vault:// at render time; `+` terminates the expression)
 _db_dsn = "postgres://${mm.db.user}:${mm.db_password}+@${mm.db.service}:5432/${mm.db.name}?sslmode=disable&connect_timeout=10"
 
-manifests = [
+_always = [
     # 1. Namespace
     k8s.Namespace {
         metadata.name = mm.namespace
@@ -54,6 +54,9 @@ manifests = [
             DB_CONNECTION_STRING = _db_dsn
         }
     }
+]
+
+_gated = [
     # 5. Nginx Ingress for HTTPS traffic (wildcard cert via reflector)
     {
         apiVersion = "networking.k8s.io/v1"
@@ -288,3 +291,5 @@ manifests = [
         }
     }
 ]
+
+manifests = _always + (_gated if mm.enabled else [])

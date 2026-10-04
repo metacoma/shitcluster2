@@ -354,6 +354,7 @@ config = {
         }
     }
     mattermost = {
+        enabled = False
         namespace = "mattermost"
         ingress_host = "mattermost.mansion.metacoma.org"
         db_password = "ref+vault://kv/mattermost#db_password"
@@ -457,6 +458,7 @@ config = {
         }
     }
     pongbot = {
+        enabled = False
         namespace = "mattermost"
         name = "pongbot"
         username = "pongbot"

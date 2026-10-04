@@ -110,7 +110,7 @@ if __name__ == "__main__":
     main()
 """
 
-manifests = [
+_always = [
     # ------------------------------------------------------------------
     # ConfigMap: pongbot.py script
     # ------------------------------------------------------------------
@@ -137,7 +137,9 @@ manifests = [
             token = _pb.token
         }
     },
+]
 
+_gated = [
     # ------------------------------------------------------------------
     # Deployment: runs pongbot.py against Mattermost
     # ------------------------------------------------------------------
@@ -207,3 +209,5 @@ manifests = [
         }
     },
 ]
+
+manifests = _always + (_gated if _pb.enabled else [])
