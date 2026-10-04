@@ -14,6 +14,7 @@ peers_data = [
     {"pk": "ref+vault://kv/wireguard#peer_4_pk", "ip": "ref+vault://kv/wireguard#peer_4_ip"},
     {"pk": "ref+vault://kv/wireguard#peer_5_pk", "ip": "ref+vault://kv/wireguard#peer_5_ip"},
     {"pk": "ref+vault://kv/wireguard#peer_6_pk", "ip": "ref+vault://kv/wireguard#peer_6_ip"},
+    {"pk": "ref+vault://kv/wireguard#peer_7_pk", "ip": "ref+vault://kv/wireguard#peer_7_ip"},
 ]
 
 # Map to Helm chart client format
