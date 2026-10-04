@@ -1,277 +1,48 @@
-# shitcluster
+<!-- bmad:context -->
+<!-- Verified 2026-10-04 against 3d10d4fc3a50f1865ab00c71c19772fc28bc8ef7. Managed by bmad-project-context; edits inside this block are replaced on refresh. Keep anything you want preserved outside the markers. -->
 
-GitOps repository for homelab Kubernetes cluster. Ansible (Kubespray) for base infra, KCL for GitOps manifests, ArgoCD for delivery, SOPS+age for secrets, Vault for runtime secret injection.
+## shitcluster
 
-## Stack
+GitOps repo for a homelab Kubernetes cluster: Ansible (Kubespray) for base infra, KCL for manifest generation, ArgoCD for delivery, SOPS+age and Vault for secrets. Full pipeline: `make flow`; deep deployment guide in `README.md`. KCL changes reach the live cluster via ArgoCD auto-sync — verify against cluster state before committing.
 
-- Ansible 11 + Kubespray v2.31.0 (CRI-O, Calico BGP, MetalLB L2, kube-vip)
-- KCL (Kubernetes Configuration Language) for manifest generation
-- ArgoCD with KCL CMP plugin + AVP (argocd-vault-plugin)
-- HashiCorp Vault (Helm 0.34.0) + SOPS/age encryption
-- Longhorn 1.12.0 (block storage with Whereabouts CNI)
-- Istio 1.28.1, Knative 1.20.0, NATS 2.12.4
-- VictoriaMetrics + Grafana + Loki + Tempo + Vector (observability)
+## Policy
 
-## Repository structure
+- Never commit plaintext secrets — SOPS-encrypt under `secrets/*.sops.yaml` only. Never commit or print `.env` contents.
+- Never hand-edit `kcl.mod.lock` (auto-generated) or `gitops/infra/tekton-pipelines.yml` (vendored 26k-line upstream Tekton manifest — `tekton.k` reads it at render time and injects nodeSelectors; hand edits are futile).
+- Never edit files marked `generated` or `managed by`.
+- Never run `make kubernetes_reset` without explicit user confirmation — it destroys cluster state.
+- Branches `type/short-description` (feat, fix, chore, docs); conventional commits; atomic commits; squash merge on PR; `git diff --check` before committing.
+- Playbooks target mcmp2–mcmp9; mcmp5 is excluded (hardware issue, temporary — recheck on refresh).
 
-```
-ansible/                — Kubespray, network, Longhorn node prep, SOPS-to-Vault import
-ansible/group_vars/     — Cluster-wide Ansible vars (Calico, MetalLB, kube-vip)
-ansible/host_vars/      — Per-node Ansible vars
-gitops/infra/           — KCL infra module (Tekton, SOPS secrets namespace)
-gitops/workloads/       — KCL workloads module (apps, monitoring, networking)
-gitops/workloads/apps/  — Per-app KCL files (*.k). Add new apps here.
-tmux/                   — KCL tmux session configs (schema.k defines types)
-tmux/sessions/          — Individual tmux session definitions
-secrets/                — SOPS-encrypted YAML (age key in .sops.yaml)
-vault-data/             — Terraform/OpenTofu for Vault (rarely used)
-argocd/                 — ArgoCD Helm values, CMP plugins, Application JSON
-scripts/                — Maintenance and helper scripts
-misc/                   — Miscellaneous configuration and fixes
-Makefile                — Orchestration: kubernetes, longhorn, vault, argocd
-```
+## Where things are
 
-## Commands
+- Required `.env` variables and prerequisites: `README.md` (copy from `.env.sample`).
+- Adding an app: create `gitops/workloads/apps/<name>.k` exporting `manifests` → add secrets under `vault_data.<name>` in `secrets/vault_data.sops.yaml` → add config section in `gitops/workloads/config.k` → import in `main.k` → `kcl run .` to validate.
+- All namespaces, chart versions, and Vault refs live in the single dict in `gitops/workloads/config.k`.
+- Nested Helm apps: use local lambda helpers (`monitoring_app` in `apps/monitoring.k`, `istio_app` in `apps/istio.k`); complex data configs go in subdirs (`apps/vector_data/parsers/*.lua`).
+- `gitops/infra/` is flat (no `apps/`): `tekton.k`, `vault_unseal.k`, `mcp_namespace.k`.
+- ArgoCD Application JSONs in `argocd/`: `infra` and `workloads` are active; `argocd-vault` and `raw-argocd-vault` are dormant (`raw` unused/retired; both source dirs absent from repo, no apply targets). Auto-sync+selfHeal is in the JSONs; prune/allowEmpty exist only in `kubectl patch` inside Makefile targets.
 
-- `make kubernetes` — Install K8s via Kubespray (does NOT reset; run `make kubernetes_reset` first if needed)
-- `make longhorn` — Node prep + Whereabouts CNI + Longhorn Helm + BackupTarget
-- `make vault` — Install Vault Helm, wait for init, extract root token
-- `make vault-unseal` — Unseal Vault using the bootstrap secret
-- `make sops_to_vault` — Decrypt SOPS secrets, import to Vault KV v2
-- `make argocd_prepare` — Create Vault namespace, policies, tokens, K8s secrets
-- `make argocd` — Install ArgoCD Helm + KCL CMP + AVP plugin
-- `make argocd_password` — Print the initial ArgoCD admin password
-- `make argocd_infra_app` / `make argocd_workloads_app` — Create ArgoCD Applications
-- `make flow` — Full deployment pipeline (all steps in order)
-- `make update_kubeconfig` — Fetch kubeconfig from mcmp2 via SSH
-- `make -C ansible ansible_lint` — Lint Ansible playbooks
-- `make -C ansible ansible_ping` — Ping cluster nodes
-- Use `kcl-validate` skill to validate/render KCL manifests (gitops/workloads, gitops/infra)
-- Use `kcl-validate` skill to format KCL files
+## Running and verifying
 
-## GitOps architecture
+- Validate/render KCL before committing: use the `kcl-validate` skill (Docker env matching the ArgoCD CMP) for `gitops/workloads` and `gitops/infra`.
+- `make kubernetes` installs only and does NOT reset — reset is a separate destructive `make kubernetes_reset`.
+- Order matters: kubernetes → update_kubeconfig → longhorn → vault → vault-unseal → sops_to_vault (Vault must be running and unsealed) → argocd_prepare (needs SOPS keys) → argocd. `make flow` runs the install-only sequence; wait with `argocd_wait_infra` / `argocd_wait_workloads`.
+- Ad-hoc playbooks: `make -C ansible ansible_run ANSIBLE_ARGS="..."`. The venv activation does not carry into the playbook recipe line — `ansible-playbook` resolves from PATH; `ansible_lint` uses the system binary, not `ansible/.venv`.
+- Git push/pull auth: `scripts/git-sops-credential` decrypts the GitHub token from SOPS on the fly. New clone: `git config --global credential.helper "$PWD/scripts/git-sops-credential"` (absolute path required), or use GitHub MCP tools.
 
-### Pipeline overview
+## Conventions that differ from defaults
 
-```
-Git repo → ArgoCD repo-server → KCL CMP plugin (kcl run | vals eval) → Kubernetes API
-```
+- Vault refs `ref+vault://kv/<path>#<key>` resolve via `vals eval` at manifest render time in the ArgoCD repo-server, not at pod runtime; rendered values never land in Git.
+- SOPS→Vault import: top-level keys become Vault paths (`strip_prefix=vault_data`), nested dicts become sub-paths. New secrets: edit `secrets/vault_data.sops.yaml`, encrypt with `sops`, `make sops_to_vault`.
+- App files in `apps/` export `manifests`, but the directory also holds data subdirs and helper scripts — not every file is a manifest.
+- The AVP sidecar exists in argocd-repo-server but is unused; all secret resolution goes through vals.
 
-ArgoCD repo-server runs two sidecar containers:
-- **my-plugin** — KCL + vals image (`ghcr.io/metacoma/kcl-vals:latest`). Runs `kcl run` to generate YAML, then pipes through `vals eval` which resolves `ref+vault://` references by querying Vault.
-- **avp** — argocd-vault-plugin (AVP) for raw YAML files with `<path|avp.kubernetes.io>` or `avp.kubernetes.io` annotations.
+## Known pitfalls
 
-### ArgoCD Applications
+- `scripts/git-sops-credential` fails silently: if sops fails (missing age key at `~/.config/sops/age/keys.txt`), git just sees "no credentials" — no error surfaces.
+- A trailing `+` in a vals ref is an expression terminator for inline interpolation, not base64 — decoding is `?decode=base64`.
+- `.sops.yaml` age recipient must be a string, not an array.
+- Tekton CRDs and the knative-eventing namespace stay permanently OutOfSync in ArgoCD — expected, operator-managed.
 
-| Application | Source path | Plugin | Purpose |
-|---|---|---|---|
-| `infra` | `gitops/infra` | `kcl-v1.0` | Infra resources (namespace, SOPS secret, Tekton) |
-| `workloads` | `gitops/workloads` | `kcl-v1.0` | All workloads (apps, monitoring, networking) |
-| `argocd-vault` | `gitops/argocd-vault` | `kcl-v1.0` | KCL manifests with Vault refs |
-| `argocd-vault-raw` | `gitops/argocd-vault-raw` | `argocd-vault-plugin` | Raw YAML with AVP annotations |
-
-All applications use `in-cluster` connection (`https://kubernetes.default.svc`), auto-sync with self-heal, and target `master` branch.
-
-### KCL module structure
-
-Each module (infra, workloads) has its own `kcl.mod` with dependencies. Structure:
-
-```
-gitops/<module>/
-  kcl.mod          — package deps (k8s, argoproj, custom operators)
-  kcl.mod.lock     — LOCKED, auto-generated
-  main.k           — entry point: imports apps, exports manifests.yaml_stream([...])
-  config.k         — shared config dict (namespaces, Helm versions, Vault refs)
-  apps/            — per-app .k files, each exporting `manifests`
-```
-
-**main.k pattern:**
-```kcl
-import .apps.foo as foo
-import .apps.bar as bar
-
-resources = [foo.manifests, bar.manifests]
-manifests.yaml_stream([resources])
-```
-
-**config.k pattern:**
-```kcl
-config = {
-  app = {
-    namespace = "app-ns"
-    secret = "ref+vault://kv/app#secret"
-  }
-}
-```
-
-**app.k pattern** — each file in `apps/` exports a `manifests` variable (list of K8s resources). Two deployment patterns:
-
-1. **Native K8s resources** — directly define `k8s.Namespace`, `k8s.Secret`, `v1.Deployment`, etc. (e.g., `ssh_tunnel.k`, `spaceship_dns.k`)
-2. **Nested ArgoCD Application** — define `argoproj.Application` that points to a Helm chart. The nested app is managed by ArgoCD as a child of the parent application. Use a local lambda helper (e.g., `monitoring_app(...)` in `monitoring.k`, `istio_app(...)` in `istio.k`) for DRY Helm app generation.. For apps with complex data configs (like Vector), additional config files can be stored in subdirectories (e.g., `apps/vector_data/parsers/*.lua`).
-
-### KCL dependencies (workloads)
-
-| Package | OCI registry | Tag | Purpose |
-|---|---|---|---|
-| `k8s` | ghcr.io/kcl-lang/k8s | 1.31.2 | Core K8s types (v1.Namespace, v1.Deployment, etc.) |
-| `argoproj` | ghcr.io/kcl-lang/argoproj | 3.0.12 | ArgoCD Application CRD |
-| `knative` | ghcr.io/kcl-lang/knative | 0.2.0 | Knative core types |
-| `knative-operator` | ghcr.io/kcl-lang/knative-operator | 0.3.0 | KnativeServing, KnativeEventing CRDs |
-| `kubevirt` | ghcr.io/kcl-lang/kubevirt | 0.3.0 | NetworkAttachmentDefinition |
-| `victoria-metrics-operator` | ghcr.io/kcl-lang/victoria-metrics-operator | 0.45.3 | VMServiceScrape CRD |
-
-### Adding a new app
-
-1. Create `gitops/workloads/apps/<name>.k` exporting `manifests`
-2. Add Vault secrets to `secrets/vault_data.sops.yaml` under `vault_data.<name>`
-3. Add config section in `gitops/workloads/config.k`
-4. Import in `gitops/workloads/main.k` and add `.<name>.manifests` to `resources`
-5. Run `cd gitops/workloads && kcl run .` to validate locally
-6. Commit and push — ArgoCD will sync
-
-## Secrets management
-
-### Full secret lifecycle
-
-```
-secrets/vault_data.sops.yaml (SOPS encrypted in Git)
-    ↓ sops --decrypt (ansible/sops-to-vault/)
-Vault KV v2 (kv/<section>#<key>)
-    ↓ vals eval at render time (ref+vault://kv/<section>#<key>)
-K8s Secret / ConfigMap / Helm values (in cluster)
-```
-
-### Step 1: SOPS encryption (Git storage)
-
-- File: `secrets/vault_data.sops.yaml`
-- Encryption: SOPS 3.11.0 with age (`.sops.yaml` config)
-- Age recipient: `age1e2rey5g5p5jkp0fs25r8n4der46cx5wrtdf8exn6yc3g0wvuc4psrg05g3`
-- All values encrypted (`encrypted_regex: .*`)
-- Structure: top-level keys become Vault paths (with `strip_prefix=vault_data`)
-
-### Step 2: Import to Vault
-
-- `make sops_to_vault` runs `ansible/sops-to-vault/sops_to_vault.yml`
-- Decrypts with `sops --decrypt`, recursively walks YAML tree
-- Leaf values → `vault_kv2_write` at `kv/<path>`
-- Nested dicts → recursive sub-paths (e.g., `mnt_users.mcmp2` → `kv/mnt_users/mcmp2`)
-- `strip_prefix=vault_data` strips the top-level key, so `vault_data.grafana` → `kv/grafana`
-
-### Step 3: Vault → KCL at render time (vals)
-
-The KCL CMP plugin runs `kcl run | vals eval`. vals resolves references:
-
-**Format:** `ref+vault://kv/<path>#<key>`
-
-| KCL reference | Vault path | Key | Example |
-|---|---|---|---|
-| `ref+vault://kv/grafana#adminUser` | `kv/grafana` | `adminUser` | Grafana admin login |
-| `ref+vault://kv/vpn_nl#ssh_private_key_base64` | `kv/vpn_nl` | `ssh_private_key_base64` | SSH key (base64) |
-| `ref+vault://kv/nats#root_user+` | `kv/nats` | `root_user` | NATS user (note `+` suffix) |
-| `ref+vault://kv/sops/gitops#public_key` | `kv/sops/gitops` | `public_key` | SOPS age public key |
-
-**Trailing `+` suffix** (e.g., `ref+vault://kv/nats#root_user+`): explicit expression terminator for inline string interpolation. Without `+`, vals treats everything until end-of-line as the expression. With `+`, the expression ends at `+`, allowing text after it. This is NOT base64 decoding — for that, use `?decode=base64` query parameter.
-
-### Step 4: Vault credentials for ArgoCD
-
-Two K8s secrets in `argocd` namespace (created by `ansible/argocd-vault-setup.yml`):
-
-| Secret | Used by | Contents |
-|---|---|---|
-| `argocd-vault-credentials` | vals / KCL sidecar | `VAULT_ADDR`, `VAULT_TOKEN` |
-| `argocd-vault-plugin-credentials` | AVP sidecar + repo-server | `AVP_TYPE=vault`, `AVP_AUTH_TYPE=token`, `VAULT_ADDR`, `VAULT_TOKEN` |
-
-Both use the same Vault token created with `argocd-vals` policy (read access to all paths).
-
-### vals expression syntax (all supported backends)
-
-General syntax: `ref+BACKEND://PATH[?PARAMS][#FRAGMENT][+]`
-
-- `BACKEND` — provider identifier (see table below)
-- `PATH` — backend-specific path to the secret
-- `PARAMS` — URL query parameters (`key=value&key2=value2`)
-- `FRAGMENT` — `#/key/in/response` extracts a nested value from JSON/YAML response
-- `+` — explicit expression terminator for inline interpolation (e.g., `prefix ref+vault://kv/a#b+ suffix`)
-
-**Two prefixes:**
-- `ref+BACKEND://...` — regular value reference (resolved by `vals eval`)
-- `secretref+BACKEND://...` — marked as secret (preserved as-is when running `vals eval --exclude-secret`, useful for GitOps review workflows)
-
-**Vault-specific query params:**
-- `address` — Vault address (defaults to `VAULT_ADDR` env)
-- `token_env` — env var containing Vault token (defaults to `VAULT_TOKEN`)
-- `token_file` — file path containing Vault token
-- `namespace` — Vault namespace (defaults to `VAULT_NAMESPACE` env)
-- `auth_method` — `token` (default), `approle`, `kubernetes`, `userpass`
-- `decode` — `raw` (default) or `base64` (base64-decode the value before returning)
-- `version` — specific secret version to retrieve
-
-### AVP (argocd-vault-plugin) reference formats
-
-| Format | Context | Example |
-|---|---|---|
-| `<path\|avp.kubernetes.io>` | Inline in raw YAML values | `password: <kv/data/app\|avp.kubernetes.io>` |
-| `avp.kubernetes.io/path` annotation | Annotation on Secret/ConfigMap | `avp.kubernetes.io/path: "kv/data/app"` |
-
-AVP is available as a separate sidecar (`avp` container) in argocd-repo-server but is **not currently used** in this repo — all secret resolution goes through vals.
-
-### How secrets reach the cluster
-
-Secrets from Vault are injected at **manifest render time** (in ArgoCD repo-server), not at pod runtime:
-
-1. KCL file contains `ref+vault://...` strings
-2. `kcl run` generates YAML with literal `ref+vault://...` strings
-3. `vals eval` replaces those strings with actual Vault values
-4. ArgoCD applies the resulting YAML to the cluster
-5. Secrets appear as K8s `Secret` resources (or inline in ConfigMaps/Helm values)
-
-**Important:** The rendered values are NOT stored in Git — they only exist in the ArgoCD repo-server memory during rendering and in the live cluster as K8s resources.
-
-### Adding new secrets
-
-1. Add key to `secrets/vault_data.sops.yaml` under `vault_data.<section>`
-2. Encrypt: `sops secrets/vault_data.sops.yaml` (auto-encrypts on save if configured)
-3. Import: `make sops_to_vault`
-4. Reference in KCL: `"ref+vault://kv/<section>#<key>"`
-
-## Ansible conventions
-
-- Playbooks run against `ansible/inventory.yml` (nodes: mcmp2–mcmp9, mcmp5 excluded)
-- Cluster vars in `ansible/group_vars/all.yaml` (Calico BGP, MetalLB pools, kube-vip)
-- Use `make -C ansible ansible_run ANSIBLE_ARGS="..."` for ad-hoc playbook runs
-- Python deps in `ansible/.venv/` (created via `make -C ansible ansible_requirements`)
-
-## Boundaries
-
-- NEVER commit plaintext secrets — use SOPS (`secrets/*.sops.yaml` only)
-- NEVER edit `kcl.mod.lock` (auto-generated)
-- NEVER edit `gitops/infra/tekton-pipelines.yml` (template/partially generated)
-- NEVER edit files marked `generated` or `managed by`
-- NEVER run `make kubernetes_reset` without explicit user confirmation (destroys cluster state)
-- KCL changes affect live cluster via ArgoCD — verify against cluster state before committing
-- `.env` contains secrets — never commit or print its contents
-
-## Git workflow
-
-- Branch format: `type/short-description` (feat, fix, chore, docs)
-- Conventional commits: `feat:`, `fix:`, `chore:`, `docs:`
-- Atomic commits — one logical change per commit
-- Run `git diff --check` before committing
-- Squash merge on PR
-
-### Push/pull authentication (GH_TOKEN from sops)
-
-`git push`/`git pull` to `github.com/metacoma/shitcluster2` work via a credential
-helper that decrypts the GitHub token on the fly — nothing is stored in
-plaintext on disk:
-
-- Helper: `scripts/git-sops-credential` (installed globally via
-  `git config --global credential.helper "/data/shitcluster/scripts/git-sops-credential"`)
-- On `git credential get` for `host=github.com` it runs
-  `sops -d secrets/vault_data.sops.yaml` and returns
-  `username=metacoma` + `password=<vault_data.metacoma.github>`
-- `store`/`erase` are no-ops (read-only helper)
-- Test: `printf 'protocol=https\nhost=github.com\n\n' | git credential fill`
-- If the helper is missing (new clone elsewhere), reinstall from the repo:
-  `git config --global credential.helper "$PWD/scripts/git-sops-credential"`
-  (must be an absolute path) or use GitHub MCP tools as fallback
+<!-- /bmad:context -->
