@@ -13,7 +13,7 @@ backend = ll.backend_host
 # (llama-swap держит ровно одну модель за раз, exclusive:true).
 _model_list = [
     {
-        model_name = "glm-5.3"
+        model_name = "openai/glm-5.3"
         litellm_params = {
             model = "openai/glm-5.3-flash-iq4xs"
             api_base = "http://${backend}:8087/v1"
@@ -21,7 +21,7 @@ _model_list = [
         }
     }
     {
-        model_name = "qwen3.8-next"
+        model_name = "openai/qwen3.8-next"
         litellm_params = {
             model = "openai/qwen3.8-flash-next"
             api_base = "http://${backend}:8094/v1"
@@ -29,7 +29,7 @@ _model_list = [
         }
     }
     {
-        model_name = "deepseek-exp"
+        model_name = "openai/deepseek-exp"
         litellm_params = {
             model = "openai/deepseek-v4-flash"
             api_base = "http://${backend}:8087/v1"
@@ -37,7 +37,7 @@ _model_list = [
         }
     }
     {
-        model_name = "qwen3.8-27b"
+        model_name = "openai/qwen3.8-27b"
         litellm_params = {
             model = "openai/qwen38-27b"
             api_base = "http://${backend}:8093/v1"

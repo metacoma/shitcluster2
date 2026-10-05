@@ -483,7 +483,7 @@ config = {
         # (см. репо metacoma/pi-agent, commit 8fa6ec8)
         image = "ghcr.io/metacoma/pi-agent:8fa6ec87d3d938111a3021110512b9af7f50d945"
         provider = "litellm"
-        model = "openai/deepseek-v4-flash-q3"
+        model = "openai/deepseek-exp"
         vault = {
             addr = "ref+vault://kv/vault#addr"
         }
