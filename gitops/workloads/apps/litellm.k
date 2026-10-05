@@ -7,114 +7,40 @@ _config = cfg.config
 ll = _config.litellm
 backend = ll.backend_host
 
-# Model list mirroring /var/lib/llama-cpp/litellm.yaml on mcmp10,
-# with docker-internal names replaced by mcmp10.mgmt.mansion.shitcluster.io:<host-port>
+# Актуальные модели, обслуживаемые llama-swap на mcmp10
+# (/var/lib/homellm/llamaswap/config.yaml). Порты бэкендов совпадают с
+# run-model.sh llama-swap: glm-5.3 и deepseek-exp разделяют слот 8087
+# (llama-swap держит ровно одну модель за раз, exclusive:true).
 _model_list = [
     {
-        model_name = "qwen36-27b"
+        model_name = "glm-5.3"
         litellm_params = {
-            model = "openai/qwen36-27b"
-            api_base = "http://${backend}:8083/v1"
+            model = "openai/glm-5.3-flash-iq4xs"
+            api_base = "http://${backend}:8087/v1"
             api_key = "local"
         }
     }
     {
-        model_name = "qwen36-27b-uncensored"
+        model_name = "qwen3.8-next"
         litellm_params = {
-            model = "openai/qwen36-27b-uncensored"
-            api_base = "http://${backend}:8084/v1"
+            model = "openai/qwen3.8-flash-next"
+            api_base = "http://${backend}:8094/v1"
             api_key = "local"
         }
     }
     {
-        model_name = "qwen38-27b"
+        model_name = "deepseek-exp"
+        litellm_params = {
+            model = "openai/deepseek-v4-flash"
+            api_base = "http://${backend}:8087/v1"
+            api_key = "local"
+        }
+    }
+    {
+        model_name = "qwen3.8-27b"
         litellm_params = {
             model = "openai/qwen38-27b"
             api_base = "http://${backend}:8093/v1"
-            api_key = "local"
-        }
-    }
-    {
-        model_name = "qwen36-35b"
-        litellm_params = {
-            model = "openai/qwen36-35b"
-            api_base = "http://${backend}:8086/v1"
-            api_key = "local"
-        }
-    }
-    {
-        model_name = "qwen36-35b-heretic"
-        litellm_params = {
-            model = "openai/qwen36-35b-heretic"
-            # points to glm-45-air backend (as in original config)
-            api_base = "http://${backend}:8090/v1"
-            api_key = "local"
-        }
-    }
-    {
-        model_name = "step-37-flash"
-        litellm_params = {
-            model = "openai/step-37-flash"
-            api_base = "http://${backend}:8087/v1"
-            api_key = "local"
-        }
-    }
-    {
-        model_name = "glm-45-air"
-        litellm_params = {
-            model = "openai/glm-45-air"
-            api_base = "http://${backend}:8090/v1"
-            api_key = "local"
-        }
-    }
-    {
-        model_name = "laguna-s21-q2"
-        litellm_params = {
-            model = "openai/laguna-s21-q2"
-            api_base = "http://${backend}:8087/v1"
-            api_key = "local"
-        }
-    }
-    {
-        model_name = "laguna-xs21-q8"
-        litellm_params = {
-            model = "openai/laguna-xs21-q8"
-            api_base = "http://${backend}:8087/v1"
-            api_key = "local"
-        }
-    }
-    {
-        model_name = "laguna-xs21-q4"
-        litellm_params = {
-            model = "openai/laguna-xs"
-            api_base = "http://${backend}:8088/v1"
-            api_key = "local"
-        }
-    }
-    {
-        model_name = "gemma4-31b"
-        litellm_params = {
-            model = "openai/gemma4-31b"
-            api_base = "http://${backend}:8085/v1"
-            api_key = "local"
-        }
-    }
-    {
-        model_name = "deepseek-v4-flash-q3"
-        litellm_params = {
-            model = "openai/deepseek-v4-flash-q3"
-            api_base = "http://${backend}:8087/v1"
-            api_key = "local"
-        }
-    }
-    {
-        # GLM-5.3-Flash (UD-IQ3_XXS, llama.cpp с DFlash2 спекулятивным декодингом)
-        # на mcmp10: docker 127.0.0.1:8087 проброшен на mgmt-IP через
-        # socat (systemd glm-forward.service на mcmp10).
-        model_name = "glm-5.3-flash"
-        litellm_params = {
-            model = "openai/glm-5.3-flash-iq3xxs"
-            api_base = "http://${backend}:8087/v1"
             api_key = "local"
         }
     }
