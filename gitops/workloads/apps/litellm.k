@@ -8,15 +8,18 @@ ll = _config.litellm
 backend = ll.backend_host
 
 # Актуальные модели, обслуживаемые llama-swap на mcmp10
-# (/var/lib/homellm/llamaswap/config.yaml). Порты бэкендов совпадают с
-# run-model.sh llama-swap: glm-5.3 и deepseek-exp разделяют слот 8087
-# (llama-swap держит ровно одну модель за раз, exclusive:true).
+# (/var/lib/homellm/llamaswap/config.yaml). Все запросы идут через роутер
+# llama-swap (порт 8080), который сам переключает/выгружает нужную модель
+# (swap:true, exclusive:true — одновременно работает только одна модель).
+# Внутренние порты бэкендов (8087/8093/8094) НЕ используются напрямую:
+# glm-5.3 и deepseek-exp делят слот 8087, поэтому прямой доступ к порту
+# отдавал бы только текущую загруженную модель, а не запрошенную.
 _model_list = [
     {
         model_name = "openai/glm-5.3"
         litellm_params = {
             model = "openai/glm-5.3-flash-iq4xs"
-            api_base = "http://${backend}:8087/v1"
+            api_base = "http://${backend}:8080/v1"
             api_key = "local"
         }
     }
@@ -24,7 +27,7 @@ _model_list = [
         model_name = "openai/qwen3.8-next"
         litellm_params = {
             model = "openai/qwen3.8-flash-next"
-            api_base = "http://${backend}:8094/v1"
+            api_base = "http://${backend}:8080/v1"
             api_key = "local"
         }
     }
@@ -32,7 +35,7 @@ _model_list = [
         model_name = "openai/deepseek-exp"
         litellm_params = {
             model = "openai/deepseek-v4-flash"
-            api_base = "http://${backend}:8087/v1"
+            api_base = "http://${backend}:8080/v1"
             api_key = "local"
         }
     }
@@ -40,7 +43,7 @@ _model_list = [
         model_name = "openai/qwen3.8-27b"
         litellm_params = {
             model = "openai/qwen38-27b"
-            api_base = "http://${backend}:8093/v1"
+            api_base = "http://${backend}:8080/v1"
             api_key = "local"
         }
     }
