@@ -160,6 +160,31 @@ _model_list = [
             api_key = "local"
         }
     }
+    # --- Warm-селекторы llama-swap (текущая/тёплая модель) ---
+    {
+        model_name = "openai/homellm-warm"
+        litellm_params = {
+            model = "openai/homellm-warm"
+            api_base = "http://${backend}:8080/v1"
+            api_key = "local"
+        }
+    }
+    {
+        model_name = "openai/warm-normal"
+        litellm_params = {
+            model = "openai/warm-normal"
+            api_base = "http://${backend}:8080/v1"
+            api_key = "local"
+        }
+    }
+    {
+        model_name = "openai/warm-quality"
+        litellm_params = {
+            model = "openai/warm-quality"
+            api_base = "http://${backend}:8080/v1"
+            api_key = "local"
+        }
+    }
 ]
 
 manifests = [
