@@ -14,7 +14,12 @@ backend = ll.backend_host
 # Внутренние порты бэкендов (8087/8093/8094) НЕ используются напрямую:
 # glm-5.3 и deepseek-exp делят слот 8087, поэтому прямой доступ к порту
 # отдавал бы только текущую загруженную модель, а не запрошенную.
+#
+# Канонические имена + проброс ВСЕХ алиасов llama-swap
+# (includeAliasesInList:true публикует их через /v1/models). Клиент может
+# обращаться к модели по любому алиасу — llama-swap переключит нужный бэкенд.
 _model_list = [
+    # --- Канонические имена (обратная совместимость) ---
     {
         model_name = "openai/glm-5.3"
         litellm_params = {
@@ -43,6 +48,114 @@ _model_list = [
         model_name = "openai/qwen3.8-27b"
         litellm_params = {
             model = "openai/qwen38-27b"
+            api_base = "http://${backend}:8080/v1"
+            api_key = "local"
+        }
+    }
+    # --- Алиасы GLM-5.3-Flash (glm5.3-iq4xs) ---
+    {
+        model_name = "openai/atlas"
+        litellm_params = {
+            model = "openai/atlas"
+            api_base = "http://${backend}:8080/v1"
+            api_key = "local"
+        }
+    }
+    {
+        model_name = "openai/glm-5.3-flash-iq4xs"
+        litellm_params = {
+            model = "openai/glm-5.3-flash-iq4xs"
+            api_base = "http://${backend}:8080/v1"
+            api_key = "local"
+        }
+    }
+    {
+        model_name = "openai/glm-5.3-flash"
+        litellm_params = {
+            model = "openai/glm-5.3-flash"
+            api_base = "http://${backend}:8080/v1"
+            api_key = "local"
+        }
+    }
+    {
+        model_name = "openai/planner"
+        litellm_params = {
+            model = "openai/planner"
+            api_base = "http://${backend}:8080/v1"
+            api_key = "local"
+        }
+    }
+    {
+        model_name = "openai/glm53"
+        litellm_params = {
+            model = "openai/glm53"
+            api_base = "http://${backend}:8080/v1"
+            api_key = "local"
+        }
+    }
+    # --- Алиасы Qwen3.8-Flash-Next (coder) ---
+    {
+        model_name = "openai/forge"
+        litellm_params = {
+            model = "openai/forge"
+            api_base = "http://${backend}:8080/v1"
+            api_key = "local"
+        }
+    }
+    {
+        model_name = "openai/qwen38-flash-next"
+        litellm_params = {
+            model = "openai/qwen38-flash-next"
+            api_base = "http://${backend}:8080/v1"
+            api_key = "local"
+        }
+    }
+    {
+        model_name = "openai/qwen3.8-flash-next"
+        litellm_params = {
+            model = "openai/qwen3.8-flash-next"
+            api_base = "http://${backend}:8080/v1"
+            api_key = "local"
+        }
+    }
+    # --- Алиасы DeepSeek V4 Vision Exp ---
+    {
+        model_name = "openai/sentinel"
+        litellm_params = {
+            model = "openai/sentinel"
+            api_base = "http://${backend}:8080/v1"
+            api_key = "local"
+        }
+    }
+    {
+        model_name = "openai/deepseek-v4-flash"
+        litellm_params = {
+            model = "openai/deepseek-v4-flash"
+            api_base = "http://${backend}:8080/v1"
+            api_key = "local"
+        }
+    }
+    {
+        model_name = "openai/reviewer"
+        litellm_params = {
+            model = "openai/reviewer"
+            api_base = "http://${backend}:8080/v1"
+            api_key = "local"
+        }
+    }
+    {
+        model_name = "openai/deepseek-v4"
+        litellm_params = {
+            model = "openai/deepseek-v4"
+            api_base = "http://${backend}:8080/v1"
+            api_key = "local"
+        }
+    }
+    # --- Алиасы Qwen3.8-27B ---
+    {
+        model_name = "openai/skeptic"
+        litellm_params = {
+            model = "openai/skeptic"
             api_base = "http://${backend}:8080/v1"
             api_key = "local"
         }
