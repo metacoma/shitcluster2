@@ -271,7 +271,7 @@ manifests = [
                     },
                     {
                         target_label = "__address__"
-                        replacement = "blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115"
+                        replacement = "blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc:9115"
                     }
                 ]
             }
