@@ -74,25 +74,28 @@ manifests = [
             "prometheus.io/scrape" = "true"
             "prometheus.io/port" = "9115"
         }
-        # Only http_2xx was deployed; add tcp_connect so the VLESS endpoint
-        # reachability probe below has a module to use. Setting `modules`
-        # replaces the chart default, so http_2xx is kept explicitly.
-        modules = {
-            http_2xx = {
-                prober = "http"
-                timeout = "5s"
-                http = {
-                    valid_http_versions = ["HTTP/1.1", "HTTP/2.0"]
-                    follow_redirects = True
-                    preferred_ip_protocol = "ip4"
+        # Only http_2xx was deployed (the chart default `config`). Set the whole
+        # `config` map (chart 11.6.1 renders blackbox.yaml from .config, NOT
+        # .modules) to add tcp_connect for the reachability probe below, keeping
+        # http_2xx. The probe module `tcp_connect` is what the VMServiceScrape uses.
+        config = {
+            modules = {
+                http_2xx = {
+                    prober = "http"
+                    timeout = "5s"
+                    http = {
+                        valid_http_versions = ["HTTP/1.1", "HTTP/2.0"]
+                        follow_redirects = True
+                        preferred_ip_protocol = "ip4"
+                    }
                 }
-            }
-            tcp_connect = {
-                prober = "tcp"
-                timeout = "5s"
-                tcp = {
-                    preferred_ip_protocol = "ip4"
-                    connect_timeout = "5s"
+                tcp_connect = {
+                    prober = "tcp"
+                    timeout = "5s"
+                    tcp = {
+                        preferred_ip_protocol = "ip4"
+                        connect_timeout = "5s"
+                    }
                 }
             }
         }
