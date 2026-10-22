@@ -74,6 +74,28 @@ manifests = [
             "prometheus.io/scrape" = "true"
             "prometheus.io/port" = "9115"
         }
+        # Only http_2xx was deployed; add tcp_connect so the VLESS endpoint
+        # reachability probe below has a module to use. Setting `modules`
+        # replaces the chart default, so http_2xx is kept explicitly.
+        modules = {
+            http_2xx = {
+                prober = "http"
+                timeout = "5s"
+                http = {
+                    valid_http_versions = ["HTTP/1.1", "HTTP/2.0"]
+                    follow_redirects = True
+                    preferred_ip_protocol = "ip4"
+                }
+            }
+            tcp_connect = {
+                prober = "tcp"
+                timeout = "5s"
+                tcp = {
+                    preferred_ip_protocol = "ip4"
+                    connect_timeout = "5s"
+                }
+            }
+        }
     }, sync={})
     monitoring_app(mon_cfg.alertmanager.helm, values={
         nodeSelector = _config.nodeSelector.worker
@@ -509,6 +531,110 @@ manifests = [
             endpoints = [{
                 port = "http"
                 interval = "15s"
+            }]
+        }
+    }
+    # --- VLESS endpoint reachability probe ---------------------------------
+    # Probes the REALITY server the in-cluster client dials. Losing it is the
+    # exact incident that motivated this whole change: the ~21k anti-filter
+    # routes fall back to the RU uplink. Scrapes the existing blackbox exporter's
+    # /probe with the tcp_connect module added above; constant relabelings make
+    # the series self-identifying. Address comes from config.k (single source).
+    {
+        "apiVersion" = "operator.victoriametrics.com/v1beta1"
+        "kind" = "VMServiceScrape"
+        "metadata" = {
+            "name" = "vless-tcp-probe"
+            "namespace" = mon_cfg.namespace
+        }
+        "spec" = {
+            "selector" = {
+                "matchLabels" = {
+                    "app.kubernetes.io/instance" = mon_cfg.blackbox_exporter.helm.release_name
+                    "app.kubernetes.io/name" = "prometheus-blackbox-exporter"
+                }
+            }
+            "endpoints" = [{
+                "port" = "http"
+                "path" = "/probe"
+                "interval" = "30s"
+                "params" = {
+                    "target" = ["${_config.vless_tunnel.server}:${_config.vless_tunnel.server_port}"]
+                    "module" = ["tcp_connect"]
+                }
+                "relabelings" = [
+                    {
+                        "targetLabel" = "instance"
+                        "replacement" = "${_config.vless_tunnel.server}:${_config.vless_tunnel.server_port}"
+                    },
+                    {
+                        "targetLabel" = "module"
+                        "replacement" = "tcp_connect"
+                    },
+                    {
+                        "targetLabel" = "alert_group"
+                        "replacement" = "vless"
+                    }
+                ]
+            }]
+        }
+    }
+    # --- VLESS reliability alerts ------------------------------------------
+    {
+        "apiVersion" = "operator.victoriametrics.com/v1beta1"
+        "kind" = "VMRule"
+        "metadata" = {
+            "name" = "vless-tunnel-alerts"
+            "namespace" = mon_cfg.namespace
+        }
+        "spec" = {
+            "groups" = [{
+                "name" = "vless-tunnel.rules"
+                "rules" = [
+                    {
+                        "alert" = "VlessEndpointUnreachable"
+                        "expr" = "probe_success{alert_group=\"vless\", instance=\"${_config.vless_tunnel.server}:${_config.vless_tunnel.server_port}\"} == 0"
+                        "for" = "2m"
+                        "labels" = {
+                            "severity" = "critical"
+                            "type" = "tunnel"
+                        }
+                        "annotations" = {
+                            "summary" = "VLESS endpoint ${_config.vless_tunnel.server}:${_config.vless_tunnel.server_port} unreachable from the cluster"
+                            "description" = "TCP probe to the REALITY server is failing. Anti-filter traffic falls back to the RU uplink. Check `systemctl status xray-vless` on vpn-nl (Ansible role vless_server)."
+                        }
+                    },
+                    {
+                        "alert" = "VlessPodMemoryHigh"
+                        # RSS ~1.1Gi idle; warn at 1.5Gi (1610612736). This is the
+                        # safety net when NO memory limit is set, and the
+                        # early-warning ahead of a generous limit. Tunable; see
+                        # the vless_tunnel.k resource decision.
+                        "expr" = "container_memory_working_set_bytes{namespace=\"network\", container=\"singbox\", pod=~\"vless-tunnel.*\"} > 1610612736"
+                        "for" = "5m"
+                        "labels" = {
+                            "severity" = "warning"
+                            "type" = "tunnel"
+                        }
+                        "annotations" = {
+                            "summary" = "vless-tunnel sing-box RSS above 1.5Gi"
+                            "description" = "Resident memory is climbing; an OOM would drop every tunnelled route."
+                        }
+                    },
+                    {
+                        "alert" = "VlessPodOOMKilled"
+                        "expr" = "increase(container_oom_events_total{namespace=\"network\", container=\"singbox\", pod=~\"vless-tunnel.*\"}[10m]) > 0"
+                        "for" = "0m"
+                        "labels" = {
+                            "severity" = "critical"
+                            "type" = "tunnel"
+                        }
+                        "annotations" = {
+                            "summary" = "vless-tunnel container was OOMKilled"
+                            "description" = "The sing-box container hit its memory limit; routes were unreachable until reschedule."
+                        }
+                    }
+                ]
             }]
         }
     }
