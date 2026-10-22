@@ -94,7 +94,6 @@ manifests = [
                     timeout = "5s"
                     tcp = {
                         preferred_ip_protocol = "ip4"
-                        connect_timeout = "5s"
                     }
                 }
             }
