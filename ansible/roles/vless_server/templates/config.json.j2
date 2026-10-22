@@ -1,0 +1,72 @@
+{
+  "log": {
+    "loglevel": "{{ xray_log_level }}",
+    "access": "{{ xray_access_log }}"
+  },
+  "inbounds": [
+    {
+      "listen": "{{ xray_listen }}",
+      "port": {{ xray_port }},
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "id": "{{ xray_client_id }}",
+            "flow": "{{ xray_client_flow }}"
+          }
+        ],
+        "decryption": "{{ xray_decryption }}"
+      },
+      "streamSettings": {
+        "network": "xhttp",
+        "xhttpSettings": {
+          "path": "{{ xray_xhttp_path }}",
+          "host": "{{ xray_xhttp_host }}",
+          "mode": "{{ xray_xhttp_mode }}"
+        },
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "dest": "{{ xray_reality_dest }}",
+          "xver": 0,
+          "serverNames": [
+{% for name in xray_reality_server_names %}
+            "{{ name }}"{{ "," if not loop.last else "" }}
+{% endfor %}
+          ],
+          "privateKey": "{{ xray_reality_private_key }}",
+          "shortIds": [
+            "{{ xray_reality_short_id }}"
+          ],
+          "settings": {
+            "fingerprint": "{{ xray_reality_fingerprint }}"
+          }
+        }
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "freedom",
+      "tag": "direct"
+    },
+    {
+      "protocol": "blackhole",
+      "tag": "block"
+    }
+  ],
+  "routing": {
+    "domainStrategy": "AsIs",
+    "rules": [
+      {
+        "type": "field",
+        "outboundTag": "block",
+        "ip": [
+{% for cidr in xray_block_cidrs %}
+          "{{ cidr }}"{{ "," if not loop.last else "" }}
+{% endfor %}
+        ]
+      }
+    ]
+  }
+}

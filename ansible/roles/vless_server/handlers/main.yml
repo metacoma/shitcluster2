@@ -1,0 +1,6 @@
+---
+- name: restart xray-vless
+  ansible.builtin.systemd:
+    name: "{{ xray_service }}"
+    state: restarted
+    enabled: true

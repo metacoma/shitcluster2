@@ -1,0 +1,56 @@
+---
+# Pull the REALITY private key (server section) plus the client uuid/shortId,
+# render config.json, and hand off to the restart handler.
+#
+# community.hashi_vault reads VAULT_ADDR / VAULT_TOKEN from the environment, so
+# the edge playbook only needs those exported (see ansible/edge/vless_server.yml
+# and the ansible_edge_run make target). The private key never appears in
+# inventory, group_vars, or Git; no_log keeps it out of the job output.
+
+- name: Read the server section from Vault (reality_private_key)
+  community.hashi_vault.vault_kv2_get:
+    url: "{{ vless_vault_url }}"
+    engine_mount_point: "kv"
+    path: "{{ vless_edge_vault_server_secret | regex_replace('^kv/', '') }}"
+    validate_certs: false
+  register: xray_vault_server
+  no_log: true
+
+- name: Read the client section from Vault (uuid, reality_short_id)
+  community.hashi_vault.vault_kv2_get:
+    url: "{{ vless_vault_url }}"
+    engine_mount_point: "kv"
+    path: "{{ vless_edge_vault_client_secret | regex_replace('^kv/', '') }}"
+    validate_certs: false
+  register: xray_vault_client
+  no_log: true
+
+- name: Assert the Vault secrets carry the expected fields
+  ansible.builtin.assert:
+    that:
+      - xray_vault_server.data.data.reality_private_key is defined
+      - xray_vault_client.data.data.uuid is defined
+      - xray_vault_client.data.data.reality_short_id is defined
+    fail_msg: >-
+      Vault is missing one of kv/vless_tunnel_server#reality_private_key,
+      kv/vless_tunnel#uuid, kv/vless_tunnel#reality_short_id. Run `make sops_to_vault`
+      after adding them. (Values intentionally not printed.)
+    quiet: true
+  no_log: true
+
+- name: Build the template context from Vault material
+  ansible.builtin.set_fact:
+    xray_reality_private_key: "{{ xray_vault_server.data.data.reality_private_key }}"
+    xray_client_id: "{{ xray_vault_client.data.data.uuid }}"
+    xray_reality_short_id: "{{ xray_vault_client.data.data.reality_short_id }}"
+  no_log: true
+
+- name: Render config.json
+  ansible.builtin.template:
+    src: config.json.j2
+    dest: "{{ xray_conf_file }}"
+    owner: root
+    group: "{{ xray_group }}"
+    mode: "0640"
+  no_log: true
+  notify: restart xray-vless

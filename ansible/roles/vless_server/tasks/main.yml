@@ -1,0 +1,38 @@
+---
+- name: Load OS-specific variables
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_facts.distribution }}-{{ ansible_facts.distribution_major_version }}.yml"
+        - "{{ ansible_facts.distribution }}.yml"
+        - "main.yml"
+      skip: true
+  tags: [always]
+
+- name: Preflight (version compatibility, required vars)
+  ansible.builtin.import_tasks: preflight.yml
+  tags: [preflight]
+
+- name: Managed user and group
+  ansible.builtin.import_tasks: user.yml
+  tags: [user]
+
+- name: Install the pinned Xray binary
+  ansible.builtin.import_tasks: install.yml
+  tags: [install]
+
+- name: Render configuration from Vault material
+  ansible.builtin.import_tasks: configure.yml
+  tags: [config]
+
+- name: Install and start the systemd unit
+  ansible.builtin.import_tasks: service.yml
+  tags: [service]
+
+- name: Log rotation and optional hardening
+  ansible.builtin.import_tasks: harden.yml
+  tags: [harden]
+
+- name: Verify the endpoint
+  ansible.builtin.import_tasks: verify.yml
+  tags: [verify]

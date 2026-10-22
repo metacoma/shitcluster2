@@ -1,0 +1,75 @@
+---
+# Post-deploy verification. None of this changes running state; safe under --check
+# (the only externally-visible task, the decoy probe, is read-only).
+
+# PITFALL: never run `xray -test` as root. Xray opens the access log during
+# validation, so a root run creates /var/log/xray/access.log as root:root 0600
+# and the service (which runs as {{ xray_user }}) then dies with status=23.
+# Always validate as {{ xray_user }}.
+- name: Validate the rendered config as the xray user
+  ansible.builtin.command:
+    cmd: "{{ xray_bin }} -test -config {{ xray_conf_file }}"
+  become: true
+  become_user: "{{ xray_user }}"
+  register: xray_test
+  changed_when: false
+
+- name: Assert the config is valid
+  ansible.builtin.assert:
+    that:
+      - xray_test.rc == 0
+      - "'Configuration OK' in xray_test.stdout"
+    fail_msg: "xray -test failed: {{ xray_test.stderr | default(xray_test.stdout) }}"
+    quiet: true
+
+- name: Read the service status
+  ansible.builtin.systemd:
+    name: "{{ xray_service }}"
+  register: xray_service_status
+
+- name: Assert the service is active and enabled
+  ansible.builtin.assert:
+    that:
+      - xray_service_status.status.ActiveState is defined
+      - xray_service_status.status.ActiveState == 'active'
+      - xray_service_status.status.UnitFileState | default('enabled') == 'enabled'
+    fail_msg: >-
+      {{ xray_service }} is {{ xray_service_status.status.ActiveState | default('unknown') }} /
+      {{ xray_service_status.status.UnitFileState | default('unknown') }}
+    quiet: true
+
+- name: Wait for the listener on {{ xray_listen }}:{{ xray_port }}
+  ansible.builtin.wait_for:
+    host: "127.0.0.1"
+    port: "{{ xray_port }}"
+    state: started
+    timeout: 30
+
+# Decoy check: a plain TLS handshake with SNI={{ xray_reality_server_names[0] }} and no
+# REALITY secret must be proxied to the real destination — proof the endpoint is
+# fronting {{ xray_reality_dest }}, not just sitting on the port.
+- name: Check curl is available for the decoy probe
+  ansible.builtin.stat:
+    path: /usr/bin/curl
+  register: xray_curl
+
+- name: Decoy probe (plain TLS -> real Google, no secret)
+  ansible.builtin.command:
+    cmd: >-
+      curl -sk -m 10 --resolve {{ xray_reality_server_names[0] }}:443:127.0.0.1
+      https://{{ xray_reality_server_names[0] }}/ -o /dev/null -w '%{http_code}'
+  register: xray_decoy
+  changed_when: false
+  failed_when: false
+  when: xray_curl.stat.exists
+
+- name: Assert the decoy path returned something (not connection-refused)
+  ansible.builtin.assert:
+    that:
+      - xray_decoy.stdout is match('^[0-9]{3}$')
+      - xray_decoy.stdout != '000'
+    fail_msg: >-
+      Decoy probe to 127.0.0.1:443 returned '{{ xray_decoy.stdout | default("n/a") }}'
+      (000 = connection refused / timeout: REALITY fallback not serving the decoy).
+    quiet: true
+  when: xray_curl.stat.exists

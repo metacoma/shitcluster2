@@ -1,0 +1,10 @@
+---
+# OS-specific overrides for the vpn-nl edge host (Ubuntu 24.04.2 LTS, x86_64).
+#
+# Ground truth captured on the running endpoint: the base image ships python3 but
+# NOT unzip, and NOT the `xray` binary. install.yml therefore extracts the release
+# archive with `python3 -m zipfile` (no package install, no unzip dependency).
+#
+# Nothing to override beyond the shared defaults yet; kept as the extension point
+# so a future Rocky/Debian edge host can diverge without touching tasks.
+xray_os_family: "Debian"

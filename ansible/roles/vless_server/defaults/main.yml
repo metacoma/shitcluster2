@@ -1,0 +1,104 @@
+---
+# Defaults for the vless_server role — the Xray VLESS+XHTTP+REALITY endpoint
+# that backs the shitcluster anti-filter tunnel (gitops/workloads/apps/vless_tunnel.k
+# is the matching in-cluster client).
+#
+# Every value here mirrors what the endpoint was built with by hand on 2026-10-22;
+# the role is meant to converge an already-running server, not to surprise it.
+# Change a value only together with a rotation (see README.md).
+
+# --- Version pinning -------------------------------------------------------
+# Xray >= v26.9.8 accepts ONLY the hybrid PQ key share and rejects the client
+# currently pinned in gitops (sing-box-lx 1.14.0-lx.26). Do NOT bump past
+# v26.9.8 without bumping the client image past v1.14.0-lx.36 at the same time.
+# Rationale and full matrix: vars/main.yml.
+xray_version: "v26.7.28"
+# sha256 of Xray-linux-64.zip for xray_version. Verified post-download.
+xray_sha256: "8195d909f1109b8f3d99eefe401a3c451d7bf4af71f24d3815420f77e5dd2a40"
+xray_release_base: "https://github.com/XTLS/Xray-core/releases/download"
+# Asset name for x86_64; overridden per-arch in vars/*.yml if ever needed.
+xray_asset: "Xray-linux-64.zip"
+xray_download_url: "{{ xray_release_base }}/{{ xray_version }}/{{ xray_asset }}"
+
+# Hard ceiling that would break the current client. preflight fails at/above this.
+xray_incompatible_min: "v26.9.8"
+
+# --- Filesystem / identity -------------------------------------------------
+xray_user: "xray"
+xray_group: "xray"
+xray_uid: 997
+xray_gid: 988
+
+xray_bin: "/usr/local/bin/xray"
+xray_conf_dir: "/usr/local/etc/xray"
+xray_conf_file: "{{ xray_conf_dir }}/config.json"
+xray_log_dir: "/var/log/xray"
+xray_access_log: "{{ xray_log_dir }}/access.log"
+
+xray_service: "xray-vless"
+
+# --- Listener / transport --------------------------------------------------
+xray_listen: "0.0.0.0"
+xray_port: 443
+
+xray_xhttp_path: "/video"
+xray_xhttp_host: "www.google.com"
+xray_xhttp_mode: "auto"
+
+# --- REALITY ---------------------------------------------------------------
+# privateKey comes from Vault (vless_server_vault_server_secret) — never here.
+xray_reality_dest: "www.google.com:443"
+xray_reality_server_names:
+  - "www.google.com"
+xray_reality_fingerprint: "chrome"
+
+# VLESS client. `flow` is intentionally empty for xhttp (no xtls-rprx-* flow).
+xray_client_flow: ""
+xray_decryption: "none"
+
+# --- Logging ---------------------------------------------------------------
+xray_log_level: "warning"
+
+# --- SSRF guard ------------------------------------------------------------
+# The host runs dnsmasq and sits on management nets (192.168.152.0/24,
+# 10.10.0.0/24); routing these to `blackhole` stops the tunnel from becoming an
+# open proxy into the mansion/lab networks.
+xray_block_cidrs:
+  - "0.0.0.0/8"
+  - "10.0.0.0/8"
+  - "100.64.0.0/10"
+  - "127.0.0.0/8"
+  - "169.254.0.0/16"
+  - "172.16.0.0/12"
+  - "192.168.0.0/16"
+  - "::1/128"
+  - "fc00::/7"
+  - "fe80::/10"
+
+# --- logrotate -------------------------------------------------------------
+xray_logrotate: true
+xray_logrotate_frequency: "daily"
+xray_logrotate_rotate: 14
+xray_logrotate_maxsize: "100M"
+
+# --- Optional source allowlist for :443 ------------------------------------
+# OFF by default: the home uplink IP (37.113.248.76) is dynamic, so a static
+# allowlist is more likely to lock out the legitimate client than to help.
+# Flip to a list of CIDRs only if the exit becomes stable. See README.md.
+xray_allowlist_cidrs: []
+
+# --- Vault locations (paths, not values) -----------------------------------
+# Overridden by ansible/edge/inventory.yml group vars; defaults let the role be
+# exercised standalone. Field names match secrets/vault_data.sops.yaml.
+vless_edge_vault_server_secret: "kv/vless_tunnel_server"   # reality_private_key
+vless_edge_vault_client_secret: "kv/vless_tunnel"          # uuid, reality_short_id
+vless_edge_vault_ssh_secret: "kv/vpn_nl#ssh_private_key_base64"
+
+# Vault connection for the role's lookups. url/token are resolved by
+# community.hashi_vault from the environment (VAULT_ADDR / VAULT_TOKEN) when the
+# playbook is run via `make sops_to_vault`-style token plumbing.
+vless_vault_url: "{{ lookup('env', 'VAULT_ADDR') | default('http://172.25.1.4:8200', true) }}"
+
+# Public address the endpoint is expected to present to the internet. Set on the
+# inventory host; used only by verify to reason about which path traffic took.
+vless_reality_public_address: ""

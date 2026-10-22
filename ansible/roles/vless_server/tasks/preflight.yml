@@ -1,0 +1,43 @@
+---
+- name: Assert required variables are set
+  ansible.builtin.assert:
+    that:
+      - xray_version is match('^v?[0-9]+[.][0-9]+[.][0-9]+$')
+      - xray_sha256 is match('^[0-9a-fA-F]{64}$')
+      - vless_edge_vault_server_secret | length > 0
+      - vless_edge_vault_client_secret | length > 0
+    fail_msg: >-
+      vless_server requires xray_version (vX.Y.Z), a 64-hex xray_sha256, and the
+      Vault secret paths. Got version={{ xray_version }} sha256-set={{ xray_sha256 | length > 0 }}.
+    quiet: true
+  tags: [always]
+
+# Hard version gate. Xray >= v26.9.8 refuses the classic-only X25519 key share
+# offered by the currently pinned client (sing-box-lx 1.14.0-lx.26). Bumping the
+# server past this without bumping the client breaks every tunnelled route.
+- name: Fail if the pinned Xray version is incompatible with the current client
+  ansible.builtin.assert:
+    that:
+      - xray_version | regex_replace('^v', '') is version(
+          xray_incompatible_min | regex_replace('^v', ''), '<')
+    fail_msg: >-
+      xray_version={{ xray_version }} is >= {{ xray_incompatible_min }}, which only
+      accepts the hybrid X25519MLKEM768 key share. The in-cluster client
+      (sing-box-lx 1.14.0-lx.26, gitops/workloads/apps/vless_tunnel.k) still sends
+      classic X25519. Bump the client image to >= v1.14.0-lx.36 in the SAME change
+      or keep this server below {{ xray_incompatible_min }}. See vars/main.yml.
+    quiet: true
+  when: not (xray_skip_version_gate | default(false) | bool)
+  tags: [always]
+
+- name: Confirm the target is supported (x86_64 Linux)
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.kernel == 'Linux'
+      - ansible_facts.architecture in ['x86_64']
+    fail_msg: >-
+      vless_server ships xray_asset={{ xray_asset }} (x86_64). Host is
+      {{ ansible_facts.kernel }}/{{ ansible_facts.architecture }}; set xray_asset for
+      a different arch.
+    quiet: true
+  tags: [always]

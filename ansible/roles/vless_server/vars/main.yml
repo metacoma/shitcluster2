@@ -1,0 +1,37 @@
+---
+# Role-fixed facts (not meant to be overridden from inventory).
+
+# --- Client/server compatibility matrix (WHY the pin is v26.7.28) ----------
+#
+#   Component            Value            Constraint
+#   -------------------  ---------------  -------------------------------------------
+#   in-cluster client    sing-box-lx      image pinned in gitops/workloads/apps/
+#   (gitops/workloads)   1.14.0-lx.26     vless_tunnel.k@sha256:268b4237...
+#   PQ key share fork    Leadaxe/sing-box-lx added X25519MLKEM768 only from
+#                        v1.14.0-lx.36 — 1.14.0-lx.26 still offers classic X25519.
+#   server (this role)   Xray v26.7.28    accepts classic X25519.
+#
+#   Xray >= v26.9.8 REQUIRES the hybrid (X25519MLKEM768) key share and refuses a
+#   classic-only client. Therefore this server MUST stay < v26.9.8 until the
+#   client image is bumped to >= v1.14.0-lx.36 in the same change.
+#
+#   Why Xray (not sing-box) on the server: `sing-box-lx` is a *client* core
+#   (its XHTTP was validated "against Xray servers"), and upstream sing-box has
+#   no `xhttp` transport at all. Xray is the reference REALITY+XHTTP server.
+#
+# The exact transport/config shape the client expects (must stay byte-compatible
+# with gitops/workloads/apps/vless_tunnel.k + config.k):
+#   transport xhttp  -> path /video, host www.google.com, mode auto
+#   security reality -> server_name www.google.com, utls fingerprint chrome
+#
+# Digest note: GitHub publishes the asset hash as a `SHA2-256= <hex>` digest
+# header, NOT the `SHA256:` prefix. This role verifies via the file checksum
+# against `xray_sha256` (defaults) instead of parsing that header.
+
+# Files inside the release zip that are the deliverable. Xray-linux-64.zip also
+# ships geoip.dat/geosite.dat/example config which this REALITY setup does not
+# need (routing uses inline CIDRs), so only the `xray` binary is installed.
+xray_extract_binary: "xray"
+
+# Directory the archive is exploded into before `install`ing the binary.
+xray_tmp_root: "/tmp/xray-install"

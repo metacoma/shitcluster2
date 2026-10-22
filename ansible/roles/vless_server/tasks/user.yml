@@ -1,0 +1,35 @@
+---
+- name: Ensure the xray group exists
+  ansible.builtin.group:
+    name: "{{ xray_group }}"
+    gid: "{{ xray_gid }}"
+    system: true
+    state: present
+
+- name: Ensure the xray user exists
+  ansible.builtin.user:
+    name: "{{ xray_user }}"
+    uid: "{{ xray_uid }}"
+    group: "{{ xray_group }}"
+    system: true
+    home: "/home/{{ xray_user }}"
+    create_home: false
+    shell: /usr/sbin/nologin
+    comment: "Xray VLESS endpoint"
+    state: present
+
+- name: Ensure the log directory exists and is owned by xray
+  ansible.builtin.file:
+    path: "{{ xray_log_dir }}"
+    state: directory
+    owner: "{{ xray_user }}"
+    group: "{{ xray_group }}"
+    mode: "0750"
+
+- name: Ensure the config directory exists
+  ansible.builtin.file:
+    path: "{{ xray_conf_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"

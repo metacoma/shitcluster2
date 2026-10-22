@@ -1,0 +1,79 @@
+---
+# Install/upgrade the pinned Xray binary. Idempotent: when the installed version
+# already equals xray_version, the download (37 MB) and install are skipped.
+
+- name: Check for an existing xray binary
+  ansible.builtin.stat:
+    path: "{{ xray_bin }}"
+  register: xray_bin_stat
+
+- name: Read the installed xray version (if any)
+  ansible.builtin.command:
+    cmd: "{{ xray_bin }} version"
+  register: xray_installed_raw
+  changed_when: false
+  failed_when: false
+  when: xray_bin_stat.stat.exists
+
+- name: Parse the installed xray version
+  ansible.builtin.set_fact:
+    xray_installed_version: >-
+      {{ xray_installed_raw.stdout | default('')
+         | regex_search('[0-9]+[.][0-9]+[.][0-9]+') | default('', true) }}
+
+- name: Decide whether the pinned version is already installed
+  ansible.builtin.set_fact:
+    xray_version_matches: >-
+      {{ xray_installed_version == (xray_version | regex_replace('^v', '')) }}
+
+# "Detect manual drift" — a human (or unattended-upgrade) left a different binary.
+- name: Report version drift before converging
+  ansible.builtin.debug:
+    msg: >-
+      Version drift: installed xray '{{ xray_installed_version }}' != pinned
+      '{{ xray_version | regex_replace('^v', '') }}'. Reinstalling the pinned build.
+  when: xray_bin_stat.stat.exists and not (xray_version_matches | bool)
+
+- name: Install the pinned Xray build
+  when: not (xray_version_matches | bool)
+  block:
+    - name: Create a private temp build directory
+      ansible.builtin.file:
+        path: "{{ xray_tmp_root }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0700"
+
+    - name: Download the release archive (sha256-verified)
+      ansible.builtin.get_url:
+        url: "{{ xray_download_url }}"
+        dest: "{{ xray_tmp_root }}/{{ xray_asset }}"
+        checksum: "sha256:{{ xray_sha256 }}"
+        mode: "0644"
+        timeout: 60
+        validate_certs: true
+
+    # unzip is not present on the edge image (Ubuntu 24.04 base); python3 is.
+    # `-m zipfile -e` explodes the archive with no extra package.
+    - name: Extract the archive with python3 zipfile
+      ansible.builtin.command:
+        cmd: >-
+          python3 -m zipfile -e
+          "{{ xray_tmp_root }}/{{ xray_asset }}"
+          "{{ xray_tmp_root }}/extract"
+        creates: "{{ xray_tmp_root }}/extract/{{ xray_extract_binary }}"
+
+    - name: Install the xray binary
+      ansible.builtin.copy:
+        src: "{{ xray_tmp_root }}/extract/{{ xray_extract_binary }}"
+        dest: "{{ xray_bin }}"
+        remote_src: true
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Remove the temp build directory
+      ansible.builtin.file:
+        path: "{{ xray_tmp_root }}"
+        state: absent
