@@ -170,6 +170,7 @@ manifests = [
                         name = "singbox"
                         image = _vt.image
                         imagePullPolicy = "IfNotPresent"
+                        resources = _vt.resources
                         command = ["/bin/sh", "-c"]
                         args = [startup_script]
                         securityContext = {

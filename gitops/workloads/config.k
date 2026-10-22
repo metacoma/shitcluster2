@@ -301,6 +301,21 @@ config = {
         server = "172.233.47.9"
         server_port = 443
         config_revision = "3"
+        # Memory limit is intentionally GENEROUS (2Gi vs ~1.1Gi observed RSS): the
+        # tunnel carries ~21k router routes, so an OOMKill makes them unreachable
+        # until reschedule and traffic falls back to the RU uplink. requests cover
+        # scheduling on the control-plane node; a high-RSS alert (see monitoring.k
+        # VMRule, inert until a rules engine exists) is the early warning.
+        resources = {
+            requests = {
+                cpu = "100m"
+                memory = "1Gi"
+            }
+            limits = {
+                cpu = "2"
+                memory = "2Gi"
+            }
+        }
         tun_address = "10.70.0.1/24"
         tun_cidr = "10.70.0.0/24"
         public = {
