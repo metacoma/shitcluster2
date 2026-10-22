@@ -239,6 +239,42 @@ manifests = [
                     targets = ["${_config.longhorn.metrics_service}.${_config.longhorn.namespace}:${_config.longhorn.metrics_port}"]
                 }]
             }
+            # VLESS endpoint reachability: TCP probe through the blackbox exporter
+            # (tcp_connect module added above). Emits probe_success for the REALITY
+            # server the tunnel dials; losing it is the outage that motivated this
+            # work. This vm-agent is the victoria-metrics-agent HELM chart with a
+            # static scrape.yml, so it reads extraScrapeConfigs here (NOT the
+            # operator's VMServiceScrape CRs). Address sourced from config.k.
+            # NOTE: alerting on probe_success==0 needs a rules engine; there is no
+            # vmalert in this cluster yet (see the reliability note in the PR).
+            {
+                job_name = "vless-tcp"
+                metrics_path = "/probe"
+                scrape_interval = "30s"
+                params = {
+                    module = ["tcp_connect"]
+                }
+                static_configs = [{
+                    targets = ["${_config.vless_tunnel.server}:${_config.vless_tunnel.server_port}"]
+                    labels = {
+                        alert_group = "vless"
+                    }
+                }]
+                relabel_configs = [
+                    {
+                        source_labels = ["__address__"]
+                        target_label = "__param_target"
+                    },
+                    {
+                        source_labels = ["__param_target"]
+                        target_label = "instance"
+                    },
+                    {
+                        target_label = "__address__"
+                        replacement = "blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115"
+                    }
+                ]
+            }
         ]
     }, sync={})
     monitoring_app(mon_cfg.grafana.helm, values={
@@ -536,51 +572,10 @@ manifests = [
             }]
         }
     }
-    # --- VLESS endpoint reachability probe ---------------------------------
-    # Probes the REALITY server the in-cluster client dials. Losing it is the
-    # exact incident that motivated this whole change: the ~21k anti-filter
-    # routes fall back to the RU uplink. Scrapes the existing blackbox exporter's
-    # /probe with the tcp_connect module added above; constant relabelings make
-    # the series self-identifying. Address comes from config.k (single source).
-    {
-        "apiVersion" = "operator.victoriametrics.com/v1beta1"
-        "kind" = "VMServiceScrape"
-        "metadata" = {
-            "name" = "vless-tcp-probe"
-            "namespace" = mon_cfg.namespace
-        }
-        "spec" = {
-            "selector" = {
-                "matchLabels" = {
-                    "app.kubernetes.io/instance" = mon_cfg.blackbox_exporter.helm.release_name
-                    "app.kubernetes.io/name" = "prometheus-blackbox-exporter"
-                }
-            }
-            "endpoints" = [{
-                "port" = "http"
-                "path" = "/probe"
-                "interval" = "30s"
-                "params" = {
-                    "target" = ["${_config.vless_tunnel.server}:${_config.vless_tunnel.server_port}"]
-                    "module" = ["tcp_connect"]
-                }
-                "relabelings" = [
-                    {
-                        "targetLabel" = "instance"
-                        "replacement" = "${_config.vless_tunnel.server}:${_config.vless_tunnel.server_port}"
-                    },
-                    {
-                        "targetLabel" = "module"
-                        "replacement" = "tcp_connect"
-                    },
-                    {
-                        "targetLabel" = "alert_group"
-                        "replacement" = "vless"
-                    }
-                ]
-            }]
-        }
-    }
+    # VLESS reachability is scraped via the vm-agent `extraScrapeConfigs` job
+    # ("vless-tcp") defined in the vm_agent app above. The standalone
+    # victoria-metrics-agent helm chart reads a static scrape.yml, NOT the
+    # operator's VMServiceScrape CR, so no VMServiceScrape is declared here.
     # --- VLESS reliability alerts ------------------------------------------
     {
         "apiVersion" = "operator.victoriametrics.com/v1beta1"
