@@ -1,0 +1,21 @@
+---
+- name: Render the systemd unit
+  ansible.builtin.template:
+    src: xray-vless.service.j2
+    dest: "/etc/systemd/system/{{ xray_service }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+  register: xray_unit
+  notify: restart xray-vless
+
+- name: Reload systemd after a unit change (so enable/start sees the new unit)
+  ansible.builtin.systemd:
+    daemon_reload: true
+  when: xray_unit is changed
+
+- name: Enable and start the service
+  ansible.builtin.systemd:
+    name: "{{ xray_service }}"
+    enabled: true
+    state: started

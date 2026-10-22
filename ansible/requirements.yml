@@ -8,3 +8,10 @@ collections:
  - name: kubernetes.core
    version: "6.5.0"
  - name: community.hashi_vault
+   # Pinned: unpinned collection upgrades have broken vault_lookup before.
+   # vless_server role uses vault_kv2_get from this collection.
+   version: "6.2.1"
+ - name: ansible.posix
+   # Pinned to the version already in the venv; used by sysctl/logrotate-adjacent
+   # tasks and pulled in by the edge role's optional hardening.
+   version: "1.6.2"

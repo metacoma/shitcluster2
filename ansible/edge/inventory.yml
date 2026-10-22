@@ -1,0 +1,72 @@
+---
+# Edge inventory — hosts that are NOT part of the Kubernetes cluster.
+#
+# Lives in its own directory, not just its own file, and this is load-bearing:
+# Ansible resolves `group_vars/` relative to the inventory source, so an
+# `ansible/inventory-edge.yml` would still inherit ansible/group_vars/all.yaml —
+# the whole kubespray variable set (calico_*, kube_vip_*, metallb_*, ntp_*) —
+# onto a rented VPS. Anything edge-specific goes in ansible/edge/group_vars/.
+#
+# Also separate because the existing custom playbooks (network.yml,
+# storage_mount.yml, disable_*.yml, ...) target `hosts: all`; adding this host to
+# inventory.yml would hand a VPS to every cluster node playbook.
+#
+# ansible/Makefile hardcodes `-i inventory.yml` (ANSIBLE_PLAY_CMD), so edge runs
+# cannot go through `make ansible_run` until an edge target is added. Direct
+# invocation — and it must be run from the REPOSITORY ROOT:
+#
+#   ansible/.venv/bin/ansible-playbook -i ansible/edge/inventory.yml \
+#     ansible/edge/vless_server.yml --check
+#
+# CWD matters, not just the file location: the host_group_vars plugin also
+# searches `group_vars/` in the current directory. Verified — with CWD=ansible/
+# this host picks up 63 variables including the kubespray set (calico_*,
+# kube_vip_*, metallb_*, ntp_*, crio_*); from the repo root it gets 11, all of
+# them edge-only. Future edge playbooks belong in ansible/edge/ for the same
+# reason.
+#
+# The venv path is explicit on purpose: venv activation does not carry into
+# Makefile recipe lines, and a bare `ansible-playbook` from PATH will not see
+# community.hashi_vault from requirements.yml.
+#
+# No secret material in this file — only Vault *paths*. Credentials are
+# materialized at run time by the role's localhost pre-play (0600, removed on
+# completion). See ansible/roles/vless_server/README.md once it lands.
+
+all:
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+
+  children:
+    vless_servers:
+      hosts:
+        vpn-nl:
+          # FQDN, as used by the ssh-tunnel-nl0 endpoint. Note the in-cluster
+          # vless client dials the literal address in vless_reality_public_address
+          # (gitops/workloads/config.k), so both must stay consistent.
+          ansible_host: vpn.nl-ams.net.metacoma.org
+          ansible_user: root
+          ansible_ssh_private_key_file: "{{ vless_edge_ssh_key_path }}"
+          ansible_ssh_common_args: >-
+            -o StrictHostKeyChecking=accept-new
+            -o UserKnownHostsFile={{ vless_edge_known_hosts_file }}
+
+          # Public address the endpoint is expected to present to the internet,
+          # used by verify tasks to confirm which path traffic actually took
+          # (the nl0 tunnel terminates on the same host but masquerades from a
+          # different address, so an egress-IP check alone is not proof).
+          vless_reality_public_address: 172.233.47.9
+
+      vars:
+        # Local artifacts created and removed by the deploy run.
+        vless_edge_ssh_key_path: "~/.ssh/vpn-nl_ed25519"
+        vless_edge_known_hosts_file: "~/.ssh/known_hosts.edge"
+
+        # Vault locations (paths, not values).
+        # ssh_private_key_base64 is the existing key shared with ssh-tunnel-nl0.
+        vless_edge_vault_ssh_secret: "kv/vpn_nl#ssh_private_key_base64"
+        # Server-only material (REALITY private key); created before the role
+        # can run — see the secrets step of the plan.
+        vless_edge_vault_server_secret: "kv/vless_tunnel_server"
+        # Client-visible material, also read by vals in the ArgoCD CMP plugin.
+        vless_edge_vault_client_secret: "kv/vless_tunnel"

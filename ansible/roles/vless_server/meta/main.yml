@@ -1,0 +1,23 @@
+---
+galaxy_info:
+  role_name: vless_server
+  namespace: shitcluster
+  author: shitcluster maintainers
+  description: >-
+    Deploys and hardens the Xray VLESS+XHTTP+REALITY server that backs the
+    shitcluster anti-filter tunnel (peer of gitops/workloads/apps/vless_tunnel.k).
+  license: proprietary
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+  galaxy_tags:
+    - proxy
+    - vless
+    - reality
+    - xray
+    - edge
+
+dependencies: []

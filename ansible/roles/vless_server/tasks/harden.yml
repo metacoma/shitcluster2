@@ -1,0 +1,59 @@
+---
+# Rotate the access log. Xray keeps the file open and cannot be signalled to
+# reopen it, so `copytruncate` is used (see templates/logrotate-xray.j2). The
+# unit already funnels stdout/journald separately; journald retention is left to
+# the host's journald.conf defaults.
+- name: Install the logrotate drop-in for the access log
+  ansible.builtin.template:
+    src: logrotate-xray.j2
+    dest: "/etc/logrotate.d/xray"
+    owner: root
+    group: root
+    mode: "0644"
+  when: xray_logrotate | bool
+
+# ---------------------------------------------------------------------------
+# OPTIONAL: restrict :443 to a known source set.
+#
+# OFF by default. The home exit IP (37.113.248.76) is dynamic, so pinning it
+# would lock the legitimate client out the next time it changes. Only set
+# xray_allowlist_cidrs when the exit is stable. When set, this installs INPUT
+# rules: allow loopback + established, allow the listed CIDRs to reach
+# xray_port, and drop everything else to that port. It does NOT touch other
+# ports, so ssh stays reachable.
+# ---------------------------------------------------------------------------
+- name: Apply the :443 source allowlist
+  when: xray_allowlist_cidrs | length > 0
+  block:
+    - name: Ensure iptables is present
+      ansible.builtin.package:
+        name: iptables
+        state: present
+
+    - name: Allow loopback and established to {{ xray_port }}
+      ansible.builtin.iptables:
+        chain: INPUT
+        protocol: tcp
+        destination_port: "{{ xray_port }}"
+        match: conntrack
+        ctstate: "ESTABLISHED,RELATED"
+        jump: ACCEPT
+        comment: "vless_server allowlist: established"
+
+    - name: Allow listed sources to {{ xray_port }}
+      ansible.builtin.iptables:
+        chain: INPUT
+        protocol: tcp
+        source: "{{ item }}"
+        destination_port: "{{ xray_port }}"
+        jump: ACCEPT
+        comment: "vless_server allowlist"
+      loop: "{{ xray_allowlist_cidrs }}"
+
+    - name: Drop other sources to {{ xray_port }}
+      ansible.builtin.iptables:
+        chain: INPUT
+        protocol: tcp
+        destination_port: "{{ xray_port }}"
+        jump: DROP
+        comment: "vless_server allowlist: default-drop :{{ xray_port }}"

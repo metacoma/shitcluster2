@@ -1,0 +1,11 @@
+{{ xray_access_log }} {
+    {{ xray_logrotate_frequency }}
+    rotate {{ xray_logrotate_rotate }}
+    maxsize {{ xray_logrotate_maxsize }}
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+    su {{ xray_user }} {{ xray_group }}
+}

@@ -1,0 +1,91 @@
+---
+# Deploy the VLESS/Xray edge server (ansible/edge). RUN FROM THE REPOSITORY ROOT:
+#
+#   ansible/.venv/bin/ansible-playbook -i ansible/edge/inventory.yml \
+#     ansible/edge/vless_server.yml --check        # no --diff (template holds the key)
+#
+# or via the make target (it supplies VAULT_ADDR/VAULT_TOKEN and cd's to root):
+#
+#   make -C ansible ansible_edge_run ANSIBLE_ARGS="--check"
+#
+# Three plays on purpose:
+#   1. localhost  — materialize the vpn-nl ssh key from Vault (0600, ephemeral)
+#   2. vless_servers — converge the endpoint via the vless_server role
+#   3. localhost  — remove the materialized key
+#
+# Play 3 targets localhost, an independent host set, so it still runs (and removes
+# the key) even when play 2 fails.
+
+- name: Materialize the edge ssh key from Vault
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    # Single source of truth is ansible/edge/inventory.yml; read it off the target
+    # host's vars so the pre-play and the deploy play always agree on paths.
+    edge_target: "{{ groups['vless_servers'][0] }}"
+    edge_ssh_ref: "{{ hostvars[edge_target].vless_edge_vault_ssh_secret }}"
+    edge_ssh_key_path: "{{ hostvars[edge_target].vless_edge_ssh_key_path | expanduser }}"
+    edge_known_hosts: "{{ hostvars[edge_target].vless_edge_known_hosts_file | expanduser }}"
+  tasks:
+    - name: Split the Vault ssh secret reference (mount/path#field)
+      ansible.builtin.set_fact:
+        edge_ssh_mount: "{{ edge_ssh_ref.split('/')[0] }}"
+        edge_ssh_path: "{{ edge_ssh_ref.split('/')[1].split('#')[0] }}"
+        edge_ssh_field: "{{ edge_ssh_ref.split('#')[1] }}"
+
+    - name: Fetch the ssh private key from Vault
+      community.hashi_vault.vault_kv2_get:
+        url: "{{ vless_vault_url | default(lookup('env', 'VAULT_ADDR') | default('http://172.25.1.4:8200', true)) }}"
+        engine_mount_point: "{{ edge_ssh_mount }}"
+        path: "{{ edge_ssh_path }}"
+        validate_certs: false
+      register: edge_vault_ssh
+      no_log: true
+
+    - name: Decode the private key
+      ansible.builtin.set_fact:
+        edge_ssh_pem: "{{ edge_vault_ssh.data.data[edge_ssh_field] | b64decode }}"
+      no_log: true
+
+    - name: Ensure ~/.ssh exists
+      ansible.builtin.file:
+        path: "{{ edge_ssh_key_path | dirname }}"
+        state: directory
+        mode: "0700"
+
+    - name: Write the materialized ssh key (0600)
+      ansible.builtin.copy:
+        content: "{{ edge_ssh_pem }}"
+        dest: "{{ edge_ssh_key_path }}"
+        mode: "0600"
+      no_log: true
+
+    - name: Ensure the edge known_hosts file exists
+      ansible.builtin.file:
+        path: "{{ edge_known_hosts }}"
+        state: touch
+        mode: "0644"
+        modification_time: preserve
+        access_time: preserve
+
+- name: Converge the VLESS/Xray edge server
+  hosts: vless_servers
+  become: true
+  gather_facts: true
+  roles:
+    - role: vless_server
+
+- name: Remove the materialized ssh key
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    edge_target: "{{ groups['vless_servers'][0] }}"
+    edge_ssh_key_path: "{{ hostvars[edge_target].vless_edge_ssh_key_path | expanduser }}"
+  tasks:
+    - name: Delete the ephemeral ssh key
+      ansible.builtin.file:
+        path: "{{ edge_ssh_key_path }}"
+        state: absent
+      failed_when: false
