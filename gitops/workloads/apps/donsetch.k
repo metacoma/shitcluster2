@@ -4,13 +4,15 @@ import config as cfg
 
 # DonSeTch (https://github.com/dondai44423/donsetch) — successor of hound-mcp:
 # web fetch / keyless search / crawl as a single MCP server (streamable-http).
-# Image: metacoma/donsetch — release binary from GitHub + chromium (tier-2
-# solve-and-bounce), built manually on the gitops node and pushed to Docker Hub.
+# Image: metacoma/donsetch:v4.10.2 — release binary from GitHub + chromium
+# (tier-2 solve-and-bounce), built manually on the gitops node and pushed to
+# Docker Hub. Cache lives in $HOME/.cache/donsetch, hence the PVC mounted at
+# /home/donsetch (fsGroup 1000 makes it writable for the non-root image user).
 
 _config = cfg.config
 mcp = _config.mcp
 _name = "donsetch"
-_image = "metacoma/donsetch:v3.6.7"
+_image = "metacoma/donsetch:v4.10.2"
 _port = 8097
 
 manifests = [
@@ -52,6 +54,10 @@ manifests = [
           }
         }
         spec = {
+          # image runs as uid/gid 1000 (donsetch); the cache PVC is root-owned
+          securityContext = {
+            fsGroup = 1000
+          }
           dnsPolicy = "ClusterFirst"
           dnsConfig = {
             nameservers = ["172.25.1.9", "172.25.0.2"]
