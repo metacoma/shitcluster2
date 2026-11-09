@@ -1,0 +1,72 @@
+name: KCL validation and lint
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kcl-validation-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  kcl:
+    name: ${{ matrix.module }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        module:
+          - gitops/workloads
+          - gitops/infra
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate and lint KCL
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          image="ghcr.io/metacoma/kcl-vals:latest"
+          module="${{ matrix.module }}"
+
+          echo "::group::kcl run ($module)"
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE/$module:/app" \
+            -w /app \
+            "$image" \
+            kcl run . >/dev/null
+          echo "::endgroup::"
+
+          echo "::group::kcl lint ($module)"
+          # The image matches the KCL environment used by the ArgoCD CMP.
+          set +e
+          output=$(docker run --rm \
+            -v "$GITHUB_WORKSPACE/$module:/app" \
+            -w /app \
+            "$image" \
+            kcl lint --no_style . 2>&1)
+          status=$?
+          set -e
+
+          printf '%s\n' "$output"
+
+          if [ "$status" -ne 0 ]; then
+            if printf '%s\n' "$output" | grep -qE 'error\[E[0-9]+'; then
+              echo "::error::KCL lint failed for $module"
+              exit 1
+            fi
+            if ! printf '%s\n' "$output" | grep -q 'warning\[W'; then
+              echo "::error::KCL lint failed for $module"
+              exit 1
+            fi
+            # The repository has pre-existing unused-import warnings. Surface
+            # them as annotations without making the PR check fail on them.
+            echo "::warning::KCL lint reported warnings for $module; warnings are non-blocking"
+          fi
+          echo "::endgroup::"
