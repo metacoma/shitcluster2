@@ -73,10 +73,6 @@ manifests = [
             helm = {
               values = yaml.encode({
                 # Basic Configuration
-                image = {
-                  repository = "pihole/pihole"
-                  tag = "2026.10.1"
-                }
                 replicaCount = 1
                 adminPassword = ph.adminPassword
                 
