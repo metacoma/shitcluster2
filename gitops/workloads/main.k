@@ -36,7 +36,8 @@ import .apps.forgejo as forgejo
 import .apps.litellm as litellm
 import .apps.mattermost as mattermost
 import .apps.pongbot as pongbot
-import .apps.pi_agent as pi_agent
+# disabled: pi-agent
+# import .apps.pi_agent as pi_agent
 # temporarily disabled (2026-08-09): desktop setup testing
 # import .apps.opencode_agent as opencode_agent
 # import .apps.opencode_mattermost_bridge as opencode_mattermost_bridge
@@ -73,7 +74,7 @@ resources = [
     litellm.manifests
     mattermost.manifests
     pongbot.manifests
-    pi_agent.manifests
+    # pi_agent.manifests
     # opencode_agent.manifests
     # opencode_mattermost_bridge.manifests
 ]
