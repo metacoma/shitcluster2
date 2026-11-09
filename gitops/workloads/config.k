@@ -527,6 +527,23 @@ config = {
         mattermost_url = "http://mattermost.mattermost:8065"
         mattermost_token = "ref+vault://kv/mattermost#bot_token"
     }
+    hello_world = {
+        namespace = "test"
+        name = "hello-world"
+        image = "docker.io/nginxdemos/hello:0.4"
+        port = 80
+        replicas = 1
+        resources = {
+            requests = {
+                cpu = "10m"
+                memory = "16Mi"
+            }
+            limits = {
+                cpu = "100m"
+                memory = "64Mi"
+            }
+        }
+    }
     mcp = {
         namespace = "mcp"
         admin_password = "ref+vault://kv/mcphub#admin_password"
