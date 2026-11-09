@@ -1,9 +1,4 @@
-import argoproj.v1alpha1 as argoproj
-import yaml
-import json
-import file
 import manifests
-import json_merge_patch as json_patch
 import tekton
 import vault_unseal
 import .mcp_namespace as mcp_ns

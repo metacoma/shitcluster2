@@ -1,4 +1,3 @@
-import k8s.api.core.v1 as k8s
 import ..argoproj.v1alpha1 as argoproj
 import config as cfg
 import yaml
