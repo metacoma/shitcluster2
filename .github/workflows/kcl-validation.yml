@@ -1,0 +1,53 @@
+name: KCL validation and lint
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kcl-validation-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  kcl:
+    name: ${{ matrix.module }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        module:
+          - gitops/workloads
+          - gitops/infra
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Validate and lint KCL
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          image="ghcr.io/metacoma/kcl-vals:latest"
+          module="${{ matrix.module }}"
+
+          echo "::group::kcl run ($module)"
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE/$module:/app" \
+            -w /app \
+            "$image" \
+            kcl run . >/dev/null
+          echo "::endgroup::"
+
+          echo "::group::kcl lint ($module)"
+          # The image matches the KCL environment used by the ArgoCD CMP.
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE/$module:/app" \
+            -w /app \
+            "$image" \
+            kcl lint --no_style .
+          echo "::endgroup::"
