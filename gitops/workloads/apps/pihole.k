@@ -135,8 +135,14 @@ manifests = [
                   }
                 }
                 nodeSelector = _config.nodeSelector.worker
+                # The entrypoint applies file capabilities to pihole-FTL and then
+                # drops FTLDNS to the unprivileged pihole user; setting those file
+                # capabilities requires CAP_SETFCAP in the container.
+                capabilities = {
+                  add = ["SETFCAP"]
+                }
                 extraEnvVars = {
-                  DNSMASQ_USER = "root"
+                  DNSMASQ_USER = "pihole"
                   FTLCONF_dns_queryLogging = "false"
                 }
               })
