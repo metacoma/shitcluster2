@@ -1,0 +1,18 @@
+---
+# Temporary workaround for the Ubuntu 26.04 kernel 7.0.0-42/43 AppArmor
+# regression (CVE-2026-90231 / LP #2172640): forced //&unconfined stacking
+# denies signals between processes inside containers (nginx reload SIGHUP,
+# PostgreSQL SIGURG, systemd, etc.). Remove once a fixed kernel or CRI-O
+# AppArmor profile is available.
+- name: Disable AppArmor unprivileged-unconfined restriction
+  hosts: all
+  become: true
+  tasks:
+    - name: Persist sysctl in /etc/sysctl.d
+      ansible.posix.sysctl:
+        name: kernel.apparmor_restrict_unprivileged_unconfined
+        value: "0"
+        state: present
+        sysctl_file: /etc/sysctl.d/99-apparmor-unconfined.conf
+        sysctl_set: true
+        reload: true

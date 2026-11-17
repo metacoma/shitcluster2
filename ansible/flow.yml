@@ -7,6 +7,9 @@
 - name: Disable WireGuard AppArmor profile
   ansible.builtin.import_playbook: disable_wg_apparmor.yml
 
+- name: Disable AppArmor unprivileged-unconfined restriction
+  ansible.builtin.import_playbook: apparmor_unconfined.yml
+
 - name: Install longhorn requirements
   ansible.builtin.import_playbook: longhorn.yml
 
